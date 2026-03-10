@@ -1,4 +1,4 @@
-package it.polimi.bsnwebapp;
+package it.polimi.ingws.gc8;
 
 /**
  * Hello world!
