@@ -1,0 +1,20 @@
+package model.Deck.Cards.TribeCards.CharacterCards;
+
+import model.Deck.Cards.TribeCards.CharacterCard;
+
+public class Inventor extends CharacterCard {
+
+    // Attribute
+    private final String icon;
+
+    public Inventor(String front, String back, Era era, String icon) {
+        super(front, back, era);
+        this.icon = icon;
+    }
+
+    // Getter
+    public String getIcon() {
+        return icon;
+    }
+
+}
