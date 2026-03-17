@@ -1,10 +1,10 @@
-package model.Board;
+package it.polimi.ingws.gc8.Model.Board;
 
-import model.Deck.Cards.BuildingCard;
-import model.Deck.Cards.Card;
-import model.Deck.Cards.TribeCards.EventCard;
-import model.Deck.Cards.TribeCards.TribeCard;
-import model.Deck.Deck;
+import it.polimi.ingws.gc8.Model.Deck.Cards.BuildingCard;
+import it.polimi.ingws.gc8.Model.Deck.Cards.Card;
+import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.EventCard;
+import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.TribeCard;
+import it.polimi.ingws.gc8.Model.Deck.Deck;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -86,7 +86,7 @@ public class Board {
         this.offerTrack = offerTrack;
     }
 
-    public void setupInitialRows(int PlayerCount, List<model.Deck.Cards.BuildingCard> era1Building){ //fare check se va bene
+    public void setupInitialRows(int PlayerCount, List<BuildingCard> era1Building){ //fare check se va bene
         for (int i = 0; i < PlayerCount + 1; i++) {
             lowerRow.add(era1Building.get(i));
         }
@@ -161,13 +161,13 @@ public class Board {
     }
 
     public void discardLowerRowBuilding(){
-        lowerRow.removeIf(card -> card instanceof model.Deck.Cards.BuildingCard);
+        lowerRow.removeIf(card -> card instanceof BuildingCard);
     }
 
     public void moveUpperRowBuildingToLower() {
         List<Card> buildingCards = new ArrayList<>();
         for (Card card : upperRow) {
-            if (card instanceof model.Deck.Cards.BuildingCard) {
+            if (card instanceof BuildingCard) {
                 buildingCards.add(card);
             }
         }

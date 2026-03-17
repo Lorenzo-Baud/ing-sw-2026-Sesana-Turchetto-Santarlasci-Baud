@@ -1,4 +1,6 @@
-package model.Board;
+package it.polimi.ingws.gc8.Model.Board;
+
+import it.polimi.ingws.gc8.Model.Player;
 
 public class OfferTile {
     private OffertileId id;

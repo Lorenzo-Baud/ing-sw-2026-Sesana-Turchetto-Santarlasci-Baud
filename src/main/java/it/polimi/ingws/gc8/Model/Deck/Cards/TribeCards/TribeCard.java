@@ -1,6 +1,6 @@
-package model.Deck.Cards.TribeCards;
+package it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards;
 
-import model.Deck.Cards.Card;
+import it.polimi.ingws.gc8.Model.Deck.Cards.Card;
 
 public abstract class TribeCard extends Card {
 

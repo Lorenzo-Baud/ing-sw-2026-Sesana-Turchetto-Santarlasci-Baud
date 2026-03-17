@@ -1,7 +1,7 @@
-package model.Deck.Cards.TribeCards.CharacterCards;
+package it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCards;
 
-import model.Deck.Cards.Card;
-import model.Deck.Cards.TribeCards.CharacterCard;
+import it.polimi.ingws.gc8.Model.Deck.Cards.Card;
+import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCard;
 
 public class Builder extends CharacterCard {
 

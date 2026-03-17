@@ -1,13 +1,13 @@
-package model;
+package it.polimi.ingws.gc8.Model;
 
-import model.Board.OfferTile;
-import model.Deck.Cards.BuildingCard;
-import model.Deck.Cards.Card;
-import model.Deck.Cards.TribeCards.CharacterCard;
-import model.Deck.Cards.TribeCards.EventCard;
-import model.Enum.Era;
-import model.Enum.GamePhase;
-import model.Board.Board;
+import it.polimi.ingws.gc8.Model.Board.OfferTile;
+import it.polimi.ingws.gc8.Model.Deck.Cards.BuildingCard;
+import it.polimi.ingws.gc8.Model.Deck.Cards.Card;
+import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCard;
+import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.EventCard;
+import it.polimi.ingws.gc8.Model.Enum.Era;
+import it.polimi.ingws.gc8.Model.Enum.GamePhase;
+import it.polimi.ingws.gc8.Model.Board.Board;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -371,8 +371,8 @@ public class MesosGame implements GameModel {
     @Override
     public Player getWinner() {
         // TODO: find the player with the most PP
-        // TODO: on tie, the one with the most food wins
-        // TODO: on further tie, return null (shared victory)
+        //  on tie, the one with the most food wins
+        //  on further tie, return null (shared victory)
         return null;
     }
 }

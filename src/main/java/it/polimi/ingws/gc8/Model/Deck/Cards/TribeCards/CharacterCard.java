@@ -1,4 +1,4 @@
-package model.Deck.Cards.TribeCards;
+package it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards;
 
 public class CharacterCard extends TribeCard {
 

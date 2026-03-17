@@ -1,6 +1,6 @@
-package model.Deck.Cards.TribeCards.CharacterCards;
+package it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCards;
 
-import model.Deck.Cards.TribeCards.CharacterCard;
+import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCard;
 
 public class Inventor extends CharacterCard {
 

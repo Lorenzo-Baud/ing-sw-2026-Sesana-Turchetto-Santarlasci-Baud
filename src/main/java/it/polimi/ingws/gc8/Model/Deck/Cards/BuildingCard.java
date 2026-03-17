@@ -1,4 +1,4 @@
-package model.Deck.Cards;
+package it.polimi.ingws.gc8.Model.Deck.Cards;
 
 public class BuildingCard extends Card {
 

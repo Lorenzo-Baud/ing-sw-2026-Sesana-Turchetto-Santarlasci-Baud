@@ -1,18 +1,16 @@
-package model;
+package it.polimi.ingws.gc8.Model;
 
-import model.Deck.Cards.BuildingCard;
-import model.Deck.Cards.TribeCards.CharacterCard;
+import it.polimi.ingws.gc8.Model.Deck.Cards.BuildingCard;
+import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCard;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Tribe {
 
-    // Attributes
     private final List<CharacterCard> characters;
     private final List<BuildingCard> buildings;
 
-    // Constructor
     public Tribe() {
         this.characters = new ArrayList<>();
         this.buildings = new ArrayList<>();

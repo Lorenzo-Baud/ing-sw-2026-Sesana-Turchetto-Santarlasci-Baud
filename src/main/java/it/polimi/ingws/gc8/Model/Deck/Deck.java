@@ -1,6 +1,6 @@
-package model.Deck;
+package it.polimi.ingws.gc8.Model.Deck;
 
-import model.Deck.Cards.Card;
+import it.polimi.ingws.gc8.Model.Deck.Cards.Card;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

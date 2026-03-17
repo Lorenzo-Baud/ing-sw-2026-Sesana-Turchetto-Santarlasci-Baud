@@ -1,4 +1,4 @@
-package model.Board;
+package it.polimi.ingws.gc8.Model.Board;
 
 import com.sun.tools.javac.util.List;
 
