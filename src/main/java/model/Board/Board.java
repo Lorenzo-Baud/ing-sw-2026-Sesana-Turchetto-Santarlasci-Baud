@@ -1,26 +1,26 @@
 package model.Board;
 
-import model.Deck.BuildingDeck.BuildingCard;
+import model.Deck.Cards.BuildingCard;
 import model.Deck.Cards.Card;
 import model.Deck.Cards.TribeCards.EventCard;
-import model.Deck.TribeDeck.TribeCard;
+import model.Deck.Cards.TribeCards.TribeCard;
 import model.Deck.Deck;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Board {
-    private Deck<TribeCard> tribeDeck;
+    private Deck tribeDeck;
     private List<Card> lowerRow;
     private List<Card> upperRow;
     private TurnOrderTrack turnOrderTrack;
-    private Deck<BuildingCard> era2BuildingDeck;
-    private Deck<BuildingCard> era3BuildingDeck;
+    private Deck era2BuildingDeck;
+    private Deck era3BuildingDeck;
     private OfferTrack offerTrack;
 
-    public Board(Deck<TribeCard> tribeDeck, List<Card> lowerRow, List<Card> upperRow,
-                 TurnOrderTrack turnOrderTrack, Deck<BuildingCard> era2BuildingDeck,
-                 Deck<BuildingCard> era3BuildingDeck, OfferTrack offerTrack) {
+    public Board(Deck tribeDeck, List lowerRow, List<Card> upperRow,
+                 TurnOrderTrack turnOrderTrack, Deck era2BuildingDeck,
+                 Deck era3BuildingDeck, OfferTrack offerTrack) {
         this.tribeDeck = tribeDeck;
         this.lowerRow = lowerRow;
         this.upperRow = upperRow;
@@ -30,11 +30,11 @@ public class Board {
         this.offerTrack = offerTrack;
     }
 
-    public Deck<TribeCard> getTribeDeck() {
+    public Deck getTribeDeck() {
         return tribeDeck;
     }
 
-    public void setTribeDeck(Deck<TribeCard> tribeDeck) {
+    public void setTribeDeck(Deck tribeDeck) {
         this.tribeDeck = tribeDeck;
     }
 
@@ -62,19 +62,19 @@ public class Board {
         this.turnOrderTrack = turnOrderTrack;
     }
 
-    public Deck<BuildingCard> getEra2BuildingDeck() {
+    public Deck getEra2BuildingDeck() {
         return era2BuildingDeck;
     }
 
-    public void setEra2BuildingDeck(Deck<model.Deck.Cards.BuildingCard> era2BuildingDeck) {
+    public void setEra2BuildingDeck(Deck era2BuildingDeck) {
         this.era2BuildingDeck = era2BuildingDeck;
     }
 
-    public Deck<model.Deck.Cards.BuildingCard> getEra3BuildingDeck() {
+    public Deck getEra3BuildingDeck() {
         return era3BuildingDeck;
     }
 
-    public void setEra3BuildingDeck(Deck<model.Deck.Cards.BuildingCard> era3BuildingDeck) {
+    public void setEra3BuildingDeck(Deck era3BuildingDeck) {
         this.era3BuildingDeck = era3BuildingDeck;
     }
 
@@ -152,7 +152,7 @@ public class Board {
         List<TribeCard> newTribeCards = new ArrayList<>();
         for (int i = 0; i < playerCount + 1; i++) {
             if (!tribeDeck.isEmpty()) {
-                TribeCard card = tribeDeck.draw();
+                TribeCard card = (TribeCard) tribeDeck.draw();
                 upperRow.add(card);
                 newTribeCards.add(card);
             }
@@ -176,7 +176,7 @@ public class Board {
     }
 
     public void revealEraBuildings(int era) { //fare check se va bene
-        Deck<BuildingCard> buildingDeck = (era == 2) ? era2BuildingDeck : era3BuildingDeck;
+        Deck buildingDeck = (era == 2) ? era2BuildingDeck : era3BuildingDeck;
         for (int i = 0; i < 4; i++) {
             if (!buildingDeck.isEmpty()) {
                 lowerRow.add(buildingDeck.draw());
