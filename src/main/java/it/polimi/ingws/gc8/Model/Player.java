@@ -1,8 +1,14 @@
 package it.polimi.ingws.gc8.Model;
 
+<<<<<<< Updated upstream:src/main/java/it/polimi/ingws/gc8/Model/Player.java
 import it.polimi.ingws.gc8.Model.Deck.Cards.BuildingCard;
 import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Enum.TotemColor;
+=======
+import model.Deck.Cards.BuildingCard;
+import model.Deck.Cards.CharacterCard;
+import model.Enum.TotemColor;
+>>>>>>> Stashed changes:src/main/java/model/Player.java
 
 public class Player {
 

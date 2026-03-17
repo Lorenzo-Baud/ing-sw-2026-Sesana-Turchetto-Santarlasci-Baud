@@ -1,8 +1,13 @@
+<<<<<<<< Updated upstream:src/main/java/it/polimi/ingws/gc8/Model/Deck/Cards/TribeCards/EventCard.java
 package it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards;
+========
+package model.Deck.Cards;
+>>>>>>>> Stashed changes:src/main/java/it/polimi/ingws/gc8/Model/Deck/Cards/EventCard.java
 
 import java.util.function.Function;
+import model.Enum.Era;
 
-public class EventCard extends TribeCard{
+public class EventCard extends Card{
 
     private final boolean isFinal;
     // Event

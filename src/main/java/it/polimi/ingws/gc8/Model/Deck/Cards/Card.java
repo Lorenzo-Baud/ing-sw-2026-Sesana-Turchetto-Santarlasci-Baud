@@ -1,11 +1,8 @@
 package it.polimi.ingws.gc8.Model.Deck.Cards;
 
-public abstract class Card {
+import model.Enum.Era;
 
-    // Era enum
-    public enum Era {
-        ERA_1, ERA_2, ERA_3
-    }
+public abstract class Card {
 
     protected final Era era;
     protected final String front;

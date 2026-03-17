@@ -1,5 +1,6 @@
 package it.polimi.ingws.gc8.Model;
 
+<<<<<<< Updated upstream:src/main/java/it/polimi/ingws/gc8/Model/GameModel.java
 import it.polimi.ingws.gc8.Model.Board.Board;
 import it.polimi.ingws.gc8.Model.Board.OfferTile;
 import it.polimi.ingws.gc8.Model.Deck.Cards.BuildingCard;
@@ -8,6 +9,16 @@ import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.EventCard;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
+=======
+import model.Board.Board;
+import model.Board.OfferTile;
+import model.Deck.Cards.BuildingCard;
+import model.Deck.Cards.Card;
+import model.Deck.Cards.CharacterCard;
+import model.Deck.Cards.TribeCards.EventCard;
+import model.Enum.Era;
+import model.Enum.GamePhase;
+>>>>>>> Stashed changes:src/main/java/model/GameModel.java
 
 import java.util.List;
 

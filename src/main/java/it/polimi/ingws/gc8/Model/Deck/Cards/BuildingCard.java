@@ -1,5 +1,7 @@
 package it.polimi.ingws.gc8.Model.Deck.Cards;
 
+import model.Enum.Era;
+
 public class BuildingCard extends Card {
 
     // Attributes

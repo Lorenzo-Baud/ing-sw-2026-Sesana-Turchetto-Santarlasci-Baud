@@ -1,6 +1,13 @@
+<<<<<<<< Updated upstream:src/main/java/it/polimi/ingws/gc8/Model/Deck/Cards/TribeCards/CharacterCards/Inventor.java
 package it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCards;
 
 import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCard;
+========
+package model.Deck.Cards.CharacterCards;
+
+import model.Deck.Cards.CharacterCard;
+import model.Enum.Era;
+>>>>>>>> Stashed changes:src/main/java/it/polimi/ingws/gc8/Model/Deck/Cards/CharacterCards/Inventor.java
 
 public class Inventor extends CharacterCard {
 
