@@ -1,12 +1,7 @@
 package it.polimi.ingws.gc8.Model;
 
-<<<<<<< Updated upstream:src/main/java/it/polimi/ingws/gc8/Model/Tribe.java
 import it.polimi.ingws.gc8.Model.Deck.Cards.BuildingCard;
-import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCard;
-=======
-import model.Deck.Cards.BuildingCard;
-import model.Deck.Cards.CharacterCard;
->>>>>>> Stashed changes:src/main/java/model/Tribe.java
+import it.polimi.ingws.gc8.Model.Deck.Cards.CharacterCard;
 
 import java.util.ArrayList;
 import java.util.List;

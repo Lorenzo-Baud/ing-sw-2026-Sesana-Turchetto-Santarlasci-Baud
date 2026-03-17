@@ -1,13 +1,6 @@
-<<<<<<<< Updated upstream:src/main/java/it/polimi/ingws/gc8/Model/Deck/Cards/TribeCards/CharacterCards/Hunter.java
-package it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCards;
+package it.polimi.ingws.gc8.Model.Deck.Cards.CharacterCards;
 
-import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCard;
-========
-package model.Deck.Cards.CharacterCards;
-
-import model.Deck.Cards.CharacterCard;
-import model.Enum.Era;
->>>>>>>> Stashed changes:src/main/java/it/polimi/ingws/gc8/Model/Deck/Cards/CharacterCards/Hunter.java
+import it.polimi.ingws.gc8.Model.Deck.Cards.CharacterCard;
 
 public class Hunter extends CharacterCard {
 

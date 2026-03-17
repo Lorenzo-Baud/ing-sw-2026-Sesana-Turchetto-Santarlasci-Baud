@@ -1,12 +1,7 @@
-<<<<<<<< Updated upstream:src/main/java/it/polimi/ingws/gc8/Model/Deck/Cards/TribeCards/CharacterCards/Shaman.java
-package it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCards;
+package it.polimi.ingws.gc8.Model.Deck.Cards.CharacterCards;
 
-import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCard;
-========
-package model.Deck.Cards.CharacterCards;
-import model.Enum.Era;
-import model.Deck.Cards.CharacterCard;
->>>>>>>> Stashed changes:src/main/java/it/polimi/ingws/gc8/Model/Deck/Cards/CharacterCards/Shaman.java
+import it.polimi.ingws.gc8.Model.Deck.Cards.CharacterCard;
+import it.polimi.ingws.gc8.Model.Enum.Era;
 
 public class Shaman extends CharacterCard {
 

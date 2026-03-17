@@ -1,10 +1,7 @@
-<<<<<<<< Updated upstream:src/main/java/it/polimi/ingws/gc8/Model/Deck/Cards/TribeCards/CharacterCard.java
-package it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards;
-========
-package model.Deck.Cards;
-import model.Enum.Era;
->>>>>>>> Stashed changes:src/main/java/it/polimi/ingws/gc8/Model/Deck/Cards/CharacterCard.java
+package it.polimi.ingws.gc8.Model.Deck.Cards;
 
+import it.polimi.ingws.gc8.Model.Deck.Cards.Card;
+import it.polimi.ingws.gc8.Model.Enum.Era;
 
 public class CharacterCard extends Card {
 
