@@ -1,0 +1,9 @@
+[
+  { "id": "A", "minPlayers": 5,    "foodReward": 3, "lowerRowPicks": 0, "upperRowPicks": 0 },
+  { "id": "B", "minPlayers": null, "foodReward": 0, "lowerRowPicks": 1, "upperRowPicks": 0 },
+  { "id": "C", "minPlayers": null, "foodReward": 0, "lowerRowPicks": 0, "upperRowPicks": 1 },
+  { "id": "D", "minPlayers": 3,    "foodReward": 0, "lowerRowPicks": 2, "upperRowPicks": 0 },
+  { "id": "E", "minPlayers": null, "foodReward": 0, "lowerRowPicks": 1, "upperRowPicks": 1 },
+  { "id": "F", "minPlayers": null, "foodReward": 0, "lowerRowPicks": 0, "upperRowPicks": 2 },
+  { "id": "G", "minPlayers": 4,    "foodReward": 0, "lowerRowPicks": 1, "upperRowPicks": 2 }
+]

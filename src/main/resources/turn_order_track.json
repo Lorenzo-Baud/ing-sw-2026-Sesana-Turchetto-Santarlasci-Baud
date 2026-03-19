@@ -1,0 +1,26 @@
+[
+  {
+    "playerCount": 2,
+    "foodBonusesBySlot": [1, 0],
+    "lastSlotFoodPenalty": 1,
+    "lastSlotPrestigePenalty": -2
+  },
+  {
+    "playerCount": 3,
+    "foodBonusesBySlot": [2, 0, 0],
+    "lastSlotFoodPenalty": 1,
+    "lastSlotPrestigePenalty": -2
+  },
+  {
+    "playerCount": 4,
+    "foodBonusesBySlot": [2, 1, 0, 0],
+    "lastSlotFoodPenalty": 1,
+    "lastSlotPrestigePenalty": -2
+  },
+  {
+    "playerCount": 5,
+    "foodBonusesBySlot": [3, 1, 0, 0, 0],
+    "lastSlotFoodPenalty": 1,
+    "lastSlotPrestigePenalty": -2
+  }
+]
