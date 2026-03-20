@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+//usa quei dati + gestisce la logica di gioco
 public class TurnOrderTrack {
 
     // configurazione statica (dalla tessera)
@@ -41,7 +42,7 @@ public class TurnOrderTrack {
 
             // trova la configurazione per il numero di giocatori corretto
             TurnOrderConfig config = configs.stream()
-                    .filter(c -> c.getPlayerCount() == playerCount)
+                    .filter(c -> c.getPlayerCount() == playerCount) //selezione la tessera per il numero di giocatori
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException(
                             "Config non trovata per " + playerCount + " giocatori"));

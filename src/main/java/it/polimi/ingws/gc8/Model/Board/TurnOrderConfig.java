@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
+//questa classe serve a leggere e contenere SOLO i dati statici del JSON
 public class TurnOrderConfig {
     private int playerCount;
     private List<Integer> foodBonusesBySlot;

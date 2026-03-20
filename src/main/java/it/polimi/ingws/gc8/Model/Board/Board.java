@@ -2,185 +2,179 @@ package it.polimi.ingws.gc8.Model.Board;
 
 import it.polimi.ingws.gc8.Model.Deck.Cards.BuildingCard;
 import it.polimi.ingws.gc8.Model.Deck.Cards.Card;
-import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.EventCard;
-import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.TribeCard;
-import it.polimi.ingws.gc8.Model.Deck.Deck;
+import it.polimi.ingws.gc8.Model.Deck.Cards.EventCard;
+import it.polimi.ingws.gc8.Model.Deck.Cards.CharacterCard;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Board {
-    private Deck tribeDeck;
+    private List<CharacterCard> tribeDeck;
     private List<Card> lowerRow;
     private List<Card> upperRow;
     private TurnOrderTrack turnOrderTrack;
-    private Deck era2BuildingDeck;
-    private Deck era3BuildingDeck;
+    private List<BuildingCard> era2BuildingDeck;
+    private List<BuildingCard> era3BuildingDeck;
     private OfferTrack offerTrack;
 
-    public Board(Deck tribeDeck, List lowerRow, List<Card> upperRow,
-                 TurnOrderTrack turnOrderTrack, Deck era2BuildingDeck,
-                 Deck era3BuildingDeck, OfferTrack offerTrack) {
-        this.tribeDeck = tribeDeck;
-        this.lowerRow = lowerRow;
-        this.upperRow = upperRow;
-        this.turnOrderTrack = turnOrderTrack;
-        this.era2BuildingDeck = era2BuildingDeck;
-        this.era3BuildingDeck = era3BuildingDeck;
-        this.offerTrack = offerTrack;
+    // Costruttore
+    public Board(int playerCount, List<CharacterCard> allTribeCards,
+                 List<BuildingCard> era1Buildings,
+                 List<BuildingCard> era2Buildings,
+                 List<BuildingCard> era3Buildings) {
+
+        this.lowerRow = new ArrayList<>();
+        this.upperRow = new ArrayList<>();
+        this.offerTrack = new OfferTrack(playerCount);
+        this.turnOrderTrack = new TurnOrderTrack(playerCount);
+        this.tribeDeck = new ArrayList<>(allTribeCards);
+        this.era2BuildingDeck = new ArrayList<>(era2Buildings);
+        this.era3BuildingDeck = new ArrayList<>(era3Buildings);
+
+        setupInitialRows(playerCount, era1Buildings);
     }
 
-    public Deck getTribeDeck() {
-        return tribeDeck;
-    }
+    // Getters
+    public List<CharacterCard> getTribeDeck() { return tribeDeck; }
+    public List<Card> getLowerRow() { return lowerRow; }
+    public List<Card> getUpperRow() { return upperRow; }
+    public TurnOrderTrack getTurnOrderTrack() { return turnOrderTrack; }
+    public OfferTrack getOfferTrack() { return offerTrack; }
+    public List<BuildingCard> getEra2BuildingList() { return era2BuildingDeck; }
+    public List<BuildingCard> getEra3BuildingList() { return era3BuildingDeck; }
 
-    public void setTribeDeck(Deck tribeDeck) {
-        this.tribeDeck = tribeDeck;
-    }
+    // Setup iniziale — regole pag. 2, passi 4-6
+    public void setupInitialRows(int playerCount, List<BuildingCard> era1Buildings) {
 
-    public List<Card> getLowerRow() {
-        return lowerRow;
-    }
-
-    public void setLowerRow(List<Card> lowerRow) {
-        this.lowerRow = lowerRow;
-    }
-
-    public List<Card> getUpperRow() {
-        return upperRow;
-    }
-
-    public void setUpperRow(List<Card> upperRow) {
-        this.upperRow = upperRow;
-    }
-
-    public TurnOrderTrack getTurnOrderTrack() {
-        return turnOrderTrack;
-    }
-
-    public void setTurnOrderTrack(TurnOrderTrack turnOrderTrack) {
-        this.turnOrderTrack = turnOrderTrack;
-    }
-
-    public Deck getEra2BuildingDeck() {
-        return era2BuildingDeck;
-    }
-
-    public void setEra2BuildingDeck(Deck era2BuildingDeck) {
-        this.era2BuildingDeck = era2BuildingDeck;
-    }
-
-    public Deck getEra3BuildingDeck() {
-        return era3BuildingDeck;
-    }
-
-    public void setEra3BuildingDeck(Deck era3BuildingDeck) {
-        this.era3BuildingDeck = era3BuildingDeck;
-    }
-
-    public OfferTrack getOfferTrack() {
-        return offerTrack;
-    }
-
-    public void setOfferTrack(OfferTrack offerTrack) {
-        this.offerTrack = offerTrack;
-    }
-
-    public void setupInitialRows(int PlayerCount, List<BuildingCard> era1Building){ //fare check se va bene
-        for (int i = 0; i < PlayerCount + 1; i++) {
-            lowerRow.add(era1Building.get(i));
+        // passo 4: pesca playerCount+1 carte per la fila inferiore
+        // se si pesca un Evento → va in superiore, si continua a pescare
+        int lowerFilled = 0;
+        while (lowerFilled < playerCount + 1 && !tribeDeck.isEmpty()) {
+            Card card = tribeDeck.remove(0);
+            if (card instanceof EventCard) {
+                upperRow.add(card); // evento → fila superiore, non conta per il lower
+            } else {
+                lowerRow.add(card);
+                lowerFilled++;
+            }
         }
-        for (int i = PlayerCount + 1; i < PlayerCount * 2 + 2; i++) {
-            upperRow.add(era1Building.get(i));
+
+        // passo 5: pesca playerCount+4 carte per la fila superiore
+        // considera gli eventi già presenti nella fila superiore
+        int upperNeeded = (playerCount + 4) - upperRow.size();
+        for (int i = 0; i < upperNeeded; i++) {
+            if (!tribeDeck.isEmpty()) {
+                upperRow.add(tribeDeck.remove(0));
+            }
         }
+
+        // passo 6a: aggiunge edifici Era I in fila superiore a destra delle carte tribù
+        upperRow.addAll(era1Buildings);
     }
 
+    // Accesso e rimozione carte dalle file
     public Card getLowerRowCard(int index) {
-        if (index >= 0 && index < lowerRow.size()) {
-            return lowerRow.get(index);
-        }
+        if (index >= 0 && index < lowerRow.size()) return lowerRow.get(index);
         throw new IndexOutOfBoundsException("Invalid index for lower row: " + index);
     }
 
     public Card getUpperRowCard(int index) {
-        if (index >= 0 && index < upperRow.size()) {
-            return upperRow.get(index);
-        }
+        if (index >= 0 && index < upperRow.size()) return upperRow.get(index);
         throw new IndexOutOfBoundsException("Invalid index for upper row: " + index);
     }
 
     public Card removeLowerRowCard(int index) {
-        if (index >= 0 && index < lowerRow.size()) {
-            return lowerRow.remove(index);
-        }
+        if (index >= 0 && index < lowerRow.size()) return lowerRow.remove(index);
         throw new IndexOutOfBoundsException("Invalid index for lower row: " + index);
     }
 
     public Card removeUpperRowCard(int index) {
-        if (index >= 0 && index < upperRow.size()) {
-            return upperRow.remove(index);
-        }
+        if (index >= 0 && index < upperRow.size()) return upperRow.remove(index);
         throw new IndexOutOfBoundsException("Invalid index for upper row: " + index);
     }
 
+    // Fine round — regole pag. 6, passi 1-4
+    // chiamare in questo ordine:
+    // 1. getLowerRowEvents() → risolvi eventi
+    // 2. discardLowerRowTribeCards()
+    // 3. moveUpperRowTribeCardsToLower()
+    // 4. refillUpperRow(playerCount)
+
+    // passo 1: restituisce gli eventi in fila inferiore da risolvere
     public List<EventCard> getLowerRowEvents() {
         List<EventCard> events = new ArrayList<>();
         for (Card card : lowerRow) {
-            if (card instanceof EventCard) {
-                events.add((EventCard) card);
-            }
+            if (card instanceof EventCard) events.add((EventCard) card);
         }
         return events;
     }
 
+    // passo 2: scarta Personaggio ed Evento dalla fila inferiore
+    // le carte Edificio rimangono al loro posto
     public void discardLowerRowTribeCards() {
-        lowerRow.removeIf(card -> card instanceof TribeCard);
+        lowerRow.removeIf(card -> card instanceof CharacterCard || card instanceof EventCard);
     }
 
+    // passo 3: sposta Personaggio ed Evento dalla fila superiore alla inferiore
+    // le carte Edificio rimangono al loro posto
     public void moveUpperRowTribeCardsToLower() {
-        List<Card> tribeCards = new ArrayList<>();
+        List<Card> toMove = new ArrayList<>();
         for (Card card : upperRow) {
-            if (card instanceof TribeCard) {
-                tribeCards.add(card);
+            if (card instanceof CharacterCard || card instanceof EventCard) {
+                toMove.add(card);
             }
         }
-        upperRow.removeAll(tribeCards);
-        lowerRow.addAll(tribeCards);
+        upperRow.removeAll(toMove);
+        lowerRow.addAll(toMove);
     }
 
-    public List<TribeCard> refillUpperRow(int playerCount) { //fare check se va bene
-        List<TribeCard> newTribeCards = new ArrayList<>();
-        for (int i = 0; i < playerCount + 1; i++) {
+    // passo 4: ripristina fila superiore pescando playerCount+4 carte
+    public List<CharacterCard> refillUpperRow(int playerCount) {
+        List<CharacterCard> newCards = new ArrayList<>();
+        int needed = playerCount + 4;
+
+        for (int i = 0; i < needed; i++) {
             if (!tribeDeck.isEmpty()) {
-                TribeCard card = (TribeCard) tribeDeck.draw();
+                Card card = tribeDeck.remove(0);
                 upperRow.add(card);
-                newTribeCards.add(card);
+                if (!(card instanceof EventCard)) {
+                    newCards.add((CharacterCard) card);
+                }
+                // gli EventCard vengono aggiunti alla upperRow ma non restituiti
             }
         }
-        return newTribeCards;
+        return newCards;
     }
 
-    public void discardLowerRowBuilding(){
+    // Nuova era — regole pag. 7, passi 1-3
+
+    // passo 1: solo Era III → scarta edifici dalla fila inferiore
+    public void discardLowerRowBuildings() {
         lowerRow.removeIf(card -> card instanceof BuildingCard);
     }
 
-    public void moveUpperRowBuildingToLower() {
+    // passo 2: sposta edifici dalla fila superiore alla fila inferiore
+    public void moveUpperRowBuildingsToLower() {
         List<Card> buildingCards = new ArrayList<>();
         for (Card card : upperRow) {
-            if (card instanceof BuildingCard) {
-                buildingCards.add(card);
-            }
+            if (card instanceof BuildingCard) buildingCards.add(card);
         }
         upperRow.removeAll(buildingCards);
         lowerRow.addAll(buildingCards);
     }
 
-    public void revealEraBuildings(int era) { //fare check se va bene
-        Deck buildingDeck = (era == 2) ? era2BuildingDeck : era3BuildingDeck;
-        for (int i = 0; i < 4; i++) {
-            if (!buildingDeck.isEmpty()) {
-                lowerRow.add(buildingDeck.draw());
-            }
+    // passo 3: rivela edifici della nuova era — gestisce i 3 passi nell'ordine corretto
+    public void revealEraBuildings(int era) {
+        // solo Era III: scarta edifici dalla fila inferiore
+        if (era == 3) {
+            discardLowerRowBuildings();
         }
+        // sposta edifici Era precedente dalla superiore all'inferiore
+        moveUpperRowBuildingsToLower();
+
+        // rivela nuovi edifici in fila superiore
+        List<BuildingCard> buildingList = (era == 2) ? era2BuildingDeck : era3BuildingDeck;
+        upperRow.addAll(buildingList);
+        buildingList.clear(); // svuota la lista dopo aver rivelato
     }
 }
