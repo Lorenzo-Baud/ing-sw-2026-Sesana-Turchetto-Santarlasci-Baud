@@ -1,0 +1,110 @@
+[
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "inventor", "icon": 9},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 4, "type": "inventor", "icon": 5},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 4, "type": "inventor", "icon": 4},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 4, "type": "inventor", "icon": 7},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "inventor", "icon": 1},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "inventor", "icon": 8},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "inventor", "icon": 0},
+
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "collector", "foodDiscount": 3},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "collector", "foodDiscount": 3},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 3, "type": "collector", "foodDiscount": 3},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 5, "type": "collector", "foodDiscount": 3},
+
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "artist"},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "artist"},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "artist"},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 3, "type": "artist"},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 4, "type": "artist"},
+
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "shaman", "icons":  1},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 4, "type": "shaman", "icons":  1},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "shaman", "icons":  2},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 5, "type": "shaman", "icons":  2},
+
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "hunter", "bonus": true},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "hunter", "bonus": true},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 3, "type": "hunter", "bonus": false},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 3, "type": "hunter", "bonus": false},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "hunter", "bonus": false},
+
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "builder", "prestigePoints": 2, "foodBonus": 1},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 5, "type": "builder", "prestigePoints": 1, "foodBonus": 2},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "builder", "prestigePoints": 0, "foodBonus": 2},
+  {"front":  "", "back": "", "era": "1", "number_of_players": 0, "type": "builder", "prestigePoints": 3, "foodBonus": 1},
+
+
+
+
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "inventor", "icon": 8},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "inventor", "icon": 4},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "inventor", "icon": 6},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "inventor", "icon": 7},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "inventor", "icon": 5},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 4, "type": "inventor", "icon": 3},
+
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "collector", "foodDiscount": 3},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 3, "type": "collector", "foodDiscount": 3},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 4, "type": "collector", "foodDiscount": 3},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 5, "type": "collector", "foodDiscount": 3},
+
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "artist"},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "artist"},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "artist"},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 3, "type": "artist"},
+
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "shaman", "icons":  2},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "shaman", "icons":  2},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 5, "type": "shaman", "icons":  2},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 5, "type": "shaman", "icons":  1},
+
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "hunter", "bonus": true},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 3, "type": "hunter", "bonus": true},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 4, "type": "hunter", "bonus": true},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "hunter", "bonus": false},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "hunter", "bonus": false},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 5, "type": "hunter", "bonus": false},
+
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "builder", "prestigePoints": 4, "foodBonus": 1},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "builder", "prestigePoints": 3, "foodBonus": 2},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 0, "type": "builder", "prestigePoints": 1, "foodBonus": 2},
+  {"front":  "", "back": "", "era": "2", "number_of_players": 3, "type": "builder", "prestigePoints": 2, "foodBonus": 1}
+
+
+
+
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "inventor", "icon": 6},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "inventor", "icon": 9},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "inventor", "icon": 3},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "inventor", "icon": 2},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 3, "type": "inventor", "icon": 1},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 3, "type": "inventor", "icon": 0},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 4, "type": "inventor", "icon": 3},
+
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "collector", "foodDiscount": 3},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 4, "type": "collector", "foodDiscount": 3},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 5, "type": "collector", "foodDiscount": 3},
+
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "artist"},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "artist"},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "artist"},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 5, "type": "artist"},
+
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "shaman", "icons":  2},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 3, "type": "shaman", "icons":  2},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 4, "type": "shaman", "icons":  2},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "shaman", "icons":  3},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "shaman", "icons":  3},
+
+  {"front":  "", "back": "", "era": "3", "number_of_players": 5, "type": "hunter", "bonus": true},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "hunter", "bonus": true},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "hunter", "bonus": false},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "hunter", "bonus": false},
+
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "builder", "prestigePoints": 2, "foodBonus": 2},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 5, "type": "builder", "prestigePoints": 4, "foodBonus": 1},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "builder", "prestigePoints": 5, "foodBonus": 1},
+  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "builder", "prestigePoints": 3, "foodBonus": 2}
+
+]
