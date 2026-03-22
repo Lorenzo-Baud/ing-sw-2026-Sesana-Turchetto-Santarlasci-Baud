@@ -2,6 +2,7 @@ package it.polimi.ingws.gc8.Model;
 
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
+import it.polimi.ingws.gc8.Model.Enum.CharacterType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +75,17 @@ public class Tribe {
     public int getPrintedBuildingPrestige() {
         // TODO: implement
         return 0;
+    }
+
+    // Returns number of collectors
+    public int getNumberOfCollectors() {
+        int totalCollectors = 0;
+        for (CharacterCard card : characters) {
+            if (card.getCharacterType() == CharacterType.BUILDER) {
+                totalCollectors++;
+            }
+        }
+        return totalCollectors;
     }
 
 }

@@ -131,9 +131,25 @@ public class Board {
                         tribeDeck.add(new EventCard(front, back, era, isFinal, EventType.sustenance, players -> {
                             for (Player player : players) {
 
+                                // Calculates total food cost
+                                int foodCost = player.getTribe().getCharacters().size();
+                                foodCost = foodCost - (player.getTribe().getNumberOfCollectors() * 3);
+
+                                // Removes food to player
+                                if(foodCost <= player.getFood()) {
+                                    player.removeFood(foodCost);
+                                } else {
+
+                                    // Calculates how many prestige points to remove
+                                    player.removePrestigePoints((foodCost - player.getFood()) * prestigeMalus);
+                                    player.removeFood(player.getFood());
+
+                                }
+
                             }
                         }));
                         break;
+
                     case "hunt":
                         prestigeBonus = node.get("prestigeBonus").asInt();
                         tribeDeck.add(new EventCard(front, back, era, isFinal, EventType.hunt, players -> {
@@ -142,6 +158,7 @@ public class Board {
                             }
                         }));
                         break;
+
                     case "cavePaintings":
                         bonusArists = node.get("bonusArtists").asInt();
                         malusArists = node.get("malusArtists").asInt();

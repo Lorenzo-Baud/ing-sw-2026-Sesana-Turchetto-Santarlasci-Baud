@@ -1,6 +1,7 @@
 package it.polimi.ingws.gc8.Model.Cards.CharacterCards;
 
 import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
+import it.polimi.ingws.gc8.Model.Enum.CharacterType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 
 public class Collector extends CharacterCard {
@@ -9,7 +10,7 @@ public class Collector extends CharacterCard {
     private final int foodDiscount;
 
     public Collector(String front, String back, Era era, int numberOfPlayers, int foodDiscount) {
-        super(front, back, era, numberOfPlayers);
+        super(front, back, era, numberOfPlayers, CharacterType.COLLECTOR);
         this.foodDiscount = foodDiscount;
     }
 
