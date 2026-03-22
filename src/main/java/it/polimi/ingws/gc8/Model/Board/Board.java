@@ -8,6 +8,8 @@ import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.*;
 import it.polimi.ingws.gc8.Model.Cards.EventCard;
 import it.polimi.ingws.gc8.Model.Enum.Era;
+import it.polimi.ingws.gc8.Model.Enum.EventType;
+import it.polimi.ingws.gc8.Model.Player;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -46,7 +48,7 @@ public class Board {
     // Parses JSON file to get tribe cards data
     public void loadTribeDeck() {
 
-        // Loads character cards
+        // Character cards parsing
         // *************************************************************************
         ObjectMapper mapper = new ObjectMapper();
 
@@ -95,6 +97,72 @@ public class Board {
                         break;
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        // *************************************************************************
+
+        // Event cards parsing
+        // *************************************************************************
+        try {
+            JsonNode root = mapper.readTree(new File("src/main/resources/event_cards.json"));
+
+            for (JsonNode node : root) {
+
+                // Field extraction
+                String front = node.get("front").asText();
+                String back = node.get("back").asText();
+                int eraNum = node.get("era").asInt();
+                boolean isFinal = node.get("isFinal").asBoolean();
+                Era era = Era.values()[eraNum - 1];
+                String type = node.get("type").asText();
+
+                // Optional variables
+                int prestigeBonus;
+                int prestigeMalus;
+                int bonusArists;
+                int malusArists;
+                int bonusPoints;
+                int malusPoints;
+
+                switch (type) {
+                    case "sustenance":
+                        prestigeMalus = node.get("prestigeMalus").asInt();
+                        tribeDeck.add(new EventCard(front, back, era, isFinal, EventType.sustenance, players -> {
+                            for (Player player : players) {
+
+                            }
+                        }));
+                        break;
+                    case "hunt":
+                        prestigeBonus = node.get("prestigeBonus").asInt();
+                        tribeDeck.add(new EventCard(front, back, era, isFinal, EventType.hunt, players -> {
+                            for (Player player : players) {
+
+                            }
+                        }));
+                        break;
+                    case "cavePaintings":
+                        bonusArists = node.get("bonusArtists").asInt();
+                        malusArists = node.get("malusArtists").asInt();
+                        bonusPoints = node.get("bonusPoints").asInt();
+                        malusPoints = node.get("malusPoints").asInt();
+                        tribeDeck.add(new EventCard(front, back, era, isFinal, EventType.cavePaintings, players -> {
+                            for (Player player : players) {
+
+                            }
+                        }));
+                        break;
+                    case "ritual":
+                        prestigeBonus = node.get("prestigeBonus").asInt();
+                        prestigeMalus = node.get("prestigeMalus").asInt();
+                        tribeDeck.add(new EventCard(front, back, era, isFinal, EventType.ritual, null));
+                        break;
+                }
+
+
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
