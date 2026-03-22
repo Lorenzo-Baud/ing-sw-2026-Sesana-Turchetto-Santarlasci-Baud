@@ -25,7 +25,7 @@ public class OfferTile {
         this.foodReward = foodReward;
         this.lowerRowPicks = lowerRowPicks;
         this.upperRowPicks = upperRowPicks;
-        this.occupant = null;  // inizialmente vuota
+        this.occupant = null;  // Initially empty
     }
 
     public OffertileId getId() {

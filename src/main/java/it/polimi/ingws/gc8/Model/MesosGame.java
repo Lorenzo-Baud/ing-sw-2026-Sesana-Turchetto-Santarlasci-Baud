@@ -1,10 +1,10 @@
 package it.polimi.ingws.gc8.Model;
 
 import it.polimi.ingws.gc8.Model.Board.OfferTile;
-import it.polimi.ingws.gc8.Model.Deck.Cards.BuildingCard;
-import it.polimi.ingws.gc8.Model.Deck.Cards.Card;
-import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCard;
-import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.EventCard;
+import it.polimi.ingws.gc8.Model.Cards.BuildingCard;
+import it.polimi.ingws.gc8.Model.Cards.Card;
+import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
+import it.polimi.ingws.gc8.Model.Cards.EventCard;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 import it.polimi.ingws.gc8.Model.Board.Board;
@@ -32,10 +32,10 @@ public class MesosGame implements GameModel {
         this.currentEra = Era.ERA_1;
         this.phase = GamePhase.SETUP;
         this.currentPlayerIndex = 0;
+        this.board = new Board(3);
     }
 
     // SETUP
-
     @Override
     public void setupGame(int numPlayers) {
         this.numPlayers = numPlayers;
@@ -66,6 +66,7 @@ public class MesosGame implements GameModel {
         // TODO: select the correct Turn Order tile
         // TODO: filter Tribe cards based on player count
         // TODO: build the Tribe deck (Era I on top, Era II, Era III, Final Events at bottom)
+        board.loadTribeDeck();
         // TODO: load Building cards via BuildingCard.loadFromJson()
         // TODO: filter Building cards based on player count
         // TODO: distribute Building cards into 3 decks by Era
@@ -169,7 +170,7 @@ public class MesosGame implements GameModel {
     }
 
     @Override
-    public List<Card> getAvailableCardsFromRow(Row row) {
+    public List<Card> getAvailableCardsFromRow(int row) {
         // TODO: delegate to board.getUpperRow() or board.getLowerRow()
         // TODO: filter out Event cards (not pickable)
         // TODO: return only Character and Building cards

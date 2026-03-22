@@ -1,12 +1,13 @@
-package it.polimi.ingws.gc8.Model.Deck.Cards;
+package it.polimi.ingws.gc8.Model.Cards;
 
-import it.polimi.ingws.gc8.Model.Deck.Cards.Card;
+import it.polimi.ingws.gc8.Model.Enum.Era;
 
 import java.util.function.Function;
 
 public class EventCard extends Card {
 
     private final boolean isFinal;
+
     // Event
     private Function<Integer, Integer> method;
 

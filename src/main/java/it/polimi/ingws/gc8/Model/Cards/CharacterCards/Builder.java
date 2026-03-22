@@ -1,7 +1,8 @@
-package it.polimi.ingws.gc8.Model.Deck.Cards.CharacterCards;
+package it.polimi.ingws.gc8.Model.Cards.CharacterCards;
 
-import it.polimi.ingws.gc8.Model.Deck.Cards.Card;
-import it.polimi.ingws.gc8.Model.Deck.Cards.CharacterCard;
+import it.polimi.ingws.gc8.Model.Cards.Card;
+import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
+import it.polimi.ingws.gc8.Model.Enum.Era;
 
 public class Builder extends CharacterCard {
 
@@ -10,9 +11,8 @@ public class Builder extends CharacterCard {
     private final int prestigePoints;
 
     // Constructor
-    // Constructor
-    public Builder(String front, String back, Card.Era era, int foodBonus, int prestigePoints) {
-        super(front, back, era);
+    public Builder(String front, String back, Era era, int foodBonus, int prestigePoints, int numberOfPlayers) {
+        super(front, back, era, numberOfPlayers);
         this.foodBonus = foodBonus;
         this.prestigePoints = prestigePoints;
     }
