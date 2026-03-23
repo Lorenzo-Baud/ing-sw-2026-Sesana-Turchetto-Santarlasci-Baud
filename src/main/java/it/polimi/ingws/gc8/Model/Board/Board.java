@@ -154,7 +154,8 @@ public class Board {
                         prestigeBonus = node.get("prestigeBonus").asInt();
                         tribeDeck.add(new EventCard(front, back, era, isFinal, EventType.hunt, players -> {
                             for (Player player : players) {
-
+                                player.addFood(player.getTribe().getNumberOfHunters());
+                                player.addPrestigePoints(player.getTribe().getNumberOfHunters() * prestigeBonus);
                             }
                         }));
                         break;
@@ -166,14 +167,48 @@ public class Board {
                         malusPoints = node.get("malusPoints").asInt();
                         tribeDeck.add(new EventCard(front, back, era, isFinal, EventType.cavePaintings, players -> {
                             for (Player player : players) {
-
+                                int artists = player.getTribe().getNumberOfArtists();
+                                if(artists >= bonusArists) {
+                                    player.addPrestigePoints(artists * bonusPoints);
+                                } else if(artists <= malusArists) {
+                                    player.removePrestigePoints(artists * malusPoints);
+                                }
                             }
                         }));
                         break;
                     case "ritual":
                         prestigeBonus = node.get("prestigeBonus").asInt();
                         prestigeMalus = node.get("prestigeMalus").asInt();
-                        tribeDeck.add(new EventCard(front, back, era, isFinal, EventType.ritual, null));
+                        tribeDeck.add(new EventCard(front, back, era, isFinal, EventType.ritual, players -> {
+
+                            // Calculates min and max icons
+                            int maxIcons = players.get(0).getTribe().getShamanIcons();
+                            int minIcons = players.get(0).getTribe().getShamanIcons();
+                            for (Player player : players) {
+                                int icons = player.getTribe().getShamanIcons();
+                                if(icons > maxIcons) {
+                                    maxIcons = icons;
+                                }
+                                if(icons < minIcons) {
+                                    minIcons = icons;
+                                }
+                            }
+
+                            // Distributes bonus and malus
+                            for (Player player : players) {
+
+                                player.addFood(player.getTribe().getNumberOfHunters());
+                                player.addPrestigePoints(player.getTribe().getNumberOfHunters() * prestigeBonus);
+
+                                if(player.getTribe().getShamanIcons() == maxIcons) {
+                                    player.addPrestigePoints(prestigeBonus);
+                                } else if(player.getTribe().getShamanIcons() == minIcons) {
+                                    player.removePrestigePoints(prestigeMalus);
+                                }
+
+                            }
+
+                        }));
                         break;
                 }
 

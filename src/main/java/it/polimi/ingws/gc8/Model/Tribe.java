@@ -2,6 +2,7 @@ package it.polimi.ingws.gc8.Model;
 
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
+import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Shaman;
 import it.polimi.ingws.gc8.Model.Enum.CharacterType;
 
 import java.util.ArrayList;
@@ -87,5 +88,39 @@ public class Tribe {
         }
         return totalCollectors;
     }
+
+    // Returns number of hunters
+    public int getNumberOfHunters() {
+        int totalHunters = 0;
+        for (CharacterCard card : characters) {
+            if (card.getCharacterType() == CharacterType.HUNTER) {
+                totalHunters++;
+            }
+        }
+        return totalHunters;
+    }
+
+    // Returns number of shaman icons
+    public int getShamanIcons() {
+        int totalIcons = 0;
+        for (CharacterCard card : characters) {
+            if (card.getCharacterType() == CharacterType.SHAMAN) {
+                totalIcons = totalIcons + ((Shaman)card).getnIcons();
+            }
+        }
+        return totalIcons;
+    }
+
+    // Returns number of artists
+    public int getNumberOfArtists() {
+        int totalArtists = 0;
+        for (CharacterCard card : characters) {
+            if (card.getCharacterType() == CharacterType.ARTIST) {
+                totalArtists++;
+            }
+        }
+        return totalArtists;
+    }
+
 
 }
