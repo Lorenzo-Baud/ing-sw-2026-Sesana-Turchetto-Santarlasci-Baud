@@ -1,0 +1,327 @@
+[
+  {
+    "_comment": "=== ERA I — 6 cards ==="
+  },
+
+  {
+    "id": "E1_01",
+    "foodCost": 4,
+    "prestigeBonus": 3,
+    "era": "ERA_1",
+    "front": "",
+    "back": "",
+    "effectType": "SET_COMPLETION",
+    "effectParams": {
+      "foodReward": 5
+    },
+    "description": "Gain 5 food each time you complete a set of 6 different Character types"
+  },
+
+  {
+    "id": "E1_02",
+    "foodCost": 4,
+    "prestigeBonus": 4,
+    "era": "ERA_1",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "sustenanceType": "COLLECTOR",
+      "sustenanceReductionPerUnit": 1
+    },
+    "description": "During Sustenance, reduce food cost by 1 per Collector in your tribe"
+  },
+
+  {
+    "id": "E1_03",
+    "foodCost": 3,
+    "prestigeBonus": 4,
+    "era": "ERA_1",
+    "front": "",
+    "back": "",
+    "effectType": "INVENTOR_PAIR",
+    "effectParams": {
+      "foodReward": 3
+    },
+    "description":"Gain 3 Food each time you get a pair of identical Inventors"
+  },
+
+  {
+    "id": "E1_04",
+    "foodCost": 5,
+    "prestigeBonus": 2,
+    "era": "ERA_1",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "shield": true
+    },
+    "description": "During Shamanic Ritual, you do not lose Prestige points if you have fewer icons than the other players."
+  },
+
+  {
+    "id": "E1_05",
+    "foodCost": 3,
+    "prestigeBonus": 3,
+    "era": "ERA_1",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "extraFoodOnTurnOrder": 1
+    },
+    "description": "When your Totem lands on a Turn Order slot with a food bonus, gain 1 extra food"
+  },
+
+  {
+    "id": "E1_06",
+    "foodCost": 5,
+    "prestigeBonus": 3,
+    "era": "ERA_1",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "sustenanceType": "ARTIST",
+      "sustenanceReductionPerUnit": 1
+    },
+    "description_VERIFY": "During Sustenance, reduce food cost by 1 per Artist in your tribe"
+  },
+
+  {
+    "_comment": "=== ERA II — 7 cards ==="
+  },
+
+  {
+    "id": "E2_01",
+    "foodCost": 7,
+    "prestigeBonus": 0,
+    "era": "ERA_2",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "doubleShamanBonus": true,
+      "gainOnTie": true
+    },
+    "description": "During Shamanic Ritual, if you have the majority, gain double PP. Also gain PP on tie"
+  },
+
+  {
+    "id": "E2_02",
+    "foodCost": 6,
+    "prestigeBonus": 4,
+    "era": "ERA_2",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "shamanExtraIcons": 3
+    },
+    "description": "During Shamanic Ritual, you receive 3 extra icons"
+  },
+
+  {
+    "id": "E2_03",
+    "foodCost": 6,
+    "prestigeBonus": 4,
+    "era": "ERA_2",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "endGameStrategy": "DOUBLE_BUILDER"
+    },
+    "description": "At end of game, gain double the PP printed on your Builder cards"
+  },
+
+  {
+    "id": "E2_04",
+    "foodCost": 5,
+    "prestigeBonus": 6,
+    "era": "ERA_2",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "triggerEvent": "CAVE_PAINTING",
+      "targetType": "ARTIST",
+      "foodPerUnit": 1
+    },
+    "description": "During Cave Painting event, gain 1 food per Artist in your tribe"
+  },
+
+  {
+    "id": "E2_05",
+    "foodCost": 7,
+    "prestigeBonus": 4,
+    "era": "ERA_2",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "sustenanceType": "INVENTOR",
+      "sustenanceReductionPerUnit": 1
+    },
+    "description_VERIFY": "During Sustenance, reduce food cost by 1 per Inventor in your tribe"
+  },
+
+  {
+    "id": "E2_06",
+    "foodCost": 7,
+    "prestigeBonus": 2,
+    "era": "ERA_2",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "triggerEvent": "HUNT",
+      "targetType": "HUNTER",
+      "foodPerUnit": 1,
+      "ppPerUnit": 1
+    },
+    "description": "During Hunt event, gain 1 extra food and 1 extra PP per Hunter"
+  },
+
+  {
+    "id": "E2_07",
+    "foodCost": 5,
+    "prestigeBonus": 6,
+    "era": "ERA_2",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "endGameStrategy": "SET",
+      "endGamePPPerUnit": 6
+    },
+    "description": "At end of game, gain 6 PP per complete set of 6 different Character types"
+  },
+
+  {
+    "_comment": "=== ERA III — 8 cards ==="
+  },
+
+  {
+    "id": "E3_01",
+    "foodCost": 9,
+    "prestigeBonus": 3,
+    "era": "ERA_3",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "extraCardPick": true
+    },
+    "description": "After all Totems return to Turn Order, pick 1 extra Character/Building from upper row"
+  },
+
+  {
+    "id": "E3_02",
+    "foodCost": 10,
+    "prestigeBonus": 25,
+    "era": "ERA_3",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {},
+    "description": "At end of game, gain 25 PP"
+  },
+
+  {
+    "id": "E3_03",
+    "foodCost": 8,
+    "prestigeBonus": 8,
+    "era": "ERA_3",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "endGameStrategy": "TYPE",
+      "targetType": "HUNTER",
+      "endGamePPPerUnit": 3
+    },
+    "description_VERIFY": "At end of game, gain 3 PP per Hunter in your tribe"
+  },
+
+  {
+    "id": "E3_04",
+    "foodCost": 7,
+    "prestigeBonus": 4,
+    "era": "ERA_3",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "endGameStrategy": "TYPE",
+      "targetType": "SHAMAN",
+      "endGamePPPerUnit": 4
+    },
+    "description": "At end of game, gain 4 PP per Shaman in your tribe"
+  },
+
+  {
+    "id": "E3_05",
+    "foodCost": 7,
+    "prestigeBonus": 4,
+    "era": "ERA_3",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "endGameStrategy": "TYPE",
+      "targetType": "ARTIST",
+      "endGamePPPerUnit": 4
+    },
+    "description": "At end of game, gain 4 PP per Artist in your tribe"
+  },
+
+  {
+    "id": "E3_06",
+    "foodCost": 6,
+    "prestigeBonus": 3,
+    "era": "ERA_3",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "endGameStrategy": "TYPE",
+      "targetType": "BUILDER",
+      "endGamePPPerUnit": 4
+    },
+    "description": "At end of game, gain 4 PP per Builder in your tribe"
+  },
+
+  {
+    "id": "E3_07",
+    "foodCost": 6,
+    "prestigeBonus": 6,
+    "era": "ERA_3",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "endGameStrategy": "TYPE",
+      "targetType": "INVENTOR",
+      "endGamePPPerUnit": 2
+    },
+    "description": "At end of game, gain 2 PP per Inventor in your tribe"
+  },
+
+  {
+    "id": "E3_08",
+    "foodCost": 7,
+    "prestigeBonus": 6,
+    "era": "ERA_3",
+    "front": "",
+    "back": "",
+    "effectType": "CONFIGURABLE",
+    "effectParams": {
+      "endGameStrategy": "TYPE",
+      "targetType": "COLLECTOR",
+      "endGamePPPerUnit": 4
+    },
+    "description": "At end of game, gain 4 PP per Collector in your tribe"
+  }
+]

@@ -37,6 +37,7 @@ build/
 .vscode/
 
 ### Mac OS ###
+CLAUDE.md
+AGENT.md
 .DS_Store
 
-CLAUDE.md

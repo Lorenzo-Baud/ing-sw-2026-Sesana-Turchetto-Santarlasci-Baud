@@ -1,12 +1,11 @@
 package it.polimi.ingws.gc8.Model;
 
-import it.polimi.ingws.gc8.Model.Cards.BuildingCard;
+import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Enum.TotemColor;
 
 public class Player {
 
-    // Attributes
     private final int playerId;
     private final String nickname;
     private final TotemColor totemColor;
@@ -14,7 +13,6 @@ public class Player {
     private int prestigePoints;
     private final Tribe tribe;
 
-    // Constructor
     public Player(int playerId, String nickname, TotemColor totemColor) {
         this.playerId = playerId;
         this.nickname = nickname;
@@ -24,60 +22,113 @@ public class Player {
         this.tribe = new Tribe();
     }
 
-    // Food management
+    /**
+     * @return current food points
+     */
     public int getFood() {
         return foodPoints;
     }
 
+    /**
+     * Adds food to the player. Amount must be non-negative.
+     *
+     * @param amount food to add
+     */
     public void addFood(int amount) {
-        // TODO: implement
+        foodPoints += amount;
     }
 
+    /**
+     * Removes food from the player. Food can go negative.
+     *
+     * @param amount food to remove
+     */
     public void removeFood(int amount) {
-        // TODO: implement
+        foodPoints -= amount;
     }
 
-    // Prestige management
+    // PRESTIGE MANAGEMENT
+
+    /**
+     * @return current prestige points
+     */
     public int getPrestigePoints() {
         return prestigePoints;
     }
 
+    /**
+     * Adds prestige points to the player. Amount must be non-negative.
+     *
+     * @param amount PP to add
+     */
     public void addPrestigePoints(int amount) {
-        // TODO: implement
+        prestigePoints += amount;
     }
 
+    /**
+     * Removes prestige points from the player. PP can go negative (penalty).
+     *
+     * @param amount PP to remove
+     */
     public void removePrestigePoints(int amount) {
-        // TODO: implement
+        prestigePoints -= amount;
     }
 
-    // Tribe delegation
-    public Tribe getTribe() {
-        return tribe;
-    }
+    // CARD MANAGEMENT
 
+    /**
+     * Adds a Character card to the tribe, triggering building effects.
+     *
+     * @param card the Character card to add
+     */
     public void addCharacterCard(CharacterCard card) {
-        tribe.addCharacter(card);
+        tribe.addCharacter(this, card);
     }
 
+    /**
+     * Adds a Building card to the tribe.
+     *
+     * @param card the Building card to add
+     */
     public void addBuildingCard(BuildingCard card) {
         tribe.addBuilding(card);
     }
 
-    // Tribe aggregated queries (delegated to Tribe)
-    public int getTotalBuildingDiscount() {
-        // TODO: implement (based on Collector cards in tribe)
-        return 0;
+    // TRIBE QUERIES
+
+    /**
+     * @return the player's tribe
+     */
+    public Tribe getTribe() {
+        return tribe;
     }
 
+    /**
+     * @return total number of Character cards in the tribe
+     */
     public int getTotalCharacters() {
-        return tribe.getCharacters().size();
+        return tribe.getTotalCharacters();
     }
 
+    /**
+     * @return total number of Shaman cards in the tribe
+     */
     public int getTotalShamans() {
         return tribe.getTotalShamans();
     }
 
-    // Getters for identity fields
+    /**
+     * Returns the food discount applied when purchasing a Building card.
+     * Based on Builder cards in the tribe (sum of their foodBonus).
+     *
+     * @return total building purchase discount
+     */
+    public int getTotalBuildingDiscount() {
+        return tribe.getTotalBuilderDiscount();
+    }
+
+    // IDENTITY GETTERS
+
     public int getPlayerId() {
         return playerId;
     }
@@ -89,5 +140,4 @@ public class Player {
     public TotemColor getTotemColor() {
         return totemColor;
     }
-
 }

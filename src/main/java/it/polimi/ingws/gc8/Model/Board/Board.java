@@ -2,7 +2,7 @@ package it.polimi.ingws.gc8.Model.Board;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.polimi.ingws.gc8.Model.Cards.BuildingCard;
+import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.Card;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.*;
@@ -133,7 +133,7 @@ public class Board {
 
                                 // Calculates total food cost
                                 int foodCost = player.getTribe().getCharacters().size();
-                                foodCost = foodCost - (player.getTribe().getNumberOfCollectors() * 3);
+                                foodCost = foodCost - (player.getTribe().countByType(Collector.class) * 3);
 
                                 // Removes food to player
                                 if(foodCost <= player.getFood()) {
