@@ -2,10 +2,10 @@ package it.polimi.ingws.gc8.Model;
 
 import it.polimi.ingws.gc8.Model.Board.Board;
 import it.polimi.ingws.gc8.Model.Board.OfferTile;
-import it.polimi.ingws.gc8.Model.Deck.Cards.BuildingCard;
-import it.polimi.ingws.gc8.Model.Deck.Cards.Card;
-import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.CharacterCard;
-import it.polimi.ingws.gc8.Model.Deck.Cards.TribeCards.EventCard;
+import it.polimi.ingws.gc8.Model.Cards.BuildingCard;
+import it.polimi.ingws.gc8.Model.Cards.Card;
+import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
+import it.polimi.ingws.gc8.Model.Cards.EventCard;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 
@@ -99,7 +99,7 @@ public interface GameModel {
      * @return list of available cards in that row
      *         (excluding Event cards)
      */
-    List<Card> getAvailableCardsFromRow(Row row);
+    List<Card> getAvailableCardsFromRow(int row);
 
     /**
      * Checks whether the player can afford a Building card,

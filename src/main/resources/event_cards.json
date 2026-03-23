@@ -1,0 +1,18 @@
+[
+
+  {"front": "", "back": "", "isFinal": false, "era":  1, "type": "sustenance", "prestigeMalus": 1},
+  {"front": "", "back": "", "isFinal": false, "era":  1, "type": "hunt", "prestigeBonus": 1},
+  {"front": "", "back": "", "isFinal": false, "era":  1, "type": "cavePaintings", "malusArtists": 0, "bonusArtists": 1, "bonusPoints": 1, "malusPoints": 2},
+  {"front": "", "back": "", "isFinal": false, "era":  1, "type": "ritual", "prestigeBonus": 5, "prestigeMalus": "3"},
+
+  {"front": "", "back": "", "isFinal": false, "era":  2, "type": "sustenance", "prestigeMalus": 2},
+  {"front": "", "back": "", "isFinal": false, "era":  2, "type": "hunt", "prestigeBonus": 2},
+  {"front": "", "back": "", "isFinal": false, "era":  2, "type": "cavePaintings", "malusArtists": 1, "bonusArtists": 2, "bonusPoints": 2, "malusPoints": 2},
+  {"front": "", "back": "", "isFinal": false, "era":  2, "type": "ritual", "prestigeBonus": 10, "prestigeMalus": 5},
+
+  {"front": "", "back": "", "isFinal": true, "era": 3, "type": "sustenance", "prestigeMalus": 3},
+  {"front": "", "back": "", "isFinal": false, "era": 3, "type": "hunt", "prestigeBonus": 3},
+  {"front": "", "back": "", "isFinal": false, "era": 3, "type": "cavePaintings", "malusArtists": 2, "bonusArtists": 3, "bonusPoints": 3, "malusPoints": 2},
+  {"front": "", "back": "", "isFinal": true, "era": 3, "type": "ritual", "prestigeBonus": 15, "prestigeMalus": 7}
+
+]

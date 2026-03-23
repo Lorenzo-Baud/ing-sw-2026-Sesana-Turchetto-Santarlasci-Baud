@@ -1,4 +1,6 @@
-package it.polimi.ingws.gc8.Model.Deck.Cards;
+package it.polimi.ingws.gc8.Model.Cards;
+
+import it.polimi.ingws.gc8.Model.Enum.Era;
 
 public class BuildingCard extends Card {
 
