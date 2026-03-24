@@ -9,7 +9,6 @@ import it.polimi.ingws.gc8.Model.Cards.CharacterCards.*;
 import it.polimi.ingws.gc8.Model.Cards.EventCard;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.EventType;
-import it.polimi.ingws.gc8.Model.Player;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -49,7 +48,6 @@ public class Board {
     public void loadTribeDeck() {
 
         // Character cards parsing
-        // *************************************************************************
         ObjectMapper mapper = new ObjectMapper();
 
         try {
@@ -82,7 +80,7 @@ public class Board {
 
                     case "shaman":
                         int iconsCount = node.get("icons").asInt();
-                        tribeDeck.add(new Shaman(front, back, era, players, iconsCount));
+                        tribeDeck.add(new Shaman(front, back, era, iconsCount, players));
                         break;
 
                     case "hunter":
@@ -93,23 +91,21 @@ public class Board {
                     case "builder":
                         int pPoints = node.get("prestigePoints").asInt();
                         int fBonus = node.get("foodBonus").asInt();
-                        tribeDeck.add(new Builder(front, back, era, players, pPoints, fBonus));
+                        tribeDeck.add(new Builder(front, back, era, fBonus, pPoints, players));
                         break;
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        // *************************************************************************
 
         // Event cards parsing
-        // *************************************************************************
+
         try {
             JsonNode root = mapper.readTree(new File("src/main/resources/event_cards.json"));
 
             for (JsonNode node : root) {
 
-                // Field extraction
                 String front = node.get("front").asText();
                 String back = node.get("back").asText();
                 int eraNum = node.get("era").asInt();
@@ -117,76 +113,33 @@ public class Board {
                 Era era = Era.values()[eraNum - 1];
                 String type = node.get("type").asText();
 
-                // Optional variables
-                int prestigeBonus;
-                int prestigeMalus;
-                int bonusArists;
-                int malusArists;
-                int bonusPoints;
-                int malusPoints;
+                int prestigeBonus = node.has("prestigeBonus") ? node.get("prestigeBonus").asInt() : 0;
+                int prestigeMalus = node.has("prestigeMalus") ? node.get("prestigeMalus").asInt() : 0;
+                int bonusArtists = node.has("bonusArtists") ? node.get("bonusArtists").asInt() : 0;
+                int malusArtists = node.has("malusArtists") ? node.get("malusArtists").asInt() : 0;
+                int bonusPoints = node.has("bonusPoints") ? node.get("bonusPoints").asInt() : 0;
+                int malusPoints = node.has("malusPoints") ? node.get("malusPoints").asInt() : 0;
 
+                EventType eventType;
                 switch (type) {
-                    case "sustenance":
-                        prestigeMalus = node.get("prestigeMalus").asInt();
-                        tribeDeck.add(new EventCard(front, back, era, isFinal, EventType.sustenance, players -> {
-                            for (Player player : players) {
-
-                                // Calculates total food cost
-                                int foodCost = player.getTribe().getCharacters().size();
-                                foodCost = foodCost - (player.getTribe().countByType(Collector.class) * 3);
-
-                                // Removes food to player
-                                if(foodCost <= player.getFood()) {
-                                    player.removeFood(foodCost);
-                                } else {
-
-                                    // Calculates how many prestige points to remove
-                                    player.removePrestigePoints((foodCost - player.getFood()) * prestigeMalus);
-                                    player.removeFood(player.getFood());
-
-                                }
-
-                            }
-                        }));
-                        break;
-
-                    case "hunt":
-                        prestigeBonus = node.get("prestigeBonus").asInt();
-                        tribeDeck.add(new EventCard(front, back, era, isFinal, EventType.hunt, players -> {
-                            for (Player player : players) {
-
-                            }
-                        }));
-                        break;
-
-                    case "cavePaintings":
-                        bonusArists = node.get("bonusArtists").asInt();
-                        malusArists = node.get("malusArtists").asInt();
-                        bonusPoints = node.get("bonusPoints").asInt();
-                        malusPoints = node.get("malusPoints").asInt();
-                        tribeDeck.add(new EventCard(front, back, era, isFinal, EventType.cavePaintings, players -> {
-                            for (Player player : players) {
-
-                            }
-                        }));
-                        break;
-                    case "ritual":
-                        prestigeBonus = node.get("prestigeBonus").asInt();
-                        prestigeMalus = node.get("prestigeMalus").asInt();
-                        tribeDeck.add(new EventCard(front, back, era, isFinal, EventType.ritual, null));
-                        break;
+                    case "sustenance":    eventType = EventType.sustenance; break;
+                    case "hunt":          eventType = EventType.hunt; break;
+                    case "cavePaintings": eventType = EventType.cavePaintings; break;
+                    case "ritual":        eventType = EventType.ritual; break;
+                    default: throw new IllegalArgumentException("Unknown event type: " + type);
                 }
 
-
+                tribeDeck.add(new EventCard(front, back, era, isFinal, eventType,
+                        prestigeBonus, prestigeMalus,
+                        bonusArtists, malusArtists,
+                        bonusPoints, malusPoints));
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-        // *************************************************************************
 
         // Deck shuffle
-        // *************************************************************************
         // Shuffles deck
         java.util.Collections.shuffle(tribeDeck);
 
@@ -197,9 +150,6 @@ public class Board {
             }
             return c1.getEra().ordinal() < c2.getEra().ordinal() ? -1 : 1;
         });
-        // *************************************************************************
-
-
     }
 
     public List<Card> getTribeDeck() {
@@ -324,7 +274,7 @@ public class Board {
         List<Card> newTribeCards = new ArrayList<>();
         for (int i = 0; i < playerCount + 1; i++) {
             if (!tribeDeck.isEmpty()) {
-                Card card = (Card) tribeDeck.remove(tribeDeck.size() - 1);
+                Card card = tribeDeck.remove(0);
                 upperRow.add(card);
                 newTribeCards.add(card);
             }
@@ -351,7 +301,7 @@ public class Board {
         List<Card> buildingDeck = (era == 2) ? era2BuildingDeck : era3BuildingDeck;
         for (int i = 0; i < 4; i++) {
             if (!buildingDeck.isEmpty()) {
-                lowerRow.add(buildingDeck.remove(buildingDeck.size() - 1));
+                upperRow.add(buildingDeck.remove(buildingDeck.size() - 1));
             }
         }
     }

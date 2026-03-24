@@ -3,7 +3,7 @@
   {"front": "", "back": "", "isFinal": false, "era":  1, "type": "sustenance", "prestigeMalus": 1},
   {"front": "", "back": "", "isFinal": false, "era":  1, "type": "hunt", "prestigeBonus": 1},
   {"front": "", "back": "", "isFinal": false, "era":  1, "type": "cavePaintings", "malusArtists": 0, "bonusArtists": 1, "bonusPoints": 1, "malusPoints": 2},
-  {"front": "", "back": "", "isFinal": false, "era":  1, "type": "ritual", "prestigeBonus": 5, "prestigeMalus": "3"},
+  {"front": "", "back": "", "isFinal": false, "era":  1, "type": "ritual", "prestigeBonus": 5, "prestigeMalus": 3},
 
   {"front": "", "back": "", "isFinal": false, "era":  2, "type": "sustenance", "prestigeMalus": 2},
   {"front": "", "back": "", "isFinal": false, "era":  2, "type": "hunt", "prestigeBonus": 2},

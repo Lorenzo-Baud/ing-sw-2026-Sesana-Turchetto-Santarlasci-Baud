@@ -1,16 +1,22 @@
 package it.polimi.ingws.gc8.Model;
 
+import it.polimi.ingws.gc8.Model.Board.Board;
 import it.polimi.ingws.gc8.Model.Board.OfferTile;
+import it.polimi.ingws.gc8.Model.Board.TurnOrderTrack;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.Card;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Cards.EventCard;
+import it.polimi.ingws.gc8.Model.Enum.CharacterType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
+import it.polimi.ingws.gc8.Model.Enum.EventType;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
-import it.polimi.ingws.gc8.Model.Board.Board;
+import it.polimi.ingws.gc8.Model.Enum.TotemColor;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Concrete implementation of the MESOS game model.
@@ -45,335 +51,469 @@ public class MesosGame implements GameModel {
         distributeInitialFood();
         this.currentRound = 1;
         this.phase = GamePhase.POSITIONING;
-        // TODO: notify observers that the game has started
     }
 
     /**
-     * Creates Players.
+     * Creates Players with default names and sequential TotemColors.
      */
     private void initializePlayers(int numPlayers) {
-        // TODO
+        players.clear(); //remove eventual player left from a previews configuration
+        TotemColor[] colors = TotemColor.values();
+        for (int i = 0; i < numPlayers; i++) {
+            players.add(new Player(i + 1, "Player " + (i + 1), colors[i]));
+        }
     }
 
     /**
-     * Creates the Board: loads Tribe and Building cards, prepares decks,
-     * reveals initial rows and positions the Offer tiles.
+     * Creates the Board, loads the Tribe deck, distributes Building cards
+     * into era decks, and fills the initial lower and upper rows.
      */
     private void initializeBoard(int numPlayers) {
-        // TODO: create the Board
-        // TODO: filter Offer tiles based on player count
-        // TODO: build the Offer track
-        // TODO: select the correct Turn Order tile
-        // TODO: filter Tribe cards based on player count
-        // TODO: build the Tribe deck (Era I on top, Era II, Era III, Final Events at bottom)
+        board = new Board(numPlayers);
+        board.setTurnOrderTrack(new TurnOrderTrack(numPlayers));
         board.loadTribeDeck();
-        // TODO: load Building cards via BuildingCard.loadFromJson()
-        // TODO: filter Building cards based on player count
-        // TODO: distribute Building cards into 3 decks by Era
-        // TODO: reveal Era I Building cards in the upper row
-        // TODO: draw cards for the lower row (numPlayers + 1)
-        // TODO: draw cards for the upper row (numPlayers + 4)
+
+        // Load building cards and split by era
+        List<BuildingCard> allBuildings = BuildingCard.loadFromJson(
+                "src/main/resources/buildings_cards.json");
+        List<Card> era2Buildings = new ArrayList<>();
+        List<Card> era3Buildings = new ArrayList<>();
+        List<BuildingCard> era1Buildings = new ArrayList<>();
+
+        for (BuildingCard b : allBuildings) {
+            switch (b.getEra()) {
+                case ERA_1: era1Buildings.add(b);  break;
+                case ERA_2: era2Buildings.add(b);  break;
+                case ERA_3: era3Buildings.add(b);  break;
+            }
+        }
+
+        board.setEra2BuildingDeck(era2Buildings);
+        board.setEra3BuildingDeck(era3Buildings);
+
+        // Era I buildings are visible in the upper row from the start
+        board.getUpperRow().addAll(era1Buildings);
+
+        // Draw tribe cards for the lower row (numPlayers + 1)
+        for (int i = 0; i < numPlayers + 1; i++) {
+            if (!board.getTribeDeck().isEmpty()) {
+                board.getLowerRow().add(board.getTribeDeck().remove(0));
+            }
+        }
+
+        // Draw tribe cards for the upper row (numPlayers + 4)
+        for (int i = 0; i < numPlayers + 4; i++) {
+            if (!board.getTribeDeck().isEmpty()) {
+                board.getUpperRow().add(board.getTribeDeck().remove(0));
+            }
+        }
     }
 
     /**
-     * Randomly places Totems on the Turn Order tile.
+     * Randomly places Totems on the Turn Order track.
      */
     private void randomizeTurnOrder() {
-        // TODO: place Totems in random order on the TurnOrderTrack
+        List<Player> shuffled = new ArrayList<>(players);
+        Collections.shuffle(shuffled);
+        TurnOrderTrack track = board.getTurnOrderTrack();
+        for (Player player : shuffled) {
+            track.placePlayer(player);
+        }
     }
 
     /**
-     * Distributes initial food based on position:
-     * 1st player: 2 Food, 2nd-3rd: 3 Food, 4th-5th: 4 Food.
+     * Distributes initial food based on turn-order position:
+     * 1st: 2 food, 2nd–3rd: 3 food, 4th–5th: 4 food.
      */
     private void distributeInitialFood() {
-        // TODO: iterate over players in TurnOrderTrack order
-        //       and assign food based on position
+        int[] foodByPosition = {2, 3, 3, 4, 4};
+        List<Player> order = board.getTurnOrderTrack().getCurrentOrder();
+        for (int i = 0; i < order.size(); i++) {
+            Player player = order.get(i);
+            if (player != null) {
+                player.addFood(foodByPosition[i]);
+            }
+        }
     }
 
     // GETTERS
+    @Override
+    public int getNumPlayers() { return numPlayers; }
 
     @Override
-    public int getNumPlayers() {
-        return numPlayers;
-    }
+    public int getCurrentRound() { return currentRound; }
 
     @Override
-    public int getCurrentRound() {
-        return currentRound;
-    }
+    public Era getCurrentEra() { return currentEra; }
 
     @Override
-    public Era getCurrentEra() {
-        return currentEra;
-    }
+    public GamePhase getPhase() { return phase; }
 
     @Override
-    public GamePhase getPhase() {
-        return phase;
-    }
+    public List<Player> getPlayers() { return players; }
 
     @Override
-    public List<Player> getPlayers() {
-        return players;
-    }
-
-    @Override
-    public Board getBoard() {
-        return board;
-    }
+    public Board getBoard() { return board; }
 
     @Override
     public Player getCurrentPlayer() {
-        // TODO
-        return null;
+        if (players.isEmpty()) return null;
+        return players.get(currentPlayerIndex);
     }
 
     // PHASE 1: TOTEM PLACEMENT
-
     @Override
     public List<Player> getPlayersInTurnOrder() {
-        // TODO: read order from the Board's TurnOrderTrack
-        return null;
+        List<Player> order = new ArrayList<>();
+        for (Player p : board.getTurnOrderTrack().getCurrentOrder()) {
+            if (p != null) order.add(p);
+        }
+        return order;
     }
 
     @Override
     public List<OfferTile> getAvailableOfferTiles() {
-        // TODO
-        return null;
+        return board.getOfferTrack().getAvailableTiles();
     }
 
     @Override
     public void placeTotem(Player player, OfferTile offerTile) {
-        // TODO: verify that the current phase is POSITIONING
-        // TODO: verify that it is this player's turn
-        // TODO: verify that the Offer tile is free
-        // TODO: place the Totem on the tile (offerTile.placeTotem(player))
-        // TODO: advance to the next player
-        // TODO: if all players have placed, switch to GamePhase.ACTION_RESOLUTION
+        board.getOfferTrack().placeTotem(offerTile.getId(), player);
+        currentPlayerIndex = (currentPlayerIndex + 1) % numPlayers;
+        if (allTotemsPlaced()) {
+            phase = GamePhase.ACTION_RESOLUTION;
+            currentPlayerIndex = 0;
+        }
     }
 
     @Override
     public boolean allTotemsPlaced() {
-        // TODO: check that all fillable Offer tiles have a Totem
-        //       or that all players have placed
-        return false;
+        return board.getOfferTrack().isFull(numPlayers);
     }
 
     // PHASE 2: ACTION RESOLUTION
-
     @Override
     public List<Player> getPlayersInOfferOrder() {
-        // TODO: return players in the order of their Totems on the Offer track
-        //       (left to right, tile A to G)
-        return null;
+        List<Player> order = new ArrayList<>();
+        for (OfferTile tile : board.getOfferTrack().getResolutionOrder()) {
+            order.add(tile.getOccupant());
+        }
+        return order;
     }
 
+    /**
+     * @param row 0 = lower row, 1 = upper row
+     * @return available (non-Event) cards in the requested row
+     */
     @Override
     public List<Card> getAvailableCardsFromRow(int row) {
-        // TODO: delegate to board.getUpperRow() or board.getLowerRow()
-        // TODO: filter out Event cards (not pickable)
-        // TODO: return only Character and Building cards
-        return null;
+        List<Card> source = (row == 0) ? board.getLowerRow() : board.getUpperRow();
+        List<Card> available = new ArrayList<>();
+        for (Card card : source) {
+            if (!(card instanceof EventCard)) {
+                available.add(card);
+            }
+        }
+        return available;
     }
 
     @Override
     public boolean canPlayerAffordBuilding(Player player, BuildingCard building) {
-        // TODO: calculate discount: player.getTotalBuilderDiscount()
-        // TODO: calculate effective cost: building.getEffectiveCost(discount)
-        // TODO: compare with player.getFood()
-        return false;
+        int discount = player.getTribe().getTotalBuilderDiscount();
+        return building.getEffectiveCost(discount) <= player.getFood();
     }
 
     @Override
     public void takeCharacterCard(Player player, CharacterCard card) {
-        // TODO: verify that the card is in a row accessible to the player
-        // TODO: remove the card from the Board row
-        // TODO: add to tribe: player.getTribe().addCharacter(player, card)
-        //       (this automatically triggers onCardAdded on buildings)
-        // TODO: handle immediate Hunter bonus icon effect
+        board.getLowerRow().remove(card);
+        board.getUpperRow().remove(card);
+        player.addCharacterCard(card);
     }
 
     @Override
     public void takeBuildingCard(Player player, BuildingCard card) {
-        // TODO: verify that the player can afford it (canPlayerAffordBuilding)
-        // TODO: calculate effective cost and remove food from player
-        // TODO: remove the card from the Board row
-        // TODO: add to tribe: player.getTribe().addBuilding(card)
+        int discount = player.getTribe().getTotalBuilderDiscount();
+        player.removeFood(card.getEffectiveCost(discount));
+        board.getLowerRow().remove(card);
+        board.getUpperRow().remove(card);
+        player.addBuildingCard(card);
     }
 
     @Override
     public void takeFood(Player player) {
-        // TODO: verify that the player is on tile A (5-player games only)
-        // TODO: add 3 Food to the player
+        player.addFood(3);
     }
 
     @Override
     public void returnTotemToTurnOrder(Player player) {
-        // TODO: remove the Totem from the Offer tile
-        // TODO: place the Totem in the first free slot on the TurnOrderTrack
-        // TODO: if the slot has a food bonus, assign it
-        // TODO: query buildings for extra food:
-        //       for (BuildingCard building : player.getTribe().getBuildings())
-        //           extraFood += building.getEffect().getExtraFoodOnTurnOrder();
-        //       if base bonus > 0, also add extraFood
-        // TODO: if it's the last slot, the player pays 1 food
-        //       (if no food, lose 2 PP instead; the building has no effect here)
-        // TODO: update turn order for the next round
+        // Remove totem from the offer track
+        for (OfferTile tile : board.getOfferTrack().getTiles()) {
+            if (player.equals(tile.getOccupant())) {
+                tile.removeTotem();
+                break;
+            }
+        }
+
+        // Place in the first free slot on the TurnOrderTrack
+        TurnOrderTrack track = board.getTurnOrderTrack();
+        int slotIndex = track.placePlayer(player);
+
+        // Food bonus: buildings only add extra food if there is a base food bonus on the slot
+        int baseBonus = track.getFoodBonusForSlot(slotIndex);
+        if (baseBonus > 0) {
+            player.addFood(baseBonus + player.getTribe().getTotalExtraFoodOnTurnOrder());
+        }
+
+        // Last slot penalty: pay 1 food, or lose PP if no food available
+        if (track.isLastSlot(slotIndex)) {
+            int foodPenalty = track.getLastSlotFoodPenalty();
+            if (player.getFood() >= foodPenalty) {
+                player.removeFood(foodPenalty);
+            } else {
+                // lastSlotPrestigePenalty is stored as a negative value in the JSON
+                player.addPrestigePoints(track.getLastSlotPrestigePenalty());
+            }
+        }
     }
 
     @Override
     public boolean canPickExtraCard(Player player) {
-        // TODO: iterate over the player's buildings
-        //       and check if any has canPickExtraCard() == true
-        return false;
+        return player.getTribe().canPickExtraCard();
     }
 
     @Override
     public void takeExtraCard(Player player, Card card) {
-        // TODO: verify that canPickExtraCard(player) is true
-        // TODO: verify that the card is in the upper row
-        // TODO: if it's a Building, the player must pay the cost
-        // TODO: remove the card from the upper row
-        // TODO: add to tribe (same as takeCharacterCard or takeBuildingCard)
+        if (card instanceof BuildingCard) {
+            takeBuildingCard(player, (BuildingCard) card);
+        } else if (card instanceof CharacterCard) {
+            takeCharacterCard(player, (CharacterCard) card);
+        }
     }
 
     // END OF ROUND: EVENT RESOLUTION
 
     @Override
     public List<EventCard> getEventsToResolve() {
-        // TODO: collect Event cards from the lower row
-        // TODO: if it's the last round, also include those from the upper row
-        // TODO: order them: Sustenance always last
-        // TODO: if two events of the same type, order by Era
-        return null;
+        List<EventCard> events = new ArrayList<>(board.getLowerRowEvents());
+
+        // In the final round (tribe deck exhausted), also resolve upper row events
+        if (isGameOver()) {
+            for (Card card : board.getUpperRow()) {
+                if (card instanceof EventCard) {
+                    events.add((EventCard) card);
+                }
+            }
+        }
+
+        // Order: Sustenance always last; within the same type, order by Era
+        events.sort(Comparator
+                .comparing((EventCard e) -> e.getEventType() == EventType.sustenance ? 1 : 0)
+                .thenComparing(e -> e.getEra().ordinal()));
+
+        return events;
     }
 
     @Override
     public void resolveHunt(EventCard event) {
-        // TODO: for each player:
-        //   - count Hunters: player.getTribe().countByType(HUNTER)
-        //   - assign base food: +1 per Hunter
-        //   - assign base PP: event.getPPPerUnit() per Hunter
-        //   - trigger buildings: player.getTribe().triggerOnEvent(player, event)
-        //     (ConfigurableEffect with triggerEvent=HUNT adds extra food and PP)
+        for (Player player : players) {
+            Tribe tribe = player.getTribe();
+            int hunters = tribe.countByType(CharacterType.HUNTER);
+
+            // Base reward: +1 food and +prestigeBonus PP per Hunter
+            player.addFood(hunters);
+            player.addPrestigePoints(hunters * event.getPrestigeBonus());
+
+            // Building effects (e.g. E2_06: extra food and PP per Hunter)
+            tribe.triggerOnEvent(player, event);
+        }
     }
 
     @Override
     public void resolveShamanicRitual(EventCard event) {
-        // TODO: STEP 1 - collect icons for all players:
-        //   for each player:
-        //   - base icons: player.getTribe().getTotalShamanIcons()
-        //   - building bonus icons: player.getTribe().getTotalShamanIconBonus()
-        //   - total = base + bonus
+        // STEP 1: collect total shaman icons (base + building bonus) for each player
+        int[] icons = new int[players.size()];
+        for (int i = 0; i < players.size(); i++) {
+            Tribe tribe = players.get(i).getTribe();
+            icons[i] = tribe.getTotalShamanIcons() + tribe.getTotalShamanIconBonus();
+        }
 
-        // TODO: STEP 2 - determine max and min across all players
+        // STEP 2: determine max and min
+        int max = Integer.MIN_VALUE;
+        int min = Integer.MAX_VALUE;
+        for (int icon : icons) {
+            if (icon > max) max = icon;
+            if (icon < min) min = icon;
+        }
 
-        // TODO: STEP 3 - apply bonuses and penalties:
-        //   for each player:
-        //   - if has max:
-        //     - pp = event.getBonusPP()
-        //     - if player.getTribe().hasShamanDouble(): pp *= 2
-        //     - assign PP
-        //   - if has min:
-        //     - if !player.getTribe().hasShamanShield(): lose event.getPenaltyPP()
-        //   - handle tie (all tied: first gain, then lose)
-        //   - handle gainsOnShamanTie (building that grants PP even on tie)
+        boolean allTied = (max == min);
+
+        // STEP 3: apply bonuses and penalties
+        for (int i = 0; i < players.size(); i++) {
+            Player player = players.get(i);
+            Tribe tribe = player.getTribe();
+
+            boolean hasMax = (icons[i] == max);
+            boolean hasMin = (icons[i] == min);
+
+            // Bonus for majority (or tie if building grants PP on tie)
+            if (hasMax && (!allTied || tribe.hasShamanGainOnTie())) {
+                int pp = event.getPrestigeBonus();
+                if (tribe.hasShamanDouble()) pp *= 2;
+                player.addPrestigePoints(pp);
+            }
+
+            // Penalty for minority (or all tied), unless shielded
+            if (hasMin && !tribe.hasShamanShield()) {
+                player.removePrestigePoints(event.getPrestigeMalus());
+            }
+        }
     }
 
     @Override
     public void resolveCavePainting(EventCard event) {
-        // TODO: for each player:
-        //   - count Artists: player.getTribe().countByType(ARTIST)
-        //   - if artists < event minimum threshold: lose penalty PP
-        //   - if artists >= threshold: gain PP per Artist
-        //   - trigger buildings: player.getTribe().triggerOnEvent(player, event)
-        //     (ConfigurableEffect with triggerEvent=CAVE_PAINTING adds food)
+        for (Player player : players) {
+            Tribe tribe = player.getTribe();
+            int artists = tribe.countByType(CharacterType.ARTIST);
+
+            if (artists < event.getMalusArtists()) {
+                player.removePrestigePoints(event.getMalusPoints());
+            } else if (artists >= event.getBonusArtists()) {
+                player.addPrestigePoints(artists * event.getBonusPoints());
+            }
+
+            // Building effects (e.g. E2_04: food per Artist during Cave Painting)
+            tribe.triggerOnEvent(player, event);
+        }
     }
 
     @Override
     public void resolveSustenance(EventCard event) {
-        // TODO: for each player:
-        //   - count Characters: player.getTribe().getTotalCharacters()
-        //   - Collector discount: player.getTribe().getCollectorDiscount()
-        //   - building discount: player.getTribe().getTotalSustenanceReduction(player)
-        //   - food to pay = max(0, characters - collectorDiscount - buildingDiscount)
-        //   - pay as much food as possible (player MUST pay)
-        //   - for each unfed Character: lose event.getPenaltyPP()
+        for (Player player : players) {
+            Tribe tribe = player.getTribe();
+
+            int totalCharacters = tribe.getTotalCharacters();
+            int collectorDiscount = tribe.getCollectorDiscount();
+            int buildingDiscount = tribe.getTotalSustenanceReduction(player);
+            int foodToPay = Math.max(0, totalCharacters - collectorDiscount - buildingDiscount);
+
+            if (foodToPay <= player.getFood()) {
+                player.removeFood(foodToPay);
+            } else {
+                int unfed = foodToPay - player.getFood();
+                player.removeFood(player.getFood());
+                player.removePrestigePoints(unfed * event.getPrestigeMalus());
+            }
+        }
     }
 
     // END OF ROUND: ROW AND ERA MANAGEMENT
 
     @Override
     public void discardLowerRow() {
-        // TODO
+        board.discardLowerRowTribeCards();
     }
 
     @Override
     public void moveUpperRowToLower() {
-        // TODO
+        board.moveUpperRowTribeCardsToLower();
     }
 
     @Override
     public void refreshUpperRow() {
-        // TODO
+        for (int i = 0; i < numPlayers + 4; i++) {
+            if (!board.getTribeDeck().isEmpty()) {
+                board.getUpperRow().add(board.getTribeDeck().remove(0));
+            }
+        }
+        currentRound++;
     }
 
     @Override
     public boolean checkNewEra() {
-        // TODO
+        Era maxEraInRow = currentEra;
+        for (Card card : board.getUpperRow()) {
+            if (card.getEra().ordinal() > maxEraInRow.ordinal()) {
+                maxEraInRow = card.getEra();
+            }
+        }
+        if (maxEraInRow != currentEra) {
+            currentEra = maxEraInRow;
+            handleNewEra();
+            return true;
+        }
         return false;
     }
 
     /**
      * Handles the transition to a new Era:
-     * moves/discards Building cards and reveals those of the new Era.
+     * discards lower row buildings (Era III only), moves upper row buildings
+     * to the lower row, and reveals the new era's building cards in the upper row.
      */
     private void handleNewEra() {
-        // TODO: 1. discard Building cards from the lower row
-        //          (only happens at the start of Era III)
-        // TODO: 2. move Building cards from the upper row to the lower row
-        //          (happens at the start of Era II and Era III)
-        // TODO: 3. place the new Era's Building cards in the upper row
-        //          next to the Tribe cards
+        if (currentEra == Era.ERA_3) {
+            board.discardLowerRowBuilding();
+        }
+        board.moveUpperRowBuildingToLower();
+        board.revealEraBuildings(currentEra == Era.ERA_2 ? 2 : 3);
     }
 
     // END OF GAME
-
+    /**
+     * Returns true when the tribe deck is exhausted (last round in progress).
+     * At this point, upper row events are also resolved.
+     */
     @Override
     public boolean isGameOver() {
-        // TODO: return true if currentRound > 10
-        //       (Tribe deck is exhausted and rows can no longer be refreshed)
-        return false;
+        return board.getTribeDeck().isEmpty();
     }
 
     @Override
     public void calculateFinalScores() {
-        // TODO: for each player:
-        //   Tribe tribe = player.getTribe();
-        //
-        //   // Inventor PP: numInventors * numDistinctInventionIcons
-        //   int inventorPP = tribe.countByType(INVENTOR) * tribe.getDistinctInventionIcons();
-        //
-        //   // Artist PP: 10 PP per pair
-        //   int artistPP = tribe.getArtistPairs() * 10;
-        //
-        //   // Builder PP: summed directly from cards
-        //
-        //   // Printed Building PP
-        //   int printedBuildingPP = tribe.getPrintedBuildingPrestige();
-        //
-        //   // Building effect PP
-        //   int effectPP = tribe.triggerOnGameEnd(player);
-        //
-        //   player.addPrestigePoints(inventorPP + artistPP + printedBuildingPP + effectPP);
+        for (Player player : players) {
+            Tribe tribe = player.getTribe();
+
+            // Inventor PP: count × distinct invention icons
+            int inventorPP = tribe.countByType(CharacterType.INVENTOR)
+                           * tribe.getDistinctInventionIcons();
+
+            // Artist PP: 10 PP per pair
+            int artistPP = tribe.getArtistPairs() * 10;
+
+            // Builder PP: sum of printed PP on Builder cards
+            int builderPP = tribe.getBuilderPrestigeSum();
+
+            // Printed Building PP (prestigeBonus printed on each Building card)
+            int printedBuildingPP = tribe.getPrintedBuildingPrestige();
+
+            // Building effect PP (end-game strategies: TYPE, SET, DOUBLE_BUILDER)
+            int effectPP = tribe.triggerOnGameEnd(player);
+
+            player.addPrestigePoints(inventorPP + artistPP + builderPP
+                    + printedBuildingPP + effectPP);
+        }
     }
 
     @Override
     public Player getWinner() {
-        // TODO: find the player with the most PP
-        //  on tie, the one with the most food wins
-        //  on further tie, return null (shared victory)
-        return null;
+        if (players.isEmpty()) return null;
+        Player best = players.get(0);
+        boolean tied = false;
+        for (int i = 1; i < players.size(); i++) {
+            Player p = players.get(i);
+            int ppCmp = Integer.compare(p.getPrestigePoints(), best.getPrestigePoints());
+            if (ppCmp > 0) {
+                best = p;
+                tied = false;
+            } else if (ppCmp == 0) {
+                int foodCmp = Integer.compare(p.getFood(), best.getFood());
+                if (foodCmp > 0) {
+                    best = p;
+                    tied = false;
+                } else if (foodCmp == 0) {
+                    tied = true;
+                }
+            }
+        }
+        return tied ? null : best;
     }
 }
