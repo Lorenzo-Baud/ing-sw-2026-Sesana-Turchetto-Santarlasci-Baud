@@ -9,7 +9,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class TurnOrderTrackTest_getters {
+class TurnOrderTrackTest_semplici {
 
     private TurnOrderTrack turnOrderTrack;
     private Player player;
