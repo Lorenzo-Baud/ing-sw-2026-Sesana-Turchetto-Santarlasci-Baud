@@ -7,7 +7,7 @@ import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Builder;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Collector;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Inventor;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Shaman;
-import it.polimi.ingws.gc8.Model.Cards.EventCard;
+import it.polimi.ingws.gc8.Model.Cards.EventCards.EventCard;
 import it.polimi.ingws.gc8.Model.Enum.CharacterType;
 
 import java.util.ArrayList;

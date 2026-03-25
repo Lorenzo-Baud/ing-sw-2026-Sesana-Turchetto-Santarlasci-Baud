@@ -1,6 +1,7 @@
 package it.polimi.ingws.gc8;
 
 
+import it.polimi.ingws.gc8.Model.Cards.EventCards.EventCard;
 import it.polimi.ingws.gc8.Model.GameModel;
 import it.polimi.ingws.gc8.Model.MesosGame;
 
@@ -21,8 +22,8 @@ public class App
         game.getBoard().getTribeDeck().forEach(card -> {
             System.out.println(card.getEra());
             // If instanceof EventCard, print the event type
-             if (card instanceof it.polimi.ingws.gc8.Model.Cards.EventCard) {
-                 System.out.println(((it.polimi.ingws.gc8.Model.Cards.EventCard) card).getEventType());
+             if (card instanceof EventCard) {
+                 System.out.println(((EventCard) card).getEventType());
              }
         });
 

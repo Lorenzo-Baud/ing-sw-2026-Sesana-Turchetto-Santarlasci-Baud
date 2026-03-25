@@ -1,8 +1,7 @@
 package it.polimi.ingws.gc8.Model.Cards.BuildingCard;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
-import it.polimi.ingws.gc8.Model.Cards.EventCard;
+import it.polimi.ingws.gc8.Model.Cards.EventCards.EventCard;
 import it.polimi.ingws.gc8.Model.Enum.CharacterType;
 import it.polimi.ingws.gc8.Model.Enum.EventType;
 import it.polimi.ingws.gc8.Model.Player;
