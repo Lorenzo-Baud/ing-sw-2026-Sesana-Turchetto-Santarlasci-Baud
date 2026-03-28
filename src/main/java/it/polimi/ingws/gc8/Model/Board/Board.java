@@ -11,30 +11,32 @@ import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.EventType;
 
 import java.io.File;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 public class Board {
-    private List<Card> tribeDeck;
+    private Deque<Card> tribeDeck;
     private List<Card> lowerRow;
     private List<Card> upperRow;
     private TurnOrderTrack turnOrderTrack;
-    private List<Card> era2BuildingDeck;
-    private List<Card> era3BuildingDeck;
+    private Deque<Card> era2BuildingDeck;
+    private Deque<Card> era3BuildingDeck;
     private OfferTrack offerTrack;
 
     public Board(int playerCount) {
-        this.tribeDeck = new ArrayList<>();
+        this.tribeDeck = new ArrayDeque<>();
         this.lowerRow = new ArrayList<>();
         this.upperRow = new ArrayList<>();
-        this.era2BuildingDeck = new ArrayList<>();
-        this.era3BuildingDeck = new ArrayList<>();
+        this.era2BuildingDeck = new ArrayDeque<>();
+        this.era3BuildingDeck = new ArrayDeque<>();
         this.offerTrack = new OfferTrack(playerCount);
     }
 
-    public Board(List<Card> tribeDeck, List<Card> lowerRow, List<Card> upperRow,
-                 TurnOrderTrack turnOrderTrack, List<Card> era2BuildingDeck,
-                 List<Card> era3BuildingDeck, OfferTrack offerTrack) {
+    public Board(Deque<Card> tribeDeck, List<Card> lowerRow, List<Card> upperRow,
+                 TurnOrderTrack turnOrderTrack, Deque<Card> era2BuildingDeck,
+                 Deque<Card> era3BuildingDeck, OfferTrack offerTrack) {
         this.tribeDeck = tribeDeck;
         this.lowerRow = lowerRow;
         this.upperRow = upperRow;
@@ -44,9 +46,7 @@ public class Board {
         this.offerTrack = offerTrack;
     }
 
-    // Parses JSON file to get tribe cards data
     public void loadTribeDeck() {
-
         ObjectMapper mapper = new ObjectMapper();
 
         // Character cards parsing
@@ -54,8 +54,6 @@ public class Board {
             JsonNode root = mapper.readTree(new File("src/main/resources/character_cards.json"));
 
             for (JsonNode node : root) {
-
-                // Field extraction
                 String type = node.get("type").asText();
                 String front = node.get("front").asText();
                 String back = node.get("back").asText();
@@ -67,27 +65,22 @@ public class Board {
                     case "artist":
                         tribeDeck.add(new Artist(front, back, era, players));
                         break;
-
                     case "inventor":
                         int icon = node.get("icon").asInt();
                         tribeDeck.add(new Inventor(front, back, era, players, icon));
                         break;
-
                     case "collector":
                         int discount = node.get("foodDiscount").asInt();
                         tribeDeck.add(new Collector(front, back, era, players, discount));
                         break;
-
                     case "shaman":
                         int iconsCount = node.get("icons").asInt();
                         tribeDeck.add(new Shaman(front, back, era, iconsCount, players));
                         break;
-
                     case "hunter":
                         boolean bonus = node.get("bonus").asBoolean();
                         tribeDeck.add(new Hunter(front, back, era, players, bonus));
                         break;
-
                     case "builder":
                         int pPoints = node.get("prestigePoints").asInt();
                         int fBonus = node.get("foodBonus").asInt();
@@ -104,8 +97,6 @@ public class Board {
             JsonNode root = mapper.readTree(new File("src/main/resources/event_cards.json"));
 
             for (JsonNode node : root) {
-
-                // Field extraction
                 String front = node.get("front").asText();
                 String back = node.get("back").asText();
                 int eraNum = node.get("era").asInt();
@@ -113,7 +104,6 @@ public class Board {
                 Era era = Era.values()[eraNum - 1];
                 String type = node.get("type").asText();
 
-                // Optional variables
                 int prestigeBonus;
                 int prestigeMalus;
                 int bonusArists;
@@ -126,12 +116,10 @@ public class Board {
                         prestigeMalus = node.get("prestigeMalus").asInt();
                         tribeDeck.add(new SustenanceEventCard(front, back, era, isFinal, EventType.sustenance, prestigeMalus));
                         break;
-
                     case "hunt":
                         prestigeBonus = node.get("prestigeBonus").asInt();
                         tribeDeck.add(new HuntEventCard(front, back, era, isFinal, EventType.hunt, prestigeBonus));
                         break;
-
                     case "cavePaintings":
                         bonusArists = node.get("bonusArtists").asInt();
                         malusArists = node.get("malusArtists").asInt();
@@ -148,88 +136,47 @@ public class Board {
                         tribeDeck.add(new RitualEventCard(front, back, era, isFinal, EventType.ritual, prestigeBonus, prestigeMalus));
                         break;
                 }
-
-
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // Deck shuffle
-        // Shuffles deck
-        java.util.Collections.shuffle(tribeDeck);
-
-        // Orders deck by era
-        tribeDeck.sort((c1, c2) -> {
-            if (c1.getEra() == c2.getEra()) {
-                return 0;
-            }
+        // Shuffle e sort per era
+        List<Card> temp = new ArrayList<>(tribeDeck);
+        java.util.Collections.shuffle(temp);
+        temp.sort((c1, c2) -> {
+            if (c1.getEra() == c2.getEra()) return 0;
             return c1.getEra().ordinal() < c2.getEra().ordinal() ? -1 : 1;
         });
+        tribeDeck = new ArrayDeque<>(temp);
     }
 
-    public List<Card> getTribeDeck() {
-        return tribeDeck;
-    }
+    public Deque<Card> getTribeDeck() { return tribeDeck; }
+    public void setTribeDeck(Deque<Card> tribeDeck) { this.tribeDeck = tribeDeck; }
 
-    public void setTribeDeck(List<Card> tribeDeck) {
-        this.tribeDeck = tribeDeck;
-    }
+    public List<Card> getLowerRow() { return lowerRow; }
+    public void setLowerRow(List<Card> lowerRow) { this.lowerRow = lowerRow; }
 
-    public List<Card> getLowerRow() {
-        return lowerRow;
-    }
+    public List<Card> getUpperRow() { return upperRow; }
+    public void setUpperRow(List<Card> upperRow) { this.upperRow = upperRow; }
 
-    public void setLowerRow(List<Card> lowerRow) {
-        this.lowerRow = lowerRow;
-    }
+    public TurnOrderTrack getTurnOrderTrack() { return turnOrderTrack; }
+    public void setTurnOrderTrack(TurnOrderTrack turnOrderTrack) { this.turnOrderTrack = turnOrderTrack; }
 
-    public List<Card> getUpperRow() {
-        return upperRow;
-    }
+    public Deque<Card> getEra2BuildingDeck() { return era2BuildingDeck; }
+    public void setEra2BuildingDeck(Deque<Card> era2BuildingDeck) { this.era2BuildingDeck = era2BuildingDeck; }
 
-    public void setUpperRow(List<Card> upperRow) {
-        this.upperRow = upperRow;
-    }
+    public Deque<Card> getEra3BuildingDeck() { return era3BuildingDeck; }
+    public void setEra3BuildingDeck(Deque<Card> era3BuildingDeck) { this.era3BuildingDeck = era3BuildingDeck; }
 
-    public TurnOrderTrack getTurnOrderTrack() {
-        return turnOrderTrack;
-    }
+    public OfferTrack getOfferTrack() { return offerTrack; }
+    public void setOfferTrack(OfferTrack offerTrack) { this.offerTrack = offerTrack; }
 
-    public void setTurnOrderTrack(TurnOrderTrack turnOrderTrack) {
-        this.turnOrderTrack = turnOrderTrack;
-    }
-
-    public List<Card> getEra2BuildingDeck() {
-        return era2BuildingDeck;
-    }
-
-    public void setEra2BuildingDeck(List<Card> era2BuildingDeck) {
-        this.era2BuildingDeck = era2BuildingDeck;
-    }
-
-    public List<Card> getEra3BuildingDeck() {
-        return era3BuildingDeck;
-    }
-
-    public void setEra3BuildingDeck(List<Card> era3BuildingDeck) {
-        this.era3BuildingDeck = era3BuildingDeck;
-    }
-
-    public OfferTrack getOfferTrack() {
-        return offerTrack;
-    }
-
-    public void setOfferTrack(OfferTrack offerTrack) {
-        this.offerTrack = offerTrack;
-    }
-
-    public void setupInitialRows(int PlayerCount, List<BuildingCard> era1Building){ //fare check se va bene
-        for (int i = 0; i < PlayerCount + 1; i++) {
+    public void setupInitialRows(int playerCount, List<BuildingCard> era1Building) {
+        for (int i = 0; i < playerCount + 1; i++) {
             lowerRow.add(era1Building.get(i));
         }
-        for (int i = PlayerCount + 1; i < PlayerCount * 2 + 2; i++) {
+        for (int i = playerCount + 1; i < playerCount * 2 + 2; i++) {
             upperRow.add(era1Building.get(i));
         }
     }
@@ -287,11 +234,11 @@ public class Board {
         lowerRow.addAll(tribeCards);
     }
 
-    public List<Card> refillUpperRow(int playerCount) { //fare check se va bene
+    public List<Card> refillUpperRow(int playerCount) {
         List<Card> newTribeCards = new ArrayList<>();
         for (int i = 0; i < playerCount + 1; i++) {
             if (!tribeDeck.isEmpty()) {
-                Card card = tribeDeck.remove(0);
+                Card card = tribeDeck.removeFirst();
                 upperRow.add(card);
                 newTribeCards.add(card);
             }
@@ -299,7 +246,7 @@ public class Board {
         return newTribeCards;
     }
 
-    public void discardLowerRowBuilding(){
+    public void discardLowerRowBuilding() {
         lowerRow.removeIf(card -> card instanceof BuildingCard);
     }
 
@@ -314,11 +261,11 @@ public class Board {
         lowerRow.addAll(buildingCards);
     }
 
-    public void revealEraBuildings(int era) { //fare check se va bene
-        List<Card> buildingDeck = (era == 2) ? era2BuildingDeck : era3BuildingDeck;
+    public void revealEraBuildings(int era) {
+        Deque<Card> buildingDeck = (era == 2) ? era2BuildingDeck : era3BuildingDeck;
         for (int i = 0; i < 4; i++) {
             if (!buildingDeck.isEmpty()) {
-                upperRow.add(buildingDeck.remove(buildingDeck.size() - 1));
+                upperRow.add(buildingDeck.removeLast());
             }
         }
     }

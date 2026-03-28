@@ -7,6 +7,7 @@ import it.polimi.ingws.gc8.Model.Player;
 
 import java.util.List;
 
+// TODO: creare e implementare il metodo getPrestigeBonus
 /**
  * Represents an Event card in the Tribe deck.
  * Pure data object — all resolution logic lives in MesosGame.

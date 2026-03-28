@@ -36,7 +36,7 @@ public class OfferTile {
         return lowerRowPicks;
     }
 
-    public int getMinPlayers() {
+    public Integer getMinPlayers() {
         return minPlayers;
     }
 
