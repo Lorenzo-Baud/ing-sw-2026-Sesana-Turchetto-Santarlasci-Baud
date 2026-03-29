@@ -71,7 +71,7 @@ public class MesosGame implements GameModel {
     private void initializeBoard(int numPlayers) {
         board = new Board(numPlayers);
         board.setTurnOrderTrack(new TurnOrderTrack(numPlayers));
-        board.loadTribeDeck();
+        //levato loadTribeDeck da qui, pk lo chiamo dentro al costruttore di Board
 
         // Load building cards and split by era
         List<BuildingCard> allBuildings = BuildingCard.loadFromJson(

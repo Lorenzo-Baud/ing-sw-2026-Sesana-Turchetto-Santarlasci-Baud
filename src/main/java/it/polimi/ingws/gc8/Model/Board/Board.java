@@ -11,10 +11,7 @@ import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.EventType;
 
 import java.io.File;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
 
 public class Board {
     private Deque<Card> tribeDeck;
@@ -25,6 +22,7 @@ public class Board {
     private Deque<Card> era3BuildingDeck;
     private OfferTrack offerTrack;
 
+    //usato da mesosGame per avviare la board
     public Board(int playerCount) {
         this.tribeDeck = new ArrayDeque<>();
         this.lowerRow = new ArrayList<>();
@@ -32,8 +30,11 @@ public class Board {
         this.era2BuildingDeck = new ArrayDeque<>();
         this.era3BuildingDeck = new ArrayDeque<>();
         this.offerTrack = new OfferTrack(playerCount);
+        this.turnOrderTrack = new TurnOrderTrack(playerCount);
+        loadTribeDeck(playerCount);
     }
 
+    //usato solo per i test
     public Board(Deque<Card> tribeDeck, List<Card> lowerRow, List<Card> upperRow,
                  TurnOrderTrack turnOrderTrack, Deque<Card> era2BuildingDeck,
                  Deque<Card> era3BuildingDeck, OfferTrack offerTrack) {
@@ -46,10 +47,17 @@ public class Board {
         this.offerTrack = offerTrack;
     }
 
-    public void loadTribeDeck() {
+    public void loadTribeDeck(int playerCount) {
         ObjectMapper mapper = new ObjectMapper();
 
-        // Character cards parsing
+        List<Card> eraI = new ArrayList<>();
+        List<Card> eraII = new ArrayList<>();
+        List<Card> eraIII = new ArrayList<>();
+        List<Card> finalEvents = new ArrayList<>();
+
+        // =========================================================
+        // PARSING CARTE PERSONAGGIO
+        // =========================================================
         try {
             JsonNode root = mapper.readTree(new File("src/main/resources/character_cards.json"));
 
@@ -59,32 +67,51 @@ public class Board {
                 String back = node.get("back").asText();
                 int eraNum = node.get("era").asInt();
                 int players = node.get("number_of_players").asInt();
-                Era era = Era.values()[eraNum - 1];
+                Era era = Era.values()[eraNum - 1]; // 1→ERA_1, 2→ERA_2, 3→ERA_3
+
+                // filtra carte non valide per il numero di giocatori
+                if (players != 0 && players > playerCount) continue;
+
+                Card card = null;
 
                 switch (type) {
                     case "artist":
-                        tribeDeck.add(new Artist(front, back, era, players));
+                        card = new Artist(front, back, era, players);
                         break;
                     case "inventor":
                         int icon = node.get("icon").asInt();
-                        tribeDeck.add(new Inventor(front, back, era, players, icon));
+                        card = new Inventor(front, back, era, players, icon);
                         break;
                     case "collector":
                         int discount = node.get("foodDiscount").asInt();
-                        tribeDeck.add(new Collector(front, back, era, players, discount));
+                        card = new Collector(front, back, era, players, discount);
                         break;
                     case "shaman":
                         int iconsCount = node.get("icons").asInt();
-                        tribeDeck.add(new Shaman(front, back, era, iconsCount, players));
+                        card = new Shaman(front, back, era, iconsCount, players);
                         break;
                     case "hunter":
                         boolean bonus = node.get("bonus").asBoolean();
-                        tribeDeck.add(new Hunter(front, back, era, players, bonus));
+                        card = new Hunter(front, back, era, players, bonus);
                         break;
                     case "builder":
                         int pPoints = node.get("prestigePoints").asInt();
                         int fBonus = node.get("foodBonus").asInt();
-                        tribeDeck.add(new Builder(front, back, era, fBonus, pPoints, players));
+                        card = new Builder(front, back, era, fBonus, pPoints, players);
+                        break;
+                }
+
+                if (card == null) continue;
+
+                switch (era) {
+                    case ERA_1:
+                        eraI.add(card);
+                        break;
+                    case ERA_2:
+                        eraII.add(card);
+                        break;
+                    case ERA_3:
+                        eraIII.add(card);
                         break;
                 }
             }
@@ -92,7 +119,9 @@ public class Board {
             e.printStackTrace();
         }
 
-        // Event cards parsing
+        // =========================================================
+        // PARSING CARTE EVENTO
+        // =========================================================
         try {
             JsonNode root = mapper.readTree(new File("src/main/resources/event_cards.json"));
 
@@ -101,54 +130,75 @@ public class Board {
                 String back = node.get("back").asText();
                 int eraNum = node.get("era").asInt();
                 boolean isFinal = node.get("isFinal").asBoolean();
-                Era era = Era.values()[eraNum - 1];
+                Era era = Era.values()[eraNum - 1]; // 1→ERA_1, 2→ERA_2, 3→ERA_3
                 String type = node.get("type").asText();
 
-                int prestigeBonus;
-                int prestigeMalus;
-                int bonusArists;
-                int malusArists;
-                int bonusPoints;
-                int malusPoints;
+                Card card = null;
 
                 switch (type) {
                     case "sustenance":
-                        prestigeMalus = node.get("prestigeMalus").asInt();
-                        tribeDeck.add(new SustenanceEventCard(front, back, era, isFinal, EventType.sustenance, prestigeMalus));
+                        int prestigeMalus = node.get("prestigeMalus").asInt();
+                        card = new SustenanceEventCard(front, back, era, isFinal, EventType.sustenance, prestigeMalus);
                         break;
                     case "hunt":
-                        prestigeBonus = node.get("prestigeBonus").asInt();
-                        tribeDeck.add(new HuntEventCard(front, back, era, isFinal, EventType.hunt, prestigeBonus));
+                        int prestigeBonus = node.get("prestigeBonus").asInt();
+                        card = new HuntEventCard(front, back, era, isFinal, EventType.hunt, prestigeBonus);
                         break;
                     case "cavePaintings":
-                        bonusArists = node.get("bonusArtists").asInt();
-                        malusArists = node.get("malusArtists").asInt();
-                        bonusPoints = node.get("bonusPoints").asInt();
-                        malusPoints = node.get("malusPoints").asInt();
-                        tribeDeck.add(new CavePaintingsEventCard(
+                        int bonusArtists = node.get("bonusArtists").asInt();
+                        int malusArtists = node.get("malusArtists").asInt();
+                        int bonusPoints = node.get("bonusPoints").asInt();
+                        int malusPoints = node.get("malusPoints").asInt();
+                        card = new CavePaintingsEventCard(
                                 front, back, era, isFinal, EventType.cavePaintings,
-                                bonusArists, malusArists, bonusPoints, malusPoints
-                        ));
+                                bonusArtists, malusArtists, bonusPoints, malusPoints
+                        );
                         break;
                     case "ritual":
-                        prestigeBonus = node.get("prestigeBonus").asInt();
-                        prestigeMalus = node.get("prestigeMalus").asInt();
-                        tribeDeck.add(new RitualEventCard(front, back, era, isFinal, EventType.ritual, prestigeBonus, prestigeMalus));
+                        int ritualBonus = node.get("prestigeBonus").asInt();
+                        int ritualMalus = node.get("prestigeMalus").asInt();
+                        card = new RitualEventCard(front, back, era, isFinal, EventType.ritual, ritualBonus, ritualMalus);
                         break;
+                }
+
+                if (card == null) continue;
+
+                // carte Evento Finale → lista separata, sempre in fondo al mazzo
+                if (isFinal) {
+                    finalEvents.add(card);
+                } else {
+                    switch (era) {
+                        case ERA_1:
+                            eraI.add(card);
+                            break;
+                        case ERA_2:
+                            eraII.add(card);
+                            break;
+                        case ERA_3:
+                            eraIII.add(card);
+                            break;
+                    }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // Shuffle e sort per era
-        List<Card> temp = new ArrayList<>(tribeDeck);
-        java.util.Collections.shuffle(temp);
-        temp.sort((c1, c2) -> {
-            if (c1.getEra() == c2.getEra()) return 0;
-            return c1.getEra().ordinal() < c2.getEra().ordinal() ? -1 : 1;
-        });
-        tribeDeck = new ArrayDeque<>(temp);
+        // =========================================================
+        // COMPOSIZIONE MAZZO FINALE
+        // =========================================================
+
+        // mescola separatamente ogni Era
+        Collections.shuffle(eraI);
+        Collections.shuffle(eraII);
+        Collections.shuffle(eraIII);
+
+        // compone il mazzo: ERA_1 in cima, poi ERA_2, ERA_3, Evento Finale in fondo
+        tribeDeck.clear();
+        for (Card c : eraI)        tribeDeck.addLast(c);
+        for (Card c : eraII)       tribeDeck.addLast(c);
+        for (Card c : eraIII)      tribeDeck.addLast(c);
+        for (Card c : finalEvents) tribeDeck.addLast(c);
     }
 
     public Deque<Card> getTribeDeck() { return tribeDeck; }
