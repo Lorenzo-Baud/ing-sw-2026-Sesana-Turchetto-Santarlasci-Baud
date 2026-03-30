@@ -21,4 +21,7 @@ public class SustenanceEventCard extends EventCard {
 
     }
 
+    public int getPrestigeMalus() {
+        return prestigeMalus;
+    }
 }

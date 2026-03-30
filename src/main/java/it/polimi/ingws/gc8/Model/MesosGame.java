@@ -6,7 +6,7 @@ import it.polimi.ingws.gc8.Model.Board.TurnOrderTrack;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.Card;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
-import it.polimi.ingws.gc8.Model.Cards.EventCards.EventCard;
+import it.polimi.ingws.gc8.Model.Cards.EventCards.*;
 import it.polimi.ingws.gc8.Model.Enum.CharacterType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.EventType;
@@ -69,9 +69,9 @@ public class MesosGame implements GameModel {
      * into era decks, and fills the initial lower and upper rows.
      */
     private void initializeBoard(int numPlayers) {
+
         board = new Board(numPlayers);
         board.setTurnOrderTrack(new TurnOrderTrack(numPlayers));
-        //levato loadTribeDeck da qui, pk lo chiamo dentro al costruttore di Board
 
         // Load building cards and split by era
         List<BuildingCard> allBuildings = BuildingCard.loadFromJson(
@@ -97,14 +97,14 @@ public class MesosGame implements GameModel {
         // Draw tribe cards for the lower row (numPlayers + 1)
         for (int i = 0; i < numPlayers + 1; i++) {
             if (!board.getTribeDeck().isEmpty()) {
-                board.getLowerRow().add(board.getTribeDeck().remove(0));
+                board.getLowerRow().add(board.getTribeDeck().removeFirst());
             }
         }
 
         // Draw tribe cards for the upper row (numPlayers + 4)
         for (int i = 0; i < numPlayers + 4; i++) {
             if (!board.getTribeDeck().isEmpty()) {
-                board.getUpperRow().add(board.getTribeDeck().remove(0));
+                board.getUpperRow().add(board.getTribeDeck().removeFirst());
             }
         }
     }
@@ -314,7 +314,7 @@ public class MesosGame implements GameModel {
     }
 
     @Override
-    public void resolveHunt(EventCard event) {
+    public void resolveHunt(HuntEventCard event) {
         for (Player player : players) {
             Tribe tribe = player.getTribe();
             int hunters = tribe.countByType(CharacterType.HUNTER);
@@ -329,7 +329,7 @@ public class MesosGame implements GameModel {
     }
 
     @Override
-    public void resolveShamanicRitual(EventCard event) {
+    public void resolveShamanicRitual(RitualEventCard event) {
         // STEP 1: collect total shaman icons (base + building bonus) for each player
         int[] icons = new int[players.size()];
         for (int i = 0; i < players.size(); i++) {
@@ -370,7 +370,7 @@ public class MesosGame implements GameModel {
     }
 
     @Override
-    public void resolveCavePainting(EventCard event) {
+    public void resolveCavePainting(CavePaintingsEventCard event) {
         for (Player player : players) {
             Tribe tribe = player.getTribe();
             int artists = tribe.countByType(CharacterType.ARTIST);
@@ -387,7 +387,7 @@ public class MesosGame implements GameModel {
     }
 
     @Override
-    public void resolveSustenance(EventCard event) {
+    public void resolveSustenance(SustenanceEventCard event) {
         for (Player player : players) {
             Tribe tribe = player.getTribe();
 
@@ -422,7 +422,7 @@ public class MesosGame implements GameModel {
     public void refreshUpperRow() {
         for (int i = 0; i < numPlayers + 4; i++) {
             if (!board.getTribeDeck().isEmpty()) {
-                board.getUpperRow().add(board.getTribeDeck().remove(0));
+                board.getUpperRow().add(board.getTribeDeck().removeFirst());
             }
         }
         currentRound++;

@@ -27,4 +27,19 @@ public class CavePaintingsEventCard extends EventCard {
 
     }
 
+    public int getBonusArtists() {
+        return bonusArtists;
+    }
+
+    public int getMalusArtists() {
+        return malusArtists;
+    }
+
+    public int getBonusPoints() {
+        return bonusPoints;
+    }
+
+    public int getMalusPoints() {
+        return malusPoints;
+    }
 }

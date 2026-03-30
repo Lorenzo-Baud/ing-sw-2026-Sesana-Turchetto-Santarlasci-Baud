@@ -23,4 +23,11 @@ public class RitualEventCard extends EventCard {
 
     }
 
+    public int getPrestigeBonus() {
+        return prestigeBonus;
+    }
+
+    public int getPrestigeMalus() {
+        return prestigeMalus;
+    }
 }

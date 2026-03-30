@@ -5,7 +5,7 @@ import it.polimi.ingws.gc8.Model.Board.OfferTile;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.Card;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
-import it.polimi.ingws.gc8.Model.Cards.EventCards.EventCard;
+import it.polimi.ingws.gc8.Model.Cards.EventCards.*;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 
@@ -170,7 +170,7 @@ public interface GameModel {
      * per Hunter. Triggers buildings via onEvent.
      * @param event the Hunt Event card
      */
-    void resolveHunt(EventCard event);
+    void resolveHunt(HuntEventCard event);
 
     /**
      * Resolves the Shamanic Ritual event: determines majority/minority
@@ -178,14 +178,14 @@ public interface GameModel {
      * Queries buildings for shield, double bonus, extra icons.
      * @param event the Shamanic Ritual Event card
      */
-    void resolveShamanicRitual(EventCard event);
+    void resolveShamanicRitual(RitualEventCard event);
 
     /**
      * Resolves the Cave Painting event: PP or penalty based on
      * the number of Artists. Triggers buildings via onEvent.
      * @param event the Cave Painting Event card
      */
-    void resolveCavePainting(EventCard event);
+    void resolveCavePainting(CavePaintingsEventCard event);
 
     /**
      * Resolves the Sustenance event: each player pays 1 food
@@ -193,7 +193,7 @@ public interface GameModel {
      * Always resolved last.
      * @param event the Sustenance Event card
      */
-    void resolveSustenance(EventCard event);
+    void resolveSustenance(SustenanceEventCard event);
 
     // END OF ROUND: ROW AND ERA MANAGEMENT
 

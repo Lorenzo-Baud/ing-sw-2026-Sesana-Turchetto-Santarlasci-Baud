@@ -20,4 +20,7 @@ public class HuntEventCard extends EventCard {
 
     }
 
+    public int getPrestigeBonus() {
+        return prestigeBonus;
+    }
 }

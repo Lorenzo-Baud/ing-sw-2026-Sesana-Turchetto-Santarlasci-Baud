@@ -56,7 +56,7 @@ public class Board {
         List<Card> finalEvents = new ArrayList<>();
 
         // =========================================================
-        // PARSING CARTE PERSONAGGIO
+        // Character card parsing
         // =========================================================
         try {
             JsonNode root = mapper.readTree(new File("src/main/resources/character_cards.json"));
@@ -69,7 +69,7 @@ public class Board {
                 int players = node.get("number_of_players").asInt();
                 Era era = Era.values()[eraNum - 1]; // 1→ERA_1, 2→ERA_2, 3→ERA_3
 
-                // filtra carte non valide per il numero di giocatori
+                // Filters invalid cards for number of players
                 if (players != 0 && players > playerCount) continue;
 
                 Card card = null;
