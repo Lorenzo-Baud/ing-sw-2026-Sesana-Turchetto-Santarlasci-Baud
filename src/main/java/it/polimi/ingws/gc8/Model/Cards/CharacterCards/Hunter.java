@@ -18,4 +18,5 @@ public class Hunter extends CharacterCard {
     public boolean hasBonus() {
         return bonus;
     }
+
 }

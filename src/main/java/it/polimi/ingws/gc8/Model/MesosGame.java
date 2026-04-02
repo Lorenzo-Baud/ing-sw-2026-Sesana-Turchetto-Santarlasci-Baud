@@ -13,10 +13,7 @@ import it.polimi.ingws.gc8.Model.Enum.EventType;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 import it.polimi.ingws.gc8.Model.Enum.TotemColor;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Concrete implementation of the MESOS game model.
@@ -76,8 +73,8 @@ public class MesosGame implements GameModel {
         // Load building cards and split by era
         List<BuildingCard> allBuildings = BuildingCard.loadFromJson(
                 "src/main/resources/buildings_cards.json");
-        List<Card> era2Buildings = new ArrayList<>();
-        List<Card> era3Buildings = new ArrayList<>();
+        Deque<Card> era2Buildings = new ArrayDeque<>();
+        Deque<Card> era3Buildings = new ArrayDeque<>();
         List<BuildingCard> era1Buildings = new ArrayList<>();
 
         for (BuildingCard b : allBuildings) {
