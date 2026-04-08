@@ -165,35 +165,6 @@ public interface GameModel {
      */
     List<EventCard> getEventsToResolve();
 
-    /**
-     * Resolves the Hunt event: for each player, +1 food and +PP
-     * per Hunter. Triggers buildings via onEvent.
-     * @param event the Hunt Event card
-     */
-    void resolveHunt(HuntEventCard event);
-
-    /**
-     * Resolves the Shamanic Ritual event: determines majority/minority
-     * of shaman icons (including building bonuses), applies PP/penalties.
-     * Queries buildings for shield, double bonus, extra icons.
-     * @param event the Shamanic Ritual Event card
-     */
-    void resolveShamanicRitual(RitualEventCard event);
-
-    /**
-     * Resolves the Cave Painting event: PP or penalty based on
-     * the number of Artists. Triggers buildings via onEvent.
-     * @param event the Cave Painting Event card
-     */
-    void resolveCavePainting(CavePaintingsEventCard event);
-
-    /**
-     * Resolves the Sustenance event: each player pays 1 food
-     * per Character, with Collector and building discounts.
-     * Always resolved last.
-     * @param event the Sustenance Event card
-     */
-    void resolveSustenance(SustenanceEventCard event);
 
     // END OF ROUND: ROW AND ERA MANAGEMENT
 
