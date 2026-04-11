@@ -71,6 +71,7 @@ public class MesosGame implements GameModel {
         board.setTurnOrderTrack(new TurnOrderTrack(numPlayers));
 
         // Load building cards and split by era
+        //TODO: da rivedere creazione mazzetti (spostare in board?)
         List<BuildingCard> allBuildings = BuildingCard.loadFromJson(
                 "src/main/resources/buildings_cards.json");
         Deque<Card> era2Buildings = new ArrayDeque<>();
@@ -90,6 +91,7 @@ public class MesosGame implements GameModel {
 
         // Era I buildings are visible in the upper row from the start
         board.getUpperRow().addAll(era1Buildings);
+        //TODO: controlla (probabilmente da mettere in board
 
         // Draw tribe cards for the lower row (numPlayers + 1)
         for (int i = 0; i < numPlayers + 1; i++) {
