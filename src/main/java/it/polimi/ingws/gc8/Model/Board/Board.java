@@ -13,7 +13,13 @@ import it.polimi.ingws.gc8.Model.Enum.EventType;
 import java.io.File;
 import java.util.*;
 
+/**
+ * Represents the main game board containing all shared components.
+ * The Board manages the card decks for different eras, the rows of cards
+ * available for purchase, and the tracks for turn order and offers.
+ */
 public class Board {
+
     private Deque<Card> tribeDeck;
     private List<Card> lowerRow;
     private List<Card> upperRow;
@@ -22,7 +28,17 @@ public class Board {
     private Deque<Card> era3BuildingDeck;
     private OfferTrack offerTrack;
 
-    //usato da mesosGame per avviare la board
+    /**
+     * Constructs a new Board and initializes all game components based on the number of players.
+     * <p>
+     * This constructor initializes the card rows as empty lists, creates the decks as
+     * {@link ArrayDeque}, and sets up the tracks. Finally, it triggers the loading
+     * of the tribe deck.
+     * </p>
+     *
+     * @param playerCount number of players participating in the game,
+     * used to calibrate the decks and tracks
+     */
     public Board(int playerCount) {
         this.tribeDeck = new ArrayDeque<>();
         this.lowerRow = new ArrayList<>();
@@ -34,7 +50,21 @@ public class Board {
         loadTribeDeck(playerCount);
     }
 
-    //usato solo per i test
+    /**
+     * Constructs a Board with pre-initialized components
+     * <p>
+     * This constructor is primarily intended for testing purposes,
+     * allowing the creation of a specific board state
+     * </p>
+     *
+     * @param tribeDeck deck of tribe cards to be used
+     * @param lowerRow list of cards to be placed in the lower display row
+     * @param upperRow list of cards to be placed in the upper display row
+     * @param turnOrderTrack pre-configured turn order
+     * @param era2BuildingDeck deck containing Era 2 building cards
+     * @param era3BuildingDeck deck containing Era 3 building cards
+     * @param offerTrack pre-configured offer track
+     */
     public Board(Deque<Card> tribeDeck, List<Card> lowerRow, List<Card> upperRow,
                  TurnOrderTrack turnOrderTrack, Deque<Card> era2BuildingDeck,
                  Deque<Card> era3BuildingDeck, OfferTrack offerTrack) {
@@ -47,6 +77,17 @@ public class Board {
         this.offerTrack = offerTrack;
     }
 
+    /**
+     * Loads the tribe deck by parsing character and event cards from JSON files.
+     * <p>
+     * This method reads cards from `character_cards.json` and `event_cards.json`,
+     * filters them based on player count, and organizes them by era. Final event cards
+     * are placed at the bottom of the deck. The deck is then shuffled by era before
+     * being composed into the final tribe deck structure.
+     * </p>
+     *
+     * @param playerCount the number of players, used to filter cards with player restrictions
+     */
     public void loadTribeDeck(int playerCount) {
         ObjectMapper mapper = new ObjectMapper();
 
@@ -201,27 +242,88 @@ public class Board {
         for (Card c : finalEvents) tribeDeck.addLast(c);
     }
 
+    /**
+     * Returns tribe deck
+     * @return tribe deck
+     */
     public Deque<Card> getTribeDeck() { return tribeDeck; }
+    /**
+     * Sets tribe cards deck
+     * @param tribeDeck tribe deck to set
+     */
     public void setTribeDeck(Deque<Card> tribeDeck) { this.tribeDeck = tribeDeck; }
 
+    /**
+     * Returns lower row cards
+     * @return lower row list
+     */
     public List<Card> getLowerRow() { return lowerRow; }
+    /**
+     * Sets lower row cards
+     * @param lowerRow lower row list to set
+     */
     public void setLowerRow(List<Card> lowerRow) { this.lowerRow = lowerRow; }
 
+    /**
+     * Returns upper row cards
+     * @return upper row list
+     */
     public List<Card> getUpperRow() { return upperRow; }
+    /**
+     * Sets upper row cards
+     * @param upperRow upper row list to set
+     */
     public void setUpperRow(List<Card> upperRow) { this.upperRow = upperRow; }
 
+    /**
+     * Returns turn order track manager
+     * @return turn order track
+     */
     public TurnOrderTrack getTurnOrderTrack() { return turnOrderTrack; }
+    /**
+     * Sets turn order track manager
+     * @param turnOrderTrack turn order track to set
+     */
     public void setTurnOrderTrack(TurnOrderTrack turnOrderTrack) { this.turnOrderTrack = turnOrderTrack; }
 
+    /**
+     * Returns era 2 building deck
+     * @return era 2 deck
+     */
     public Deque<Card> getEra2BuildingDeck() { return era2BuildingDeck; }
+    /**
+     * Sets era 2 building deck
+     * @param era2BuildingDeck era 2 deck to set
+     */
     public void setEra2BuildingDeck(Deque<Card> era2BuildingDeck) { this.era2BuildingDeck = era2BuildingDeck; }
 
+    /**
+     * Returns era 3 building deck
+     * @return era 3 deck
+     */
     public Deque<Card> getEra3BuildingDeck() { return era3BuildingDeck; }
+    /**
+     * Sets era 3 building deck
+     * @param era3BuildingDeck era 3 deck to set
+     */
     public void setEra3BuildingDeck(Deque<Card> era3BuildingDeck) { this.era3BuildingDeck = era3BuildingDeck; }
 
+    /**
+     * Returns offer track manager
+     * @return offer track
+     */
     public OfferTrack getOfferTrack() { return offerTrack; }
+    /**
+     * Sets offer track manager
+     * @param offerTrack offer track to set
+     */
     public void setOfferTrack(OfferTrack offerTrack) { this.offerTrack = offerTrack; }
 
+    /**
+     * Sets up initial cards in lower and upper rows based on player count
+     * @param playerCount number of players in game
+     * @param era1Building list of era 1 building cards to distribute
+     */
     public void setupInitialRows(int playerCount, List<BuildingCard> era1Building) {
         for (int i = 0; i < playerCount + 1; i++) {
             lowerRow.add(era1Building.get(i));
@@ -231,6 +333,14 @@ public class Board {
         }
     }
 
+
+    /**
+     * Returns card from lower row at specified index
+     *
+     * @param index position of card in list
+     * @return card at given index
+     * @throws IndexOutOfBoundsException if index is out of range
+     */
     public Card getLowerRowCard(int index) {
         if (index >= 0 && index < lowerRow.size()) {
             return lowerRow.get(index);
@@ -238,6 +348,13 @@ public class Board {
         throw new IndexOutOfBoundsException("Invalid index for lower row: " + index);
     }
 
+    /**
+     * Returns card from upper row at specified index
+     *
+     * @param index position of card in list
+     * @return card at given index
+     * @throws IndexOutOfBoundsException if index is out of range
+     */
     public Card getUpperRowCard(int index) {
         if (index >= 0 && index < upperRow.size()) {
             return upperRow.get(index);
@@ -245,6 +362,13 @@ public class Board {
         throw new IndexOutOfBoundsException("Invalid index for upper row: " + index);
     }
 
+    /**
+     * Removes and returns card from lower row at specified index
+     *
+     * @param index position of card in list
+     * @return card that was removed
+     * @throws IndexOutOfBoundsException if index is out of range
+     */
     public Card removeLowerRowCard(int index) {
         if (index >= 0 && index < lowerRow.size()) {
             return lowerRow.remove(index);
@@ -252,6 +376,14 @@ public class Board {
         throw new IndexOutOfBoundsException("Invalid index for lower row: " + index);
     }
 
+
+    /**
+     * Removes and returns card from upper row at specified index
+     *
+     * @param index position of card to remove
+     * @return removed card
+     * @throws IndexOutOfBoundsException if index is out of range
+     */
     public Card removeUpperRowCard(int index) {
         if (index >= 0 && index < upperRow.size()) {
             return upperRow.remove(index);
@@ -259,6 +391,12 @@ public class Board {
         throw new IndexOutOfBoundsException("Invalid index for upper row: " + index);
     }
 
+
+    /**
+     * Filters and returns all event cards from lower row
+     *
+     * @return list of event cards found in lower row
+     */
     public List<EventCard> getLowerRowEvents() {
         List<EventCard> events = new ArrayList<>();
         for (Card card : lowerRow) {
@@ -269,10 +407,16 @@ public class Board {
         return events;
     }
 
+    /**
+     * Removes all tribe cards from lower row
+     */
     public void discardLowerRowTribeCards() {
         lowerRow.removeIf(card -> card instanceof CharacterCard || card instanceof EventCard);
     }
 
+    /**
+     * Moves all upper row cards to the lower row
+     */
     public void moveUpperRowTribeCardsToLower() {
         List<Card> tribeCards = new ArrayList<>();
         for (Card card : upperRow) {
@@ -284,6 +428,12 @@ public class Board {
         lowerRow.addAll(tribeCards);
     }
 
+    /**
+     * Refills the upper row with cards
+     *
+     * @param playerCount number of players
+     * @return list of new tribe cars added to upper row
+     */
     public List<Card> refillUpperRow(int playerCount) {
         List<Card> newTribeCards = new ArrayList<>();
         for (int i = 0; i < playerCount + 1; i++) {
@@ -296,10 +446,16 @@ public class Board {
         return newTribeCards;
     }
 
+    /**
+     * Removes all building cards from lower row
+     */
     public void discardLowerRowBuilding() {
         lowerRow.removeIf(card -> card instanceof BuildingCard);
     }
 
+    /**
+     * Moves upper row buildings to lower row
+     */
     public void moveUpperRowBuildingToLower() {
         List<Card> buildingCards = new ArrayList<>();
         for (Card card : upperRow) {
@@ -311,6 +467,11 @@ public class Board {
         lowerRow.addAll(buildingCards);
     }
 
+    /**
+     * Reveals all building cards from specified era
+     *
+     * @param era era number to reveal buildings from
+     */
     public void revealEraBuildings(int era) {
         Deque<Card> buildingDeck = (era == 2) ? era2BuildingDeck : era3BuildingDeck;
         for (int i = 0; i < 4; i++) {

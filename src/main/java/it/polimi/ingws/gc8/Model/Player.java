@@ -10,15 +10,35 @@ import it.polimi.ingws.gc8.Network.DTO.PlayerDTO;
 import java.util.List;
 import java.util.stream.Stream;
 
+/**
+ * Represents a player in the game with identity, resources, and tribe components
+ */
 public class Player {
 
+    /** Unique identifier for player */
     private final int playerId;
+
+    /** Player display name */
     private final String nickname;
+
+    /** Color of player's physical components */
     private final TotemColor totemColor;
+
+    /** Current amount of food resources */
     private int foodPoints;
+
+    /** Current amount of victory points */
     private int prestigePoints;
+
+    /** Collection of cards and developments owned by player */
     private final Tribe tribe;
 
+    /**
+     * Constructs new player with starting resources and empty tribe
+     * @param playerId unique id
+     * @param nickname player name
+     * @param totemColor selected color
+     */
     public Player(int playerId, String nickname, TotemColor totemColor) {
         this.playerId = playerId;
         this.nickname = nickname;
@@ -141,16 +161,28 @@ public class Player {
         return new PlayerDTO(playerId, nickname, totemColor, foodPoints, prestigePoints, tribeDTO);
     }
 
-    // IDENTITY GETTERS
+    /**
+     * Returns unique player identifier
+     * @return player id
+     */
     public int getPlayerId() {
         return playerId;
     }
 
+    /**
+     * Returns player nickname
+     * @return player name
+     */
     public String getNickname() {
         return nickname;
     }
 
+    /**
+     * Returns color associated with player's totem
+     * @return totem color
+     */
     public TotemColor getTotemColor() {
         return totemColor;
     }
+
 }

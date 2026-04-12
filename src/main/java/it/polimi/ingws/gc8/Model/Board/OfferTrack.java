@@ -11,56 +11,68 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Manager for offer tiles available on board
+ */
 public class OfferTrack {
+
+    /**
+     * List of offer tiles on track
+     */
     private List<OfferTile> tiles;
 
+    /**
+     * Constructs offer track and loads tiles based on player count
+     *
+     * @param playerCount number of players in game
+     */
     public OfferTrack(int playerCount) {
         this.tiles = new ArrayList<>();
         loadTiles(playerCount);
     }
 
+    /**
+     * Loads offer tiles from JSON resource file and filters them by player count
+     * <p>
+     * Uses Jackson ObjectMapper to parse configuration and sorts active tiles by identifier
+     * </p>
+     *
+     * @param playerCount number of players used to filter available tiles
+     * @throws RuntimeException if resource file is missing or JSON is malformed
+     */
     private void loadTiles(int playerCount) {
         try {
-            // getClass() → prende la classe corrente (OfferTrack)
-            // getClassLoader() → prende il ClassLoader, che sa dove sono i file del progetto
-            // getResourceAsStream("offer_tiles.json") → apre il file JSON come stream di bytes
-            //   cercandolo nella cartella resources/ (che Maven mette nel classpath)
             InputStream is = getClass()
                     .getClassLoader()
                     .getResourceAsStream("offer_tiles.json");
 
-            // ObjectMapper è la classe principale di Jackson
-            // è quella che sa leggere JSON e convertirlo in oggetti Java
             ObjectMapper mapper = new ObjectMapper();
 
-            // mapper.readValue() legge il JSON dallo stream e lo converte
-            // TypeReference<List<OfferTile>>(){} dice a Jackson il tipo esatto da creare:
-            //   "voglio una List di OfferTile"
-            // serve perché Java a runtime non sa il tipo generico (type erasure)
-            // allTiles contiene TUTTE le 7 tessere lette dal JSON
             List<OfferTile> allTiles = mapper.readValue(is,
                     new TypeReference<List<OfferTile>>() {});
 
-            // .stream() → trasforma la lista in uno stream per elaborarla
-            // .filter() → tiene solo le tessere disponibili per il numero di giocatori
-            //   es. con 4 giocatori scarta la A (minPlayers=5)
-            // .sorted() → ordina le tessere per nome dell'enum (A, B, C, D, E, F, G)
-            //   .name() restituisce il nome dell'enum come stringa, es. "A", "B"...
-            // .collect(Collectors.toList()) → riconverte lo stream in una List
             this.tiles = allTiles.stream()
                     .filter(t -> t.isAvailableFor(playerCount))
                     .sorted(Comparator.comparing(t -> t.getId().name()))
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
-            // se qualcosa va storto (file non trovato, JSON malformato, ecc.)
-            // lancia una RuntimeException con messaggio chiaro e l'eccezione originale
-            throw new RuntimeException("Errore caricamento offer_tiles.json", e);
+            throw new RuntimeException("Error loading offer_tiles.json", e);
         }
     }
 
+    /**
+     * Returns list of offer tiles currently on track
+     * @return offer tiles list
+     */
     public List<OfferTile> getTiles() { return tiles; }
 
+    /**
+     * Finds offer tile by its identifier
+     *
+     * @param id identifier to search for
+     * @return matching tile or null if not found
+     */
     public OfferTile getTileById(OffertileId id) {
         for (OfferTile tile : tiles) {
             if (tile.getId() == id) return tile;
@@ -68,11 +80,24 @@ public class OfferTrack {
         return null;
     }
 
+    /**
+     * Checks if specific tile is available for occupation
+     *
+     * @param id identifier of tile to check
+     * @return true if tile exists and has no occupant
+     */
     public boolean isTileFree(OffertileId id) {
         OfferTile tile = getTileById(id);
         return tile != null && tile.getOccupant() == null;
     }
 
+    /**
+     * Places player totem on specified tile
+     *
+     * @param id identifier of tile where totem is placed
+     * @param player player occupying tile
+     * @throws IllegalStateException if tile is missing or already occupied
+     */
     public void placeTotem(OffertileId id, Player player) {
         OfferTile tile = getTileById(id);
         if (tile != null && tile.getOccupant() == null) {
@@ -82,23 +107,39 @@ public class OfferTrack {
         }
     }
 
+    /**
+     * Returns list of tiles currently without occupant
+     * @return available tiles list
+     */
     public List<OfferTile> getAvailableTiles() {
         return tiles.stream()
                 .filter(t -> t.getOccupant() == null)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Returns list of occupied tiles in their track order for resolution phase
+     * @return occupied tiles list
+     */
     public List<OfferTile> getResolutionOrder() {
         return tiles.stream()
                 .filter(t -> t.getOccupant() != null)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Removes occupants from all tiles on track
+     */
     public void clear() {
         tiles.forEach(t -> t.setOccupant(null));
     }
 
-    //controlla se il giocatore ha già piazzato il suo totem su una tessera del tracciato
+    /**
+     * Checks if player already occupies any tile on track
+     *
+     * @param player player to search for
+     * @return true if player is found on a tile
+     */
     public boolean containsPlayer(Player player) {
         for (OfferTile t : tiles) {
             if (player.equals(t.getOccupant())) {
@@ -108,7 +149,12 @@ public class OfferTrack {
         return false;  // non trovato in nessuna tessera
     }
 
-    //controlla se tutti i giocatori hanno già piazzato il loro totem su una tessera del tracciato
+    /**
+     * Checks if all players have placed their totem on track
+     *
+     * @param playerCount total number of players in game
+     * @return true if number of occupied tiles equals player count
+     */
     public boolean isFull(int playerCount) {
         int occupied = 0;
         for (OfferTile t : tiles) {
