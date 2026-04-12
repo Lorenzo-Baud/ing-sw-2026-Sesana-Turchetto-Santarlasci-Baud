@@ -3,6 +3,7 @@ package it.polimi.ingws.gc8.Model.Board;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.polimi.ingws.gc8.Model.Player;
+import it.polimi.ingws.gc8.Network.DTO.OfferTileDTO;
 
 public class OfferTile {
     private OffertileId id;
@@ -73,4 +74,9 @@ public class OfferTile {
         this.occupant = null;
         return temp;
     }
+
+    public OfferTileDTO toDTO(){
+        return new OfferTileDTO(id, occupant.getPlayerId());
+    }
+
 }

@@ -12,12 +12,12 @@ import java.util.List;
 public class CavePaintingsEventCard extends EventCard {
 
     private final int bonusArtists;
-    private final int[] malusArtists;
+    private final int malusArtists;
     private final int bonusPoints;
     private final int malusPoints;
 
     public CavePaintingsEventCard(String front, String back, Era era, boolean isFinal, EventType eventType,
-                                  int bonusArtists, int[] malusArtists, int bonusPoints, int malusPoints) {
+                                  int bonusArtists, int malusArtists, int bonusPoints, int malusPoints) {
         super(front, back, era, isFinal, eventType);
         this.bonusArtists = bonusArtists;
         this.malusArtists = malusArtists;
@@ -28,10 +28,10 @@ public class CavePaintingsEventCard extends EventCard {
     @Override
     public void resolveEvent(List<Player> players) {
         for(Player p : players) {
-            if(p.getTribe().countByType(CharacterType.ARTIST) == bonusArtists) {
+            if(p.getTribe().countByType(CharacterType.ARTIST) >= bonusArtists) {
                 p.addPrestigePoints(bonusPoints * p.getTribe().countByType(CharacterType.ARTIST));
             }
-            if(Arrays.asList(malusArtists).contains(p.getTribe().countByType(CharacterType.ARTIST))) {
+            if(p.getTribe().countByType(CharacterType.ARTIST) < malusArtists) {
                 p.removePrestigePoints(malusPoints);
             }
         }
@@ -41,18 +41,15 @@ public class CavePaintingsEventCard extends EventCard {
         return bonusArtists;
     }
 
-    public int[] getMalusArtists() {
-
+    public int getMalusArtists() {
         return malusArtists;
     }
 
     public int getBonusPoints() {
-
         return bonusPoints;
     }
 
     public int getMalusPoints() {
-
         return malusPoints;
     }
 }

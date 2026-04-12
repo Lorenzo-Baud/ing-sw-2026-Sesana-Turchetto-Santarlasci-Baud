@@ -1,8 +1,14 @@
 package it.polimi.ingws.gc8.Model;
 
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
+import it.polimi.ingws.gc8.Model.Cards.Card;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Enum.TotemColor;
+import it.polimi.ingws.gc8.Network.DTO.CardDTO;
+import it.polimi.ingws.gc8.Network.DTO.PlayerDTO;
+
+import java.util.List;
+import java.util.stream.Stream;
 
 public class Player {
 
@@ -127,8 +133,15 @@ public class Player {
         return tribe.getTotalBuilderDiscount();
     }
 
-    // IDENTITY GETTERS
+    public PlayerDTO toDTO() {
+        List<CardDTO> tribeDTO = Stream.of(tribe.getBuildings(), tribe.getCharacters())
+                .flatMap(List::stream)
+                .map(Card::toDTO)
+                .toList();
+        return new PlayerDTO(playerId, nickname, totemColor, foodPoints, prestigePoints, tribeDTO);
+    }
 
+    // IDENTITY GETTERS
     public int getPlayerId() {
         return playerId;
     }
