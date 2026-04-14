@@ -11,5 +11,7 @@ import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 
 public interface GameEventListener {
 
-    //TODO: da fare una volta fatti i DTO
+    public void onGameUpdate(Object updateMessage);
+
+    public int getPlayerId();
 }

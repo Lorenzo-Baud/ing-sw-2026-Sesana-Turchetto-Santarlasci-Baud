@@ -91,7 +91,7 @@ public class GameController {
 
         int currentPlayerId = model.getCurrentPlayer() != null
                 ? model.getCurrentPlayer().getPlayerId() : -1;
-        viewUpdater.notifyPhaseChanged(oldPhase, newPhase, currentPlayerId);
+        viewUpdater.notifyPhaseChanged(newPhase);
     }
 
     /**

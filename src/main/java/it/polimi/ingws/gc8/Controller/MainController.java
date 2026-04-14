@@ -91,7 +91,7 @@ public class MainController {
             } else {
                 // Game in progress: notify others about disconnection
                 if (viewUpdater != null) {
-                    viewUpdater.notifyPlayerDisconnected(clientHandler.getPlayerId());
+                    viewUpdater.notifyPlayerDisconnected(clientHandler.getNickname());
                 }
                 // TODO: implementare logica pause/timeout
             }
@@ -155,7 +155,7 @@ public class MainController {
             if (gameInProgress && viewUpdater != null) {
                 viewUpdater.addListener(clientHandler);
                 viewUpdater.sendFullSnapshotTo(clientHandler, gameController.getModel());
-                viewUpdater.notifyPlayerReconnected(playerId);
+                viewUpdater.notifyPlayerReconnected(clientHandler.getNickname());
             }
         }
     }

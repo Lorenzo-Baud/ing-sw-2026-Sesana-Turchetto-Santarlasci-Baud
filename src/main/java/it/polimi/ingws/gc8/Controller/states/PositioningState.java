@@ -61,7 +61,7 @@ public class PositioningState implements GameState {
         model.placeTotem(player, targetTile);
 
         // Notify all clients
-        viewUpdater.notifyTotemPlaced(player.getPlayerId(), placeAction.getOfferTileId());
+        viewUpdater.notifyTotemPlaced(model);
 
         // Check if all totems are placed → transition
         if (model.allTotemsPlaced()) {
@@ -70,7 +70,7 @@ public class PositioningState implements GameState {
             // Notify the next player that it's their turn
             Player nextPlayer = model.getCurrentPlayer();
             if (nextPlayer != null) {
-                viewUpdater.notifyPlayerTurn(nextPlayer.getPlayerId());
+                viewUpdater.notifyPlayerTurn(nextPlayer;
             }
         }
     }
@@ -80,7 +80,7 @@ public class PositioningState implements GameState {
         // Notify the first player in turn order that it's their turn
         Player firstPlayer = context.getModel().getCurrentPlayer();
         if (firstPlayer != null) {
-            context.getViewUpdater().notifyPlayerTurn(firstPlayer.getPlayerId());
+            context.getViewUpdater().notifyPlayerTurn(firstPlayer);
         }
     }
 

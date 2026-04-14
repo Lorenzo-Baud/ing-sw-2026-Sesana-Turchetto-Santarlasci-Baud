@@ -67,7 +67,14 @@ public class ClientHandler implements Runnable, GameEventListener {
         }
     }
 
-    // TODO: GameEventListener implementation
+    @Override
+    public void onGameUpdate(Object updateMessage) {
+        // Se la connessione è attiva, spediamo il messaggio (es. un GameDTO) al client.
+        if (connection.isConnected()) {
+            connection.sendMessage(updateMessage);
+        }
+    }
+
 
 
 
@@ -78,7 +85,7 @@ public class ClientHandler implements Runnable, GameEventListener {
     }
 
     //Getters
-
+    @Override
     public int getPlayerId() {
         return playerId;
     }

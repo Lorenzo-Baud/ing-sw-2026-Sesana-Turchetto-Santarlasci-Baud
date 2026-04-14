@@ -66,7 +66,7 @@ public class ActionResolutionState implements GameState {
 
         // Notify the first player
         if (!offerOrder.isEmpty()) {
-            context.getViewUpdater().notifyPlayerTurn(offerOrder.get(0).getPlayerId());
+            context.getViewUpdater().notifyPlayerTurn(offerOrder.get(0));
         }
     }
 
@@ -118,7 +118,7 @@ public class ActionResolutionState implements GameState {
         }
 
         viewUpdater.notifyCardTaken(player.getPlayerId(),
-                targetCard.getFront(), cardType, action.getRow());
+                targetCard);
     }
 
     private void handleTakeFood(GameController context, Player player) {
@@ -150,7 +150,7 @@ public class ActionResolutionState implements GameState {
             context.transitionTo(GamePhase.END_ROUND);
         } else {
             // Notify the next player
-            viewUpdater.notifyPlayerTurn(offerOrder.get(nextIndex).getPlayerId());
+            viewUpdater.notifyPlayerTurn(offerOrder.get(nextIndex));
         }
     }
 
