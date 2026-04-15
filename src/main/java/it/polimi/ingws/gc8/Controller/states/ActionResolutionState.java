@@ -1,7 +1,7 @@
 package it.polimi.ingws.gc8.Controller.states;
 
 import it.polimi.ingws.gc8.Controller.GameController;
-import it.polimi.ingws.gc8.Controller.ViewUpdater;
+import it.polimi.ingws.gc8.Model.ViewUpdater;
 import it.polimi.ingws.gc8.Controller.actions.*;
 import it.polimi.ingws.gc8.Model.GameModel;
 import it.polimi.ingws.gc8.Model.Player;
@@ -64,9 +64,9 @@ public class ActionResolutionState implements GameState {
         context.setOfferOrder(offerOrder);
         context.setOfferOrderIndex(0);
 
-        // Notify the first player
         if (!offerOrder.isEmpty()) {
-            context.getViewUpdater().notifyPlayerTurn(offerOrder.get(0));
+            Player firstPlayer = offerOrder.get(0);
+            context.getModel().setCurrentPlayer(firstPlayer); // Questo scatena notifyUpdate!
         }
     }
 
@@ -117,40 +117,30 @@ public class ActionResolutionState implements GameState {
             return;
         }
 
-        viewUpdater.notifyCardTaken(player.getPlayerId(),
-                targetCard);
     }
 
     private void handleTakeFood(GameController context, Player player) {
         GameModel model = context.getModel();
         ViewUpdater viewUpdater = context.getViewUpdater();
-
         model.takeFood(player);
-        viewUpdater.notifyFoodTaken(player.getPlayerId(), player.getFood());
+
     }
 
     private void handleReturnTotem(GameController context, Player player) {
         GameModel model = context.getModel();
-        ViewUpdater viewUpdater = context.getViewUpdater();
 
-        int foodBefore = player.getFood();
         model.returnTotemToTurnOrder(player);
-        int foodChange = player.getFood() - foodBefore;
 
-        viewUpdater.notifyTotemReturned(player.getPlayerId(), 0, foodChange);
-        // TODO: pass the actual slot index when available
-
-        // Advance to the next player in offer order
         int nextIndex = context.getOfferOrderIndex() + 1;
         context.setOfferOrderIndex(nextIndex);
-
         List<Player> offerOrder = context.getOfferOrder();
+
         if (nextIndex >= offerOrder.size()) {
-            // All players have resolved → transition to END_ROUND
             context.transitionTo(GamePhase.END_ROUND);
         } else {
-            // Notify the next player
-            viewUpdater.notifyPlayerTurn(offerOrder.get(nextIndex));
+
+            Player nextPlayer = offerOrder.get(nextIndex);
+            context.getModel().setCurrentPlayer(nextPlayer);
         }
     }
 

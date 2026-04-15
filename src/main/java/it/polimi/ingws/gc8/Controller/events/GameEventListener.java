@@ -1,6 +1,7 @@
 package it.polimi.ingws.gc8.Controller.events;
 
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
+import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
 
 /**
  * Listener interface for game-state notifications.
@@ -11,7 +12,7 @@ import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 
 public interface GameEventListener {
 
-    public void onGameUpdate(Object updateMessage);
+    public void onGameUpdate(NetworkMessage updateMessage);
 
     public int getPlayerId();
 }

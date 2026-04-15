@@ -4,6 +4,7 @@ import it.polimi.ingws.gc8.Controller.MainController;
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Controller.events.GameEventListener;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
+import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
 
 /**
  * Handles the bidirectional communication with a single connected player.
@@ -68,15 +69,12 @@ public class ClientHandler implements Runnable, GameEventListener {
     }
 
     @Override
-    public void onGameUpdate(Object updateMessage) {
+    public void onGameUpdate(NetworkMessage updateMessage) {
         // Se la connessione è attiva, spediamo il messaggio (es. un GameDTO) al client.
         if (connection.isConnected()) {
             connection.sendMessage(updateMessage);
         }
     }
-
-
-
 
     //Helpers
 

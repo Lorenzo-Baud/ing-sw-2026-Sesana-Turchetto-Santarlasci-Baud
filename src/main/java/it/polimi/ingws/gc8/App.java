@@ -4,6 +4,7 @@ package it.polimi.ingws.gc8;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.EventCard;
 import it.polimi.ingws.gc8.Model.GameModel;
 import it.polimi.ingws.gc8.Model.MesosGame;
+import it.polimi.ingws.gc8.Model.ViewUpdater;
 
 /**
  * Hello world!
@@ -15,8 +16,8 @@ public class App
     {
 
         System.out.println( "Hello World!" );
-
-        GameModel game = new MesosGame();
+        ViewUpdater viewUpdater = new ViewUpdater();
+        GameModel game = new MesosGame(viewUpdater);
         game.setupGame(3);
 
         game.getBoard().getTribeDeck().forEach(card -> {

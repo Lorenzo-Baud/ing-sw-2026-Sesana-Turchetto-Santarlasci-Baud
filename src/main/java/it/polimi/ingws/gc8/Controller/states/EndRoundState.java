@@ -1,7 +1,7 @@
 package it.polimi.ingws.gc8.Controller.states;
 
 import it.polimi.ingws.gc8.Controller.GameController;
-import it.polimi.ingws.gc8.Controller.ViewUpdater;
+import it.polimi.ingws.gc8.Model.ViewUpdater;
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Model.GameModel;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.EventCard;
@@ -38,10 +38,6 @@ public class EndRoundState implements GameState {
         List<EventCard> events = model.getEventsToResolve();
         for (EventCard event : events) {
             event.resolveEvent(model.getPlayers());
-            viewUpdater.notifyEventResolved(
-                    event.getEventType().name(),
-                    event.getFront()
-            );
         }
 
         // 2. Check if the game is over (tribe deck exhausted)
@@ -61,14 +57,7 @@ public class EndRoundState implements GameState {
         // 5. Check for era transition
         boolean eraChanged = model.checkNewEra();
 
-        // 6. Notify clients about round end
-        viewUpdater.notifyRoundEnded(
-                model.getCurrentRound(),
-                eraChanged,
-                model.getCurrentEra().name()
-        );
-
-        // 7. Transition to next positioning phase
+        // 6. Transition to next positioning phase
         context.transitionTo(GamePhase.POSITIONING);
     }
 

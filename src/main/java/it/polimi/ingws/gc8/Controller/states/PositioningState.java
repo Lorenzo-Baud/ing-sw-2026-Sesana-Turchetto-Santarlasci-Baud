@@ -1,15 +1,13 @@
 package it.polimi.ingws.gc8.Controller.states;
 
 import it.polimi.ingws.gc8.Controller.GameController;
-import it.polimi.ingws.gc8.Controller.ViewUpdater;
+import it.polimi.ingws.gc8.Model.ViewUpdater;
 import it.polimi.ingws.gc8.Controller.actions.PlaceTotemAction;
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Model.GameModel;
 import it.polimi.ingws.gc8.Model.Player;
 import it.polimi.ingws.gc8.Model.Board.OfferTile;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
-
-import java.util.List;
 
 /**
  * State active during {@link GamePhase#POSITIONING}.
@@ -60,18 +58,12 @@ public class PositioningState implements GameState {
         // Execute the action on the model
         model.placeTotem(player, targetTile);
 
-        // Notify all clients
-        viewUpdater.notifyTotemPlaced(model);
+
 
         // Check if all totems are placed → transition
         if (model.allTotemsPlaced()) {
             context.transitionTo(GamePhase.ACTION_RESOLUTION);
-        } else {
-            // Notify the next player that it's their turn
-            Player nextPlayer = model.getCurrentPlayer();
-            if (nextPlayer != null) {
-                viewUpdater.notifyPlayerTurn(nextPlayer;
-            }
+
         }
     }
 

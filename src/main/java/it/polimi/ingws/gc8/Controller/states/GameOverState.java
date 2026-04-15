@@ -22,8 +22,7 @@ public class GameOverState implements GameState {
 
     @Override
     public void onEnter(GameController context) {
-        // Notify all clients of the final result
-        context.getViewUpdater().notifyGameOver("GameOver", context.getModel());
+        return;
     }
 
     @Override

@@ -28,14 +28,30 @@ public class MesosGame implements GameModel {
     private Era currentEra;
     private GamePhase phase;
     private int currentPlayerIndex;
+    ViewUpdater viewUpdater;
 
-    public MesosGame() {
+    @Override
+    public void notifyUpdate(GameModel model){
+        if (viewUpdater != null) {
+            viewUpdater.broadcastModel(model);
+        }
+    }
+
+    @Override
+    public void setCurrentPlayer(Player player) {
+        this.currentPlayerIndex = this.players.indexOf(player);
+        notifyUpdate(this);
+    }
+
+
+    public MesosGame(ViewUpdater viewUpdater) {
         this.players = new ArrayList<>();
         this.currentRound = 0;
         this.currentEra = Era.ERA_1;
         this.phase = GamePhase.SETUP;
         this.currentPlayerIndex = 0;
         this.board = new Board(3);
+        this.viewUpdater = viewUpdater;
     }
 
     // SETUP
@@ -48,7 +64,9 @@ public class MesosGame implements GameModel {
         distributeInitialFood();
         this.currentRound = 1;
         this.phase = GamePhase.POSITIONING;
+        notifyUpdate(this);
     }
+
 
     /**
      * Creates Players with default names and sequential TotemColors.
@@ -183,6 +201,7 @@ public class MesosGame implements GameModel {
             phase = GamePhase.ACTION_RESOLUTION;
             currentPlayerIndex = 0;
         }
+        notifyUpdate(this);
     }
 
     @Override
@@ -227,6 +246,7 @@ public class MesosGame implements GameModel {
         board.getLowerRow().remove(card);
         board.getUpperRow().remove(card);
         player.addCharacterCard(card);
+        notifyUpdate(this);
     }
 
     @Override
@@ -236,11 +256,13 @@ public class MesosGame implements GameModel {
         board.getLowerRow().remove(card);
         board.getUpperRow().remove(card);
         player.addBuildingCard(card);
+        notifyUpdate(this);
     }
 
     @Override
     public void takeFood(Player player) {
         player.addFood(3);
+        notifyUpdate(this);
     }
 
     @Override
@@ -273,6 +295,7 @@ public class MesosGame implements GameModel {
                 player.addPrestigePoints(track.getLastSlotPrestigePenalty());
             }
         }
+        notifyUpdate(this);
     }
 
     @Override
@@ -287,6 +310,7 @@ public class MesosGame implements GameModel {
         } else if (card instanceof CharacterCard) {
             takeCharacterCard(player, (CharacterCard) card);
         }
+        notifyUpdate(this);
     }
 
     // END OF ROUND: EVENT RESOLUTION
@@ -319,11 +343,14 @@ public class MesosGame implements GameModel {
     @Override
     public void discardLowerRow() {
         board.discardLowerRowTribeCards();
+        notifyUpdate(this);
     }
 
     @Override
     public void moveUpperRowToLower() {
+
         board.moveUpperRowTribeCardsToLower();
+        notifyUpdate(this);
     }
 
     @Override
@@ -334,6 +361,7 @@ public class MesosGame implements GameModel {
             }
         }
         currentRound++;
+        notifyUpdate(this);
     }
 
     @Override
@@ -399,6 +427,7 @@ public class MesosGame implements GameModel {
             player.addPrestigePoints(inventorPP + artistPP + builderPP
                     + printedBuildingPP + effectPP);
         }
+        notifyUpdate(this);
     }
 
     @Override

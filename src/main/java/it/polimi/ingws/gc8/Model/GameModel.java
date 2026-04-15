@@ -61,6 +61,14 @@ public interface GameModel {
      * @return the player who must act at this moment
      */
     Player getCurrentPlayer();
+    /**
+     * notifies to the view a model update
+     * @param model (the current model)
+     */
+    void notifyUpdate(GameModel model);
+
+
+    public void setCurrentPlayer(Player player);
 
     // PHASE 1: TOTEM PLACEMENT
 
@@ -164,6 +172,7 @@ public interface GameModel {
      *         ordered for resolution (Sustenance last)
      */
     List<EventCard> getEventsToResolve();
+
 
 
     // END OF ROUND: ROW AND ERA MANAGEMENT

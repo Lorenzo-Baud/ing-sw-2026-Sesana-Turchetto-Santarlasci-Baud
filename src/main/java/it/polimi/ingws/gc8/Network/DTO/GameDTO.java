@@ -1,5 +1,9 @@
 package it.polimi.ingws.gc8.Network.DTO;
 
+import it.polimi.ingws.gc8.Model.Enum.Era;
+import it.polimi.ingws.gc8.Model.Enum.GamePhase;
+import it.polimi.ingws.gc8.Model.Player;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -13,6 +17,10 @@ import java.util.List;
  * @param upperRowCards         cards currently available in the upper row of the board
  * @param lowerRowCards         cards currently available in the lower row of the board
  * @param offerTrack            DTO representation of the current offer track state
+ * @param currentPlayer         DTO that represents the player whose turn is
+ * @param phase
+ * @param currentRound
+ * @param currentEra
  */
 public record GameDTO(
     int numberOfPlayers,
@@ -20,5 +28,10 @@ public record GameDTO(
     List<PlayerDTO> players,
     List<CardDTO> upperRowCards,
     List<CardDTO> lowerRowCards,
-    List<OfferTileDTO> offerTrack
+    List<OfferTileDTO> offerTrack,
+    PlayerDTO currentPlayer,
+    GamePhase phase,
+    int currentRound,
+    Era currentEra
+
 ) implements Serializable {}

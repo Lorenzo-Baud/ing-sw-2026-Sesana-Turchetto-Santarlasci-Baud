@@ -1,11 +1,9 @@
-package it.polimi.ingws.gc8.Controller;
+package it.polimi.ingws.gc8.Model;
 
 import it.polimi.ingws.gc8.Controller.events.GameEventListener;
 import it.polimi.ingws.gc8.Model.Board.OfferTile;
 import it.polimi.ingws.gc8.Model.Cards.Card;
-import it.polimi.ingws.gc8.Model.Enum.EventType;
-import it.polimi.ingws.gc8.Model.GameModel;
-import it.polimi.ingws.gc8.Model.Player;
+import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 import it.polimi.ingws.gc8.Network.DTO.GameDTO;
@@ -52,6 +50,19 @@ public class ViewUpdater {
         }
     }
 
+
+    /**
+     * Utility method to send a message to all registered listeners.
+     *
+     * @param message the network message to broadcast
+     */
+    private void broadcast(NetworkMessage message) {
+        for (GameEventListener listener : listeners) {
+            listener.onGameUpdate(message);
+        }
+    }
+
+
     /**
      * Removes a listener so it no longer receives game updates.
      *
@@ -64,11 +75,12 @@ public class ViewUpdater {
     /**
      * Utility method to send a message to all registered listeners.
      *
-     * @param message the network message to broadcast
+     * @param model the network message to broadcast
      */
-    private void broadcast(Object message) {
+    public void broadcastModel(GameModel model) {
+        ModelUpdateMessage modelUpdate = new ModelUpdateMessage(buildGameDTO(model));
         for (GameEventListener listener : listeners) {
-            listener.onGameUpdate(message);
+            listener.onGameUpdate(modelUpdate);
         }
     }
 
@@ -124,49 +136,36 @@ public class ViewUpdater {
             offerTrackDTO.add(t.toDTO());
         }
 
+        PlayerDTO currentPlayer = null;
+        if (model.getCurrentPlayer() != null) {
+            currentPlayer = model.getCurrentPlayer().toDTO();
+        }
+
+        GamePhase phase = model.getPhase();
+
+        int currentRound = model.getCurrentRound();
+
+        Era currentEra = model.getCurrentEra();
+
         return new GameDTO(
                 numberOfPlayers,
                 currentPlayerIndex,
                 playersDTOList,
                 upperRowDTO,
                 lowerRowDTO,
-                offerTrackDTO
+                offerTrackDTO,
+                currentPlayer,
+                phase,
+                currentRound,
+                currentEra
         );
     }
 
     // --- Game lifecycle notifications ---
 
-    /**
-     * Sends a game-started notification to all listeners.
-     * Called at game start after setupGame() has completed.
-     *
-     * @param model the initialized game model to be broadcasted
-     */
-    public void notifyGameStarted(GameModel model) {
-        broadcast(new GameSnapshotMessage(buildGameDTO(model)));
-    }
 
-    /**
-     * Sends a full game snapshot to a single, specific listener.
-     * Usually used for synchronization when a client reconnects.
-     *
-     * @param listener the target listener
-     * @param model    the current game model
-     */
-    public void sendFullSnapshotTo(GameEventListener listener, GameModel model) {
-        listener.onGameUpdate(new GameSnapshotMessage(buildGameDTO(model)));
-    }
 
-    // --- Phase and turn notifications ---
 
-    /**
-     * Broadcasts a phase change to all clients.
-     *
-     * @param newPhase the new {@link GamePhase} the game has entered
-     */
-    public void notifyPhaseChanged(GamePhase newPhase) {
-        broadcast(new PhaseUpdateMessage(newPhase));
-    }
 
     /**
      * Broadcasts a turn change, indicating which player is now active.
@@ -174,93 +173,11 @@ public class ViewUpdater {
      * @param p the {@link Player} whose turn has just started
      */
     public void notifyPlayerTurn(Player p) {
-        broadcast(
-                new TurnUpdateMessage(p.getNickname(), p.getPlayerId()));
+        broadcast(new TurnUpdateMessage(p.getNickname(), p.getPlayerId()));
     }
 
-    // --- Positioning phase ---
-
-    /**
-     * Broadcasts an updated game snapshot after a player has placed their totem.
-     *
-     * @param model the updated game model
-     */
-    public void notifyTotemPlaced(GameModel model) {
-        broadcast(new GameSnapshotMessage(buildGameDTO(model)));
-    }
-
-    // --- Action resolution phase notifications ---
-
-    /**
-     * Sends a notification to a specific player confirming they have taken a card.
-     *
-     * @param playerId the ID of the player who took the card
-     * @param c        the {@link Card} taken by the player
-     */
-    public void notifyCardTaken(int playerId, Card c) {
-        for(GameEventListener listener : listeners) {
-            if(listener.getPlayerId() == playerId) {
-                listener.onGameUpdate(new CardTakenMessage(playerId, c.toDTO()));
-            }
-        }
-    }
-
-    /**
-     * Sends a notification to a specific player updating their food amount.
-     *
-     * @param playerId   the ID of the player who took the food
-     * @param playerFood the updated amount of food owned by the player
-     */
-    public void notifyFoodTaken(int playerId, int playerFood) {
-        for(GameEventListener listener : listeners) {
-            if(listener.getPlayerId() == playerId) {
-                listener.onGameUpdate(new FoodTakenMessage(playerFood));
-            }
-        }
-    }
-
-    /**
-     * Placeholder method for notifying when a totem is returned.
-     * Currently unimplemented.
-     */
-    public void notifyTotemReturned() {}
-
-    // --- End-of-round notifications ---
-
-    /**
-     * Broadcasts the resolution of an event card to all players.
-     *
-     * @param type  the type or category of the resolved event
-     * @param front the description or effect printed on the front of the event card
-     */
-    public void notifyEventResolved(String type, String front) {
-        broadcast(new EventResolvedMessage(type, front));
-    }
-
-    /**
-     * Broadcasts the end of the current round to all players.
-     *
-     * @param currentRound the number of the completed round
-     * @param eraChanged   true if the new round starts a new Era, false otherwise
-     * @param currentEra   the string representation of the current/new Era
-     */
-    public void notifyRoundEnded(int currentRound, boolean eraChanged, String currentEra) {
-        broadcast(new RoundEndedMessage(currentRound, eraChanged, currentEra));
-    }
 
     // --- Game over ---
-
-    /**
-     * Broadcasts the end of the game, including a closing message and the final board state.
-     *
-     * @param GameOverString a message indicating the game is over (e.g., winner announcement)
-     * @param model          the final state of the game model
-     */
-    public void notifyGameOver(String GameOverString, GameModel model) {
-        broadcast(new GameOverMessage(GameOverString, buildGameDTO(model)));
-    }
-
-    // --- Error notifications ---
 
     /**
      * Sends an error message privately to a specific player (e.g., for an invalid action).

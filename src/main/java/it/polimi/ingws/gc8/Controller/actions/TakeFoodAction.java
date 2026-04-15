@@ -11,6 +11,7 @@ public class TakeFoodAction implements PlayerAction {
     private final int playerId;
 
     public TakeFoodAction(int playerId) {
+
         this.playerId = playerId;
     }
 
