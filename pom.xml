@@ -34,6 +34,18 @@
           <version>5.12.1</version>
           <scope>test</scope>
       </dependency>
+
+    <!-- JLine3 per input raw mode (singolo tasto senza Enter) -->
+    <dependency>
+      <groupId>org.jline</groupId>
+      <artifactId>jline-terminal</artifactId>
+      <version>3.28.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jline</groupId>
+      <artifactId>jline-reader</artifactId>
+      <version>3.28.0</version>
+    </dependency>
   </dependencies>
     <build>
         <plugins>
