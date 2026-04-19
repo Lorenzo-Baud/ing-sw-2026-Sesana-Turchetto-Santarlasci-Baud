@@ -35,16 +35,11 @@
           <scope>test</scope>
       </dependency>
 
-    <!-- JLine3 per input raw mode (singolo tasto senza Enter) -->
+    <!-- Lanterna per TUI (raw mode + rendering a schermo) -->
     <dependency>
-      <groupId>org.jline</groupId>
-      <artifactId>jline-terminal</artifactId>
-      <version>3.28.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jline</groupId>
-      <artifactId>jline-reader</artifactId>
-      <version>3.28.0</version>
+      <groupId>com.googlecode.lanterna</groupId>
+      <artifactId>lanterna</artifactId>
+      <version>3.1.2</version>
     </dependency>
   </dependencies>
     <build>
