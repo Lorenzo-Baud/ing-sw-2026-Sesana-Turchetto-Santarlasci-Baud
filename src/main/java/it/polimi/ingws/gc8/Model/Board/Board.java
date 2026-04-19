@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.Card;
-import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
+import it.polimi.ingws.gc8.Model.Cards.CharacterCards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.*;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.*;
 import it.polimi.ingws.gc8.Model.Enum.Era;

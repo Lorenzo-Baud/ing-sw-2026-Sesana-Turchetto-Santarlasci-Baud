@@ -5,7 +5,7 @@ import it.polimi.ingws.gc8.Model.Board.OfferTile;
 import it.polimi.ingws.gc8.Model.Board.TurnOrderTrack;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.Card;
-import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
+import it.polimi.ingws.gc8.Model.Cards.CharacterCards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.*;
 import it.polimi.ingws.gc8.Model.Enum.CharacterType;
 import it.polimi.ingws.gc8.Model.Enum.Era;

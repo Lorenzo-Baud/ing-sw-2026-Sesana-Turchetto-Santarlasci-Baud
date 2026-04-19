@@ -1,6 +1,6 @@
 package it.polimi.ingws.gc8.Model.Cards.BuildingCard;
 
-import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
+import it.polimi.ingws.gc8.Model.Cards.CharacterCards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Player;
 
 /**

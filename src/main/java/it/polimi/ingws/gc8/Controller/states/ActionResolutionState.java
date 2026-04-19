@@ -6,7 +6,7 @@ import it.polimi.ingws.gc8.Controller.actions.*;
 import it.polimi.ingws.gc8.Model.GameModel;
 import it.polimi.ingws.gc8.Model.Player;
 import it.polimi.ingws.gc8.Model.Cards.Card;
-import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
+import it.polimi.ingws.gc8.Model.Cards.CharacterCards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 

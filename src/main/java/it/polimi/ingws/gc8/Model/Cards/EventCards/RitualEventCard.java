@@ -1,14 +1,10 @@
 package it.polimi.ingws.gc8.Model.Cards.EventCards;
 
-import it.polimi.ingws.gc8.Model.Cards.CharacterCard;
-import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Shaman;
-import it.polimi.ingws.gc8.Model.Enum.CharacterType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.EventType;
 import it.polimi.ingws.gc8.Model.Player;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class RitualEventCard extends EventCard {
