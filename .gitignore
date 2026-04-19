@@ -40,4 +40,4 @@ build/
 CLAUDE.md
 AGENT.md
 .DS_Store
-
+.claude/
