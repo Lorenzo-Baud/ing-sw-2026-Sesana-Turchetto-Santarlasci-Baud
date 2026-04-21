@@ -1,7 +1,7 @@
 package it.polimi.ingws.gc8.Controller.states;
 
 import it.polimi.ingws.gc8.Controller.GameController;
-import it.polimi.ingws.gc8.Model.ViewUpdater;
+import it.polimi.ingws.gc8.Network.ViewUpdater;
 import it.polimi.ingws.gc8.Controller.actions.PlaceTotemAction;
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Model.GameModel;

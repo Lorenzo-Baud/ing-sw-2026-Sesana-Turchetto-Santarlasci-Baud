@@ -6,7 +6,7 @@ import it.polimi.ingws.gc8.Model.GameModel;
 import it.polimi.ingws.gc8.Model.MesosGame;
 import it.polimi.ingws.gc8.Model.Player;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
-import it.polimi.ingws.gc8.Model.ViewUpdater;
+import it.polimi.ingws.gc8.Network.ViewUpdater;
 
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -40,7 +40,8 @@ public class GameController {
     private int offerOrderIndex;
 
     public GameController(ViewUpdater viewUpdater) {
-        this.model = new MesosGame(viewUpdater);
+        this.model = new MesosGame();
+        this.model.addObserver(viewUpdater);
         this.viewUpdater = viewUpdater;
         this.gameLock = new ReentrantLock();
         this.states = new EnumMap<>(GamePhase.class);

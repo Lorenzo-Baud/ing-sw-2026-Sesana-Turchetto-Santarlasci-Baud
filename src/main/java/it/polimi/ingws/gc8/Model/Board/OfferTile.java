@@ -3,7 +3,6 @@ package it.polimi.ingws.gc8.Model.Board;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.polimi.ingws.gc8.Model.Player;
-import it.polimi.ingws.gc8.Network.DTO.OfferTileDTO;
 
 /**
  * Represents single tile on offer track providing specific rewards and bonuses
@@ -146,14 +145,6 @@ public class OfferTile {
         Player temp = occupant;
         this.occupant = null;
         return temp;
-    }
-
-    /**
-     * Converts offer tile to data transfer object
-     * @return offer tile DTO containing id and occupant info
-     */
-    public OfferTileDTO toDTO(){
-        return new OfferTileDTO(id, occupant.getPlayerId());
     }
 
 }

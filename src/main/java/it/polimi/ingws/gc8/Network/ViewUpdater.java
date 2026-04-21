@@ -1,11 +1,15 @@
-package it.polimi.ingws.gc8.Model;
+package it.polimi.ingws.gc8.Network;
 
 import it.polimi.ingws.gc8.Controller.events.GameEventListener;
 import it.polimi.ingws.gc8.Model.Board.OfferTile;
 import it.polimi.ingws.gc8.Model.Cards.Card;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
+import it.polimi.ingws.gc8.Model.GameModel;
+import it.polimi.ingws.gc8.Model.ModelObserver;
+import it.polimi.ingws.gc8.Model.Player;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
+import it.polimi.ingws.gc8.Network.DTO.DtoMapper;
 import it.polimi.ingws.gc8.Network.DTO.GameDTO;
 import it.polimi.ingws.gc8.Network.DTO.OfferTileDTO;
 import it.polimi.ingws.gc8.Network.DTO.PlayerDTO;
@@ -16,16 +20,15 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Bridges the controller/model layer to the view layer.
- * Maintains a list of {@link GameEventListener} instances and broadcasts
- * game notifications to all of them.
+ * Bridges the model layer to the view layer.
+ * Registers as a {@link ModelObserver} on the {@link GameModel} and broadcasts
+ * snapshots to a list of {@link GameEventListener}s (typically ClientHandlers).
  * <p>
- * All notify methods build immutable data from the model and broadcast it.
  * ViewUpdater never holds a persistent reference to the model;
- * it receives it as a parameter when a full snapshot is needed.
+ * it receives it as a parameter whenever a snapshot is needed.
  * </p>
  */
-public class ViewUpdater {
+public class ViewUpdater implements ModelObserver {
 
     private final List<GameEventListener> listeners;
 
@@ -73,15 +76,36 @@ public class ViewUpdater {
     }
 
     /**
-     * Utility method to send a message to all registered listeners.
+     * {@link ModelObserver} callback: the model signals a state change here,
+     * and the updater rebroadcasts a snapshot to every listener.
+     */
+    @Override
+    public void onModelChanged(GameModel snapshot) {
+        broadcastModel(snapshot);
+    }
+
+    /**
+     * Builds a snapshot message for the given model and sends it to every listener.
      *
-     * @param model the network message to broadcast
+     * @param model the current game model
      */
     public void broadcastModel(GameModel model) {
         ModelUpdateMessage modelUpdate = new ModelUpdateMessage(buildGameDTO(model));
         for (GameEventListener listener : listeners) {
             listener.onGameUpdate(modelUpdate);
         }
+    }
+
+    /**
+     * Sends a full model snapshot to a single listener (used on reconnection,
+     * so the rejoining client gets the current state without broadcasting to others).
+     *
+     * @param listener the target listener (e.g., the reconnecting ClientHandler)
+     * @param model    the current game model
+     */
+    public void sendFullSnapshotTo(GameEventListener listener, GameModel model) {
+        if (listener == null) return;
+        listener.onGameUpdate(new ModelUpdateMessage(buildGameDTO(model)));
     }
 
     /**
@@ -98,47 +122,27 @@ public class ViewUpdater {
 
         List<PlayerDTO> playersDTOList = new ArrayList<>();
         for (Player p : model.getPlayers()) {
-
-
-            List<CardDTO> tribeDTO = new ArrayList<>();
-
-            for (Card c : p.getTribe().getCharacters()) {
-                tribeDTO.add(c.toDTO());
-            }
-
-            for (Card c : p.getTribe().getBuildings()){
-                tribeDTO.add(c.toDTO());
-            }
-
-            PlayerDTO pDTO = new PlayerDTO(
-                    p.getPlayerId(),
-                    p.getNickname(),
-                    p.getTotemColor(),
-                    p.getFood(),
-                    p.getPrestigePoints(),
-                    tribeDTO
-            );
-            playersDTOList.add(pDTO);
+            playersDTOList.add(DtoMapper.toDTO(p));
         }
 
         List<CardDTO> upperRowDTO = new ArrayList<>();
         for (Card c : model.getAvailableCardsFromRow(0)) {
-            upperRowDTO.add(c.toDTO());
+            upperRowDTO.add(DtoMapper.toDTO(c));
         }
 
         List<CardDTO> lowerRowDTO = new ArrayList<>();
         for (Card c : model.getAvailableCardsFromRow(1)) {
-            lowerRowDTO.add(c.toDTO());
+            lowerRowDTO.add(DtoMapper.toDTO(c));
         }
 
         List<OfferTileDTO> offerTrackDTO = new ArrayList<>();
         for (OfferTile t : model.getBoard().getOfferTrack().getAvailableTiles()) {
-            offerTrackDTO.add(t.toDTO());
+            offerTrackDTO.add(DtoMapper.toDTO(t));
         }
 
         PlayerDTO currentPlayer = null;
         if (model.getCurrentPlayer() != null) {
-            currentPlayer = model.getCurrentPlayer().toDTO();
+            currentPlayer = DtoMapper.toDTO(model.getCurrentPlayer());
         }
 
         GamePhase phase = model.getPhase();
@@ -162,7 +166,6 @@ public class ViewUpdater {
     }
 
     // --- Game lifecycle notifications ---
-
 
 
 

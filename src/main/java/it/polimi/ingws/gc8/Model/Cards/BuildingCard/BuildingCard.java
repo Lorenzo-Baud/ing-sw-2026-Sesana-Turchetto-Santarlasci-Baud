@@ -3,9 +3,7 @@ package it.polimi.ingws.gc8.Model.Cards.BuildingCard;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.polimi.ingws.gc8.Model.Cards.Card;
-import it.polimi.ingws.gc8.Model.Enum.CardType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
-import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -110,14 +108,6 @@ public class BuildingCard extends Card {
      */
     public BuildingEffect getEffect() {
         return effect;
-    }
-
-    /**
-     * @return Card DTO
-     */
-    @Override
-    public CardDTO toDTO() {
-        return new CardDTO(this.front, this.back, false, CardType.BUILDING);
     }
 
 }

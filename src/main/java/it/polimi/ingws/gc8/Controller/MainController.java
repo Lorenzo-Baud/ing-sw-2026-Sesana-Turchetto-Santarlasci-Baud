@@ -1,7 +1,7 @@
 package it.polimi.ingws.gc8.Controller;
 
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
-import it.polimi.ingws.gc8.Model.ViewUpdater;
+import it.polimi.ingws.gc8.Network.ViewUpdater;
 import it.polimi.ingws.gc8.Network.ClientHandler;
 
 import java.util.List;

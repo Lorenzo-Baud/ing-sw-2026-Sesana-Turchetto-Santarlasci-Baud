@@ -1,7 +1,6 @@
 package it.polimi.ingws.gc8.Model.Cards;
 
 import it.polimi.ingws.gc8.Model.Enum.Era;
-import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 
 public abstract class Card {
 
@@ -25,13 +24,6 @@ public abstract class Card {
         this.back = back;
         this.era = era;
     }
-
-    /**
-     * Creates a Data Transfer Object (DTO) representing the current state of the card.
-     * Used for sending card information over the network while hiding logic.
-     * * @return a DTO version of the card
-     */
-    public abstract CardDTO toDTO();
 
     /**
      * Returns the path for the front image of the card.

@@ -61,14 +61,18 @@ public interface GameModel {
      * @return the player who must act at this moment
      */
     Player getCurrentPlayer();
+
     /**
-     * notifies to the view a model update
-     * @param model (the current model)
+     * Registers an observer that will be notified on each model change.
      */
-    void notifyUpdate(GameModel model);
+    void addObserver(ModelObserver observer);
 
+    /**
+     * Unregisters a previously added observer.
+     */
+    void removeObserver(ModelObserver observer);
 
-    public void setCurrentPlayer(Player player);
+    void setCurrentPlayer(Player player);
 
     // PHASE 1: TOTEM PLACEMENT
 

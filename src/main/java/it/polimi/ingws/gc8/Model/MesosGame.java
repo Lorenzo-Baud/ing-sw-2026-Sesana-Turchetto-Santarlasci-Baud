@@ -14,6 +14,7 @@ import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 import it.polimi.ingws.gc8.Model.Enum.TotemColor;
 
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Concrete implementation of the MESOS game model.
@@ -28,30 +29,41 @@ public class MesosGame implements GameModel {
     private Era currentEra;
     private GamePhase phase;
     private int currentPlayerIndex;
-    ViewUpdater viewUpdater;
+    private final List<ModelObserver> observers;
 
     @Override
-    public void notifyUpdate(GameModel model){
-        if (viewUpdater != null) {
-            viewUpdater.broadcastModel(model);
+    public void addObserver(ModelObserver observer) {
+        if (observer != null && !observers.contains(observer)) {
+            observers.add(observer);
+        }
+    }
+
+    @Override
+    public void removeObserver(ModelObserver observer) {
+        observers.remove(observer);
+    }
+
+    private void notifyObservers() {
+        for (ModelObserver o : observers) {
+            o.onModelChanged(this);
         }
     }
 
     @Override
     public void setCurrentPlayer(Player player) {
         this.currentPlayerIndex = this.players.indexOf(player);
-        notifyUpdate(this);
+        notifyObservers();
     }
 
 
-    public MesosGame(ViewUpdater viewUpdater) {
+    public MesosGame() {
         this.players = new ArrayList<>();
         this.currentRound = 0;
         this.currentEra = Era.ERA_1;
         this.phase = GamePhase.SETUP;
         this.currentPlayerIndex = 0;
         this.board = new Board(3);
-        this.viewUpdater = viewUpdater;
+        this.observers = new CopyOnWriteArrayList<>();
     }
 
     // SETUP
@@ -64,7 +76,7 @@ public class MesosGame implements GameModel {
         distributeInitialFood();
         this.currentRound = 1;
         this.phase = GamePhase.POSITIONING;
-        notifyUpdate(this);
+        notifyObservers();
     }
 
 
@@ -201,7 +213,7 @@ public class MesosGame implements GameModel {
             phase = GamePhase.ACTION_RESOLUTION;
             currentPlayerIndex = 0;
         }
-        notifyUpdate(this);
+        notifyObservers();
     }
 
     @Override
@@ -246,7 +258,7 @@ public class MesosGame implements GameModel {
         board.getLowerRow().remove(card);
         board.getUpperRow().remove(card);
         player.addCharacterCard(card);
-        notifyUpdate(this);
+        notifyObservers();
     }
 
     @Override
@@ -256,13 +268,13 @@ public class MesosGame implements GameModel {
         board.getLowerRow().remove(card);
         board.getUpperRow().remove(card);
         player.addBuildingCard(card);
-        notifyUpdate(this);
+        notifyObservers();
     }
 
     @Override
     public void takeFood(Player player) {
         player.addFood(3);
-        notifyUpdate(this);
+        notifyObservers();
     }
 
     @Override
@@ -295,7 +307,7 @@ public class MesosGame implements GameModel {
                 player.addPrestigePoints(track.getLastSlotPrestigePenalty());
             }
         }
-        notifyUpdate(this);
+        notifyObservers();
     }
 
     @Override
@@ -310,7 +322,7 @@ public class MesosGame implements GameModel {
         } else if (card instanceof CharacterCard) {
             takeCharacterCard(player, (CharacterCard) card);
         }
-        notifyUpdate(this);
+        notifyObservers();
     }
 
     // END OF ROUND: EVENT RESOLUTION
@@ -343,14 +355,14 @@ public class MesosGame implements GameModel {
     @Override
     public void discardLowerRow() {
         board.discardLowerRowTribeCards();
-        notifyUpdate(this);
+        notifyObservers();
     }
 
     @Override
     public void moveUpperRowToLower() {
 
         board.moveUpperRowTribeCardsToLower();
-        notifyUpdate(this);
+        notifyObservers();
     }
 
     @Override
@@ -361,7 +373,7 @@ public class MesosGame implements GameModel {
             }
         }
         currentRound++;
-        notifyUpdate(this);
+        notifyObservers();
     }
 
     @Override
@@ -427,7 +439,7 @@ public class MesosGame implements GameModel {
             player.addPrestigePoints(inventorPP + artistPP + builderPP
                     + printedBuildingPP + effectPP);
         }
-        notifyUpdate(this);
+        notifyObservers();
     }
 
     @Override
