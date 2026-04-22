@@ -93,24 +93,5 @@ class CavePaintingsEventCardTest {
         assertEquals(0, p2.getPrestigePoints());  // 10 - 10 = 0
     }
 
-    @Test
-    void testToDTO() {
-        String front = "event_front.png";
-        String back = "event_back.png";
-
-        // Using CavePaintingsEventCard as a concrete implementation
-        CavePaintingsEventCard card = new CavePaintingsEventCard(
-                front, back, Era.ERA_1, false, EventType.sustenance,
-                3, 2, 5, 10
-        );
-
-        CardDTO dto = card.toDTO();
-
-        assertNotNull(dto);
-        assertEquals(front, dto.front());
-        assertEquals(back, dto.back());
-        assertEquals(CardType.EVENT, dto.type());
-        assertFalse(dto.isFlipped());
-    }
 
 }

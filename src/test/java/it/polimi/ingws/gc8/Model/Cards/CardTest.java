@@ -20,11 +20,6 @@ class CardTest {
         public ConcreteCard(String front, String back, Era era) {
             super(front, back, era);
         }
-
-        @Override
-        public CardDTO toDTO() {
-            return null;
-        }
     }
 
     @BeforeEach

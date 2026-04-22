@@ -41,17 +41,6 @@ class BuildingCardTest {
     }
 
     @Test
-    void testToDTO() {
-        BuildingCard card = new BuildingCard("B01", 5, 10, Era.ERA_1, "front.png", "back.png", null);
-        CardDTO dto = card.toDTO();
-
-        assertEquals("front.png", dto.front());
-        assertEquals("back.png", dto.back());
-        assertEquals(CardType.BUILDING, dto.type());
-        assertFalse(dto.isFlipped());
-    }
-
-    @Test
     void testLoadFromJson_RealFile() {
         List<BuildingCard> cards = BuildingCard.loadFromJson("src/main/resources/buildings_cards.json");
 

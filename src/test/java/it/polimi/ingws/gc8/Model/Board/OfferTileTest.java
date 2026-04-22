@@ -135,15 +135,5 @@ class OfferTileTest {
         assertEquals(2, tileG.getUpperRowPicks());
     }
 
-    @Test
-    void testToDTO() {
-
-        OfferTile tile = new OfferTile(OffertileId.A, 0, 0, 0, 0);
-
-        OfferTileDTO dto = tile.toDTO();
-
-        assertNotNull(dto);
-        assertEquals(-1, dto.playerIndexOccupant());
-    }
 
 }

@@ -177,10 +177,6 @@ class BoardTest {
         Deque<Card> newDeck = new ArrayDeque<>();
 
         Card dummyCard = new Card("front", "back", Era.ERA_1) {
-            @Override
-            public CardDTO toDTO() {
-                return null;
-            }
         };
 
         newDeck.add(dummyCard);
@@ -198,10 +194,6 @@ class BoardTest {
         List<Card> newLowerRow = new ArrayList<>();
 
         Card testCard = new Card("front_img", "back_img", Era.ERA_1) {
-            @Override
-            public CardDTO toDTO() {
-                return null;
-            }
         };
         newLowerRow.add(testCard);
 
@@ -216,12 +208,7 @@ class BoardTest {
 
         List<Card> newUpperRow = new ArrayList<>();
 
-        Card dummy = new Card("front_path", "back_path", Era.ERA_2) {
-            @Override
-            public CardDTO toDTO() {
-                return null;
-            }
-        };
+        Card dummy = new Card("front_path", "back_path", Era.ERA_2) {};
         newUpperRow.add(dummy);
 
         board.setUpperRow(newUpperRow);
@@ -273,10 +260,7 @@ class BoardTest {
     void testGetLowerRowCard_Success() {
         Board board = new Board(2);
         List<Card> cards = new ArrayList<>();
-        Card dummy = new Card("f", "b", Era.ERA_1) {
-            @Override
-            public CardDTO toDTO() { return null; }
-        };
+        Card dummy = new Card("f", "b", Era.ERA_1) {};
         cards.add(dummy);
         board.setLowerRow(cards);
 
@@ -287,10 +271,7 @@ class BoardTest {
     void testGetUpperRowCard_Success() {
         Board board = new Board(2);
         List<Card> cards = new ArrayList<>();
-        Card dummy = new Card("f", "b", Era.ERA_1) {
-            @Override
-            public CardDTO toDTO() { return null; }
-        };
+        Card dummy = new Card("f", "b", Era.ERA_1) {};
         cards.add(dummy);
         board.setUpperRow(cards);
 
@@ -357,10 +338,7 @@ class BoardTest {
     void testRemoveLowerRowCard_Success() {
         Board board = new Board(2);
         List<Card> cards = new ArrayList<>();
-        Card dummy = new Card("f", "b", Era.ERA_1) {
-            @Override
-            public CardDTO toDTO() { return null; }
-        };
+        Card dummy = new Card("f", "b", Era.ERA_1) {};
         cards.add(dummy);
         board.setLowerRow(cards);
 
@@ -373,10 +351,7 @@ class BoardTest {
     void testRemoveUpperRowCard_Success() {
         Board board = new Board(2);
         List<Card> cards = new ArrayList<>();
-        Card dummy = new Card("f", "b", Era.ERA_1) {
-            @Override
-            public CardDTO toDTO() { return null; }
-        };
+        Card dummy = new Card("f", "b", Era.ERA_1) {};
         cards.add(dummy);
         board.setUpperRow(cards);
 

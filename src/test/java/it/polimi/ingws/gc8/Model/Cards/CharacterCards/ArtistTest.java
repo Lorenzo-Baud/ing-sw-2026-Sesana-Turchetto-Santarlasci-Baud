@@ -44,21 +44,5 @@ class ArtistTest {
         assertEquals(Era.ERA_3, artistEra3.getEra());
     }
 
-    @Test
-    void testToDTO() {
-        String front = "artist_front.png";
-        String back = "artist_back.png";
-
-        // Using Artist as a concrete implementation of CharacterCard
-        CharacterCard card = new Artist(front, back, Era.ERA_1, 2);
-
-        CardDTO dto = card.toDTO();
-
-        assertNotNull(dto);
-        assertEquals(front, dto.front());
-        assertEquals(back, dto.back());
-        assertEquals(CardType.CHARACTER, dto.type());
-        assertFalse(dto.isFlipped());
-    }
 
 }
