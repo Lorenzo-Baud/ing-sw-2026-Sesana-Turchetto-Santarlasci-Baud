@@ -96,9 +96,7 @@ public class Board {
         List<Card> eraIII = new ArrayList<>();
         List<Card> finalEvents = new ArrayList<>();
 
-        // =========================================================
         // Character card parsing
-        // =========================================================
         try {
             JsonNode root = mapper.readTree(new File("src/main/resources/character_cards.json"));
 
@@ -158,9 +156,7 @@ public class Board {
             e.printStackTrace();
         }
 
-        // =========================================================
         // PARSING CARTE EVENTO
-        // =========================================================
         try {
             JsonNode root = mapper.readTree(new File("src/main/resources/event_cards.json"));
 
@@ -222,9 +218,7 @@ public class Board {
             e.printStackTrace();
         }
 
-        // =========================================================
         // COMPOSIZIONE MAZZO FINALE
-        // =========================================================
 
         // mescola separatamente ogni Era
         Collections.shuffle(eraI);

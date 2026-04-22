@@ -88,6 +88,7 @@ public class MainController {
             if (!gameInProgress) {
                 lobby.remove(clientHandler);
                 clientMap.remove(clientHandler.getPlayerId());
+                viewUpdater.removeListener(clientHandler);
                 broadcastLobbyUpdate();
             } else {
                 // Game in progress: notify others about disconnection

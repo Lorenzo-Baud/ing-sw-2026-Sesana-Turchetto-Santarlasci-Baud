@@ -57,9 +57,7 @@ public class PositioningState implements GameState {
 
         // Execute the action on the model
         model.placeTotem(player, targetTile);
-
-
-
+        
         // Check if all totems are placed → transition
         if (model.allTotemsPlaced()) {
             context.transitionTo(GamePhase.ACTION_RESOLUTION);

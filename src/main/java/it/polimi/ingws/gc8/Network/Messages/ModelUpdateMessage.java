@@ -10,7 +10,7 @@ public class ModelUpdateMessage implements NetworkMessage{
         this.gameDTO = gameDTO;
     }
 
-    GameDTO getGameModelDTO() {
+    public GameDTO getGameModelDTO() {
         return gameDTO;
     }
 }

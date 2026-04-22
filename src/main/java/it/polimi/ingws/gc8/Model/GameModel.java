@@ -6,6 +6,7 @@ import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.Card;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.*;
+import it.polimi.ingws.gc8.Model.Enum.CardRow;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 
@@ -48,6 +49,12 @@ public interface GameModel {
     GamePhase getPhase();
 
     /**
+     * Sets the current game phase and notifies observers.
+     * Called by the Controller when transitioning between phases.
+     */
+    void setPhase(GamePhase phase);
+
+    /**
      * @return list of all players
      */
     List<Player> getPlayers();
@@ -71,8 +78,6 @@ public interface GameModel {
      * Unregisters a previously added observer.
      */
     void removeObserver(ModelObserver observer);
-
-    void setCurrentPlayer(Player player);
 
     // PHASE 1: TOTEM PLACEMENT
 
@@ -111,7 +116,7 @@ public interface GameModel {
      * @return list of available cards in that row
      *         (excluding Event cards)
      */
-    List<Card> getAvailableCardsFromRow(int row);
+    List<Card> getAvailableCardsFromRow(CardRow row);
 
     /**
      * Checks whether the player can afford a Building card,
