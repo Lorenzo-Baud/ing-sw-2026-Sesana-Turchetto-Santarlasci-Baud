@@ -27,6 +27,15 @@ public class RMIServerConnection implements ServerConnection {
     }
 
     /**
+     * Blocking pull from the server. Stub finché non viene cablato il
+     * client-side RMI (userà il remote stub {@code pullMessageFromServer()}).
+     */
+    @Override
+    public Object receive() throws Exception {
+        throw new UnsupportedOperationException("RMIServerConnection.receive() not yet implemented");
+    }
+
+    /**
      * Closes the connection from the client side.
      */
     @Override

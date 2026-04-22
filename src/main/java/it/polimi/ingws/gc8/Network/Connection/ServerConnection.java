@@ -22,6 +22,15 @@ public interface ServerConnection {
     void sendAction(Object action);
 
     /**
+     * Blocking pull: returns the next {@code NetworkMessage} arriving from
+     * the server. Called from the client-side network pump thread.
+     *
+     * @return the received message (typically a {@code NetworkMessage})
+     * @throws Exception if the connection is closed or a transport error occurs
+     */
+    Object receive() throws Exception;
+
+    /**
      * Closes the connection from the client side.
      */
     void disconnect();
