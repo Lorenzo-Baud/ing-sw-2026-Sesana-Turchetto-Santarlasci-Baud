@@ -2,6 +2,7 @@ package it.polimi.ingws.gc8.Model.Board;
 
 import it.polimi.ingws.gc8.Model.Enum.TotemColor;
 import it.polimi.ingws.gc8.Model.Player;
+import it.polimi.ingws.gc8.Network.DTO.OfferTileDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -133,4 +134,16 @@ class OfferTileTest {
         assertEquals(1, tileG.getLowerRowPicks());
         assertEquals(2, tileG.getUpperRowPicks());
     }
+
+    @Test
+    void testToDTO() {
+
+        OfferTile tile = new OfferTile(OffertileId.A, 0, 0, 0, 0);
+
+        OfferTileDTO dto = tile.toDTO();
+
+        assertNotNull(dto);
+        assertEquals(-1, dto.playerIndexOccupant());
+    }
+
 }

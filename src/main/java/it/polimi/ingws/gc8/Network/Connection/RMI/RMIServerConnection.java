@@ -1,33 +1,44 @@
-package it.polimi.ingws.gc8.Network;
+package it.polimi.ingws.gc8.Network.Connection.RMI;
 
-/**
- * Interface for the client-side connection handler.
- * It abstracts the communication towards the server, allowing the View
- * to send actions regardless of the transport layer (RMI or Socket).
- */
-public interface ServerConnection {
+import it.polimi.ingws.gc8.Network.Connection.ServerConnection;
+
+public class RMIServerConnection implements ServerConnection {
 
     /**
      * Establishes a connection with the server.
+     *
      * @param host the server IP or hostname
      * @param port the server port
      * @throws Exception if connection fails
      */
-    void connect(String host, int port) throws Exception;
+    @Override
+    public void connect(String host, int port) throws Exception {
+        
+    }
 
     /**
      * Sends an action or message from the player to the server.
+     *
      * @param action the object representing the player's move
      */
-    void sendAction(Object action);
+    @Override
+    public void sendAction(Object action) {
+
+    }
 
     /**
      * Closes the connection from the client side.
      */
-    void disconnect();
+    @Override
+    public void disconnect() {
+
+    }
 
     /**
      * @return true if the client is currently connected to a server
      */
-    boolean isConnected();
+    @Override
+    public boolean isConnected() {
+        return false;
+    }
 }

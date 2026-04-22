@@ -142,8 +142,6 @@ public class Board {
                         break;
                 }
 
-                if (card == null) continue;
-
                 switch (era) {
                     case ERA_1:
                         eraI.add(card);
@@ -202,9 +200,8 @@ public class Board {
                         break;
                 }
 
-                if (card == null) continue;
-
-                // carte Evento Finale → lista separata, sempre in fondo al mazzo
+                // Final events cards -> separate list, always on the
+                // bottom of the deck
                 if (isFinal) {
                     finalEvents.add(card);
                 } else {

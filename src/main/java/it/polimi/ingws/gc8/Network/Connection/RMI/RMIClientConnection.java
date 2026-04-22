@@ -1,10 +1,17 @@
-package it.polimi.ingws.gc8.Network;
+package it.polimi.ingws.gc8.Network.Connection.RMI;
+
+import it.polimi.ingws.gc8.Network.Connection.ClientConnection;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * Server-client communication, this class is used by the Server to send messages
+ * to the Client and receive messages from the Client via RMI. It implements the ClientConnection
+ * interface for the Server's use and the RemoteConnectionInterface for the Client's use.
+ */
 public class RMIClientConnection extends UnicastRemoteObject implements ClientConnection, RemoteConnectionInterface {
 
     // Queue for messages waiting to be sent to the client

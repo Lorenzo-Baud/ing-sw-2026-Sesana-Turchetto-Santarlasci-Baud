@@ -1,4 +1,4 @@
-package it.polimi.ingws.gc8.Network;
+package it.polimi.ingws.gc8.Network.Connection;
 
 /**
  * Abstracts the bidirectional communication channel with a client.

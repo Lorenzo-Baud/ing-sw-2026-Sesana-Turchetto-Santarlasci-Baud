@@ -1,10 +1,10 @@
-package it.polimi.ingws.gc8.Network;
+package it.polimi.ingws.gc8.Network.Connection;
 
 import it.polimi.ingws.gc8.Controller.MainController;
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Controller.events.GameEventListener;
-import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
+import it.polimi.ingws.gc8.Network.Connection.RMI.RMIClientConnection;
 
 /**
  * Handles the bidirectional communication with a single connected player.
