@@ -4,6 +4,7 @@ import it.polimi.ingws.gc8.Controller.actions.PlaceTotemAction;
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Controller.actions.ReturnTotemAction;
 import it.polimi.ingws.gc8.Controller.actions.TakeCardAction;
+import it.polimi.ingws.gc8.Model.Enum.CardRow;
 import it.polimi.ingws.gc8.Controller.actions.TakeFoodAction;
 import it.polimi.ingws.gc8.Model.Board.OffertileId;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
@@ -213,8 +214,8 @@ public class TuiView extends View {
         if (choice == 0) return;
 
         switch (tags.get(choice - 1)) {
-            case "UPPER" -> takeCardFromRow(g.upperRowCards(), 1, "UPPER");
-            case "LOWER" -> takeCardFromRow(g.lowerRowCards(), 0, "LOWER");
+            case "UPPER" -> takeCardFromRow(g.upperRowCards(), CardRow.UPPER, "UPPER");
+            case "LOWER" -> takeCardFromRow(g.lowerRowCards(), CardRow.LOWER, "LOWER");
             case "FOOD"  -> {
                 Printer.printSuccess("Prendo food…");
                 notifyAllListeners(new TakeFoodAction(myPlayerId()));
@@ -265,7 +266,7 @@ public class TuiView extends View {
     }
 
     /** Sotto-menu: sceglie una carta da una delle due righe. */
-    private void takeCardFromRow(List<CardDTO> cards, int row, String label) {
+    private void takeCardFromRow(List<CardDTO> cards, CardRow row, String label) {
         if (cards == null || cards.isEmpty()) {
             Printer.printError("La riga " + label + " è vuota.");
             return;
