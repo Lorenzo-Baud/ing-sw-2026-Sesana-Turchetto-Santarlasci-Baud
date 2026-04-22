@@ -7,6 +7,7 @@ import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.Card;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.*;
+import it.polimi.ingws.gc8.Model.Enum.CardRow;
 import it.polimi.ingws.gc8.Model.Enum.CharacterType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.EventType;
@@ -28,7 +29,6 @@ public class MesosGame implements GameModel {
     private int currentRound;
     private Era currentEra;
     private GamePhase phase;
-    private int currentPlayerIndex;
     private final List<ModelObserver> observers;
 
     @Override
@@ -50,8 +50,8 @@ public class MesosGame implements GameModel {
     }
 
     @Override
-    public void setCurrentPlayer(Player player) {
-        this.currentPlayerIndex = this.players.indexOf(player);
+    public void setPhase(GamePhase phase) {
+        this.phase = phase;
         notifyObservers();
     }
 
@@ -61,7 +61,6 @@ public class MesosGame implements GameModel {
         this.currentRound = 0;
         this.currentEra = Era.ERA_1;
         this.phase = GamePhase.SETUP;
-        this.currentPlayerIndex = 0;
         this.board = new Board(3);
         this.observers = new CopyOnWriteArrayList<>();
     }
@@ -75,7 +74,6 @@ public class MesosGame implements GameModel {
         randomizeTurnOrder();
         distributeInitialFood();
         this.currentRound = 1;
-        this.phase = GamePhase.POSITIONING;
         notifyObservers();
     }
 
@@ -187,7 +185,22 @@ public class MesosGame implements GameModel {
     @Override
     public Player getCurrentPlayer() {
         if (players.isEmpty()) return null;
-        return players.get(currentPlayerIndex);
+        switch (phase) {
+            case POSITIONING:
+                // Primo giocatore nell'ordine di turno che non ha ancora piazzato il Totem.
+                for (Player p : board.getTurnOrderTrack().getCurrentOrder()) {
+                    if (p != null && !board.getOfferTrack().containsPlayer(p)) {
+                        return p;
+                    }
+                }
+                return null;
+            case ACTION_RESOLUTION:
+                // Giocatore con il Totem più a sinistra sul tracciato Offerte.
+                List<OfferTile> resolutionOrder = board.getOfferTrack().getResolutionOrder();
+                return resolutionOrder.isEmpty() ? null : resolutionOrder.get(0).getOccupant();
+            default:
+                return null;
+        }
     }
 
     // PHASE 1: TOTEM PLACEMENT
@@ -208,11 +221,7 @@ public class MesosGame implements GameModel {
     @Override
     public void placeTotem(Player player, OfferTile offerTile) {
         board.getOfferTrack().placeTotem(offerTile.getId(), player);
-        currentPlayerIndex = (currentPlayerIndex + 1) % numPlayers;
-        if (allTotemsPlaced()) {
-            phase = GamePhase.ACTION_RESOLUTION;
-            currentPlayerIndex = 0;
-        }
+        board.getTurnOrderTrack().returnTotem(player);
         notifyObservers();
     }
 
@@ -232,12 +241,23 @@ public class MesosGame implements GameModel {
     }
 
     /**
-     * @param row 0 = lower row, 1 = upper row
+     * @param row selected board row
      * @return available (non-Event) cards in the requested row
      */
     @Override
-    public List<Card> getAvailableCardsFromRow(int row) {
-        List<Card> source = (row == 0) ? board.getLowerRow() : board.getUpperRow();
+    public List<Card> getAvailableCardsFromRow(CardRow row) {
+        List<Card> source;
+        switch (Objects.requireNonNull(row, "row")) {
+            case LOWER:
+                source = board.getLowerRow();
+                break;
+            case UPPER:
+                source = board.getUpperRow();
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported card row: " + row);
+        }
+
         List<Card> available = new ArrayList<>();
         for (Card card : source) {
             if (!(card instanceof EventCard)) {
@@ -322,7 +342,6 @@ public class MesosGame implements GameModel {
         } else if (card instanceof CharacterCard) {
             takeCharacterCard(player, (CharacterCard) card);
         }
-        notifyObservers();
     }
 
     // END OF ROUND: EVENT RESOLUTION

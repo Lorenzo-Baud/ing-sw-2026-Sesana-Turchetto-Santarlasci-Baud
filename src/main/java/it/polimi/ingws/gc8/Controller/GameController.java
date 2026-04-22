@@ -24,11 +24,10 @@ public class GameController {
     private final ViewUpdater viewUpdater;
     private final ReentrantLock gameLock;  //più client inviano azioni contemporaneamente, ogni lock() deve avere il suo unlock()
 
-    /** Pre-instantiated states, one per GamePhase. */
+    /** Pre-instantiated states, one per GamePhase. The "current" state is
+     *  always derived from {@code model.getPhase()} via this map — we do not
+     *  keep a separate field, to avoid two sources of truth. */
     private final Map<GamePhase, GameState> states;
-
-    /** Current state corresponding to the current GamePhase. */
-    private GameState currentState;
 
     /** Fast lookup: playerId → Player model object. Set at game start. */
     private Map<Integer, Player> playerMap;
@@ -53,19 +52,19 @@ public class GameController {
         states.put(GamePhase.ACTION_RESOLUTION, new ActionResolutionState());
         states.put(GamePhase.END_ROUND, new EndRoundState());
         states.put(GamePhase.GAME_OVER, new GameOverState());
-
-        this.currentState = states.get(GamePhase.SETUP);
     }
 
     /**
      * Central action dispatch, called by {@link MainController}.
-     * Acquires the game lock, then delegates to the current state.
+     * Acquires the game lock, then delegates to the current state
+     * (derived from the model's current phase).
      */
     public void handleAction(PlayerAction action) {
         gameLock.lock();
         try {
-            if (currentState != null) {
-                currentState.handleAction(this, action);
+            GameState current = states.get(model.getPhase());
+            if (current != null) {
+                current.handleAction(this, action);
             }
         } finally {
             gameLock.unlock();
@@ -76,24 +75,22 @@ public class GameController {
      * Transitions the game to a new phase.
      * Called by {@link GameState} implementations when the phase should change.
      * Must be called while the gameLock is held.
+     *
+     * Calls onExit on the old state, asks the model to update its phase
+     * (which notifies observers), then calls onEnter on the new state.
      */
-    //chiama onExit() sullo stato vecchio, cambia stato, chiama onEnter() sul nuovo, notifica il cambio fase via viewUpdater
     public void transitionTo(GamePhase newPhase) {
-        GamePhase oldPhase = model.getPhase();
-
-        if (currentState != null) {
-            currentState.onExit(this);
+        GameState oldState = states.get(model.getPhase());
+        if (oldState != null) {
+            oldState.onExit(this);
         }
 
-        currentState = states.get(newPhase);
+        model.setPhase(newPhase);
 
-        if (currentState != null) {
-            currentState.onEnter(this);
+        GameState newState = states.get(newPhase);
+        if (newState != null) {
+            newState.onEnter(this);
         }
-
-        int currentPlayerId = model.getCurrentPlayer() != null
-                ? model.getCurrentPlayer().getPlayerId() : -1;
-
     }
 
     /**
@@ -132,7 +129,7 @@ public class GameController {
     }
 
     public GameState getCurrentState() {
-        return currentState;
+        return states.get(model.getPhase());
     }
 
     public Map<GamePhase, GameState> getStates() {

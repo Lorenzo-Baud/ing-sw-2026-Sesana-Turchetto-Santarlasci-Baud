@@ -3,6 +3,7 @@ package it.polimi.ingws.gc8.Network;
 import it.polimi.ingws.gc8.Controller.events.GameEventListener;
 import it.polimi.ingws.gc8.Model.Board.OfferTile;
 import it.polimi.ingws.gc8.Model.Cards.Card;
+import it.polimi.ingws.gc8.Model.Enum.CardRow;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 import it.polimi.ingws.gc8.Model.GameModel;
@@ -126,12 +127,12 @@ public class ViewUpdater implements ModelObserver {
         }
 
         List<CardDTO> upperRowDTO = new ArrayList<>();
-        for (Card c : model.getAvailableCardsFromRow(0)) {
+        for (Card c : model.getAvailableCardsFromRow(CardRow.UPPER)) {
             upperRowDTO.add(DtoMapper.toDTO(c));
         }
 
         List<CardDTO> lowerRowDTO = new ArrayList<>();
-        for (Card c : model.getAvailableCardsFromRow(1)) {
+        for (Card c : model.getAvailableCardsFromRow(CardRow.LOWER)) {
             lowerRowDTO.add(DtoMapper.toDTO(c));
         }
 

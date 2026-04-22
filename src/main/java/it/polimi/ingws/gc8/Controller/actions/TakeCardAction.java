@@ -1,5 +1,9 @@
 package it.polimi.ingws.gc8.Controller.actions;
 
+import it.polimi.ingws.gc8.Model.Enum.CardRow;
+
+import java.util.Objects;
+
 /**
  * Action: a player takes a card (Character or Building) from a row.
  * Valid during the ACTION_RESOLUTION phase.
@@ -10,12 +14,12 @@ public class TakeCardAction implements PlayerAction {
 
     private final int playerId;
     private final String cardName;
-    private final int row; // 0 = lower row, 1 = upper row
+    private final CardRow row;
 
-    public TakeCardAction(int playerId, String cardName, int row) {
+    public TakeCardAction(int playerId, String cardName, CardRow row) {
         this.playerId = playerId;
         this.cardName = cardName;
-        this.row = row;
+        this.row = Objects.requireNonNull(row, "row");
     }
 
     @Override
@@ -31,9 +35,9 @@ public class TakeCardAction implements PlayerAction {
     }
 
     /**
-     * @return 0 for lower row, 1 for upper row
+     * @return the board row containing the chosen card
      */
-    public int getRow() {
+    public CardRow getRow() {
         return row;
     }
 }

@@ -1,6 +1,5 @@
 package it.polimi.ingws.gc8.Controller.events;
 
-import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
 
 /**

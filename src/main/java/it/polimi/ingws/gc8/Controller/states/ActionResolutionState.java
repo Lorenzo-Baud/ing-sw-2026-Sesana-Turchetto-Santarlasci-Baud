@@ -63,11 +63,6 @@ public class ActionResolutionState implements GameState {
         List<Player> offerOrder = context.getModel().getPlayersInOfferOrder();
         context.setOfferOrder(offerOrder);
         context.setOfferOrderIndex(0);
-
-        if (!offerOrder.isEmpty()) {
-            Player firstPlayer = offerOrder.get(0);
-            context.getModel().setCurrentPlayer(firstPlayer); // Questo scatena notifyUpdate!
-        }
     }
 
     @Override
@@ -137,10 +132,6 @@ public class ActionResolutionState implements GameState {
 
         if (nextIndex >= offerOrder.size()) {
             context.transitionTo(GamePhase.END_ROUND);
-        } else {
-
-            Player nextPlayer = offerOrder.get(nextIndex);
-            context.getModel().setCurrentPlayer(nextPlayer);
         }
     }
 
