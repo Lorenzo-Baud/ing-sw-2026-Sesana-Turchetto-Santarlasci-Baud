@@ -102,7 +102,7 @@ public class GameController {
     public void startGame(int numPlayers) {
         gameLock.lock();
         try {
-            model.setupGame(numPlayers);
+            model.setupGame(numPlayers, playerMap.values().stream().toList());
 
             playerMap.clear();
             for (Player p : model.getPlayers()) {

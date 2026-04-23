@@ -16,18 +16,7 @@ public class App
     {
 
         System.out.println( "Hello World!" );
-        ViewUpdater viewUpdater = new ViewUpdater();
-        GameModel game = new MesosGame();
-        game.addObserver(viewUpdater);
-        game.setupGame(3);
 
-        game.getBoard().getTribeDeck().forEach(card -> {
-            System.out.println(card.getEra());
-            // If instanceof EventCard, print the event type
-             if (card instanceof EventCard) {
-                 System.out.println(((EventCard) card).getEventType());
-             }
-        });
 
     }
 

@@ -25,8 +25,10 @@ public interface GameModel {
      * Initializes a new game: creates players, board, decks,
      * distributes initial food and randomizes turn order.
      * @param numPlayers number of players (2-5)
+     * @param players list of Player objects representing the players in the game
+     * @throws IllegalArgumentException if numPlayers is out of range or players list is invalid
      */
-    void setupGame(int numPlayers);
+    void setupGame(int numPlayers, List<Player> players) throws IllegalArgumentException;
 
     /**
      * @return number of players in the game
@@ -93,10 +95,12 @@ public interface GameModel {
 
     /**
      * Places the player's Totem on the chosen Offer tile.
-     * @param player the player placing the Totem
+     *
+     * @param player    the player placing the Totem
      * @param offerTile the chosen Offer tile (must be free)
+     * @return
      */
-    void placeTotem(Player player, OfferTile offerTile);
+    boolean placeTotem(Player player, OfferTile offerTile);
 
     /**
      * @return true if all players have placed their Totem

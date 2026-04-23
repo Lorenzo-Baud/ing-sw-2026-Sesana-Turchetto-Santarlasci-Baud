@@ -98,7 +98,7 @@ public class OfferTrack {
      * @param player player occupying tile
      * @throws IllegalStateException if tile is missing or already occupied
      */
-    public void placeTotem(OffertileId id, Player player) {
+    public void placeTotem(OffertileId id, Player player) throws IllegalStateException {
         OfferTile tile = getTileById(id);
         if (tile != null && tile.getOccupant() == null) {
             tile.setOccupant(player);

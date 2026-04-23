@@ -12,7 +12,6 @@ import it.polimi.ingws.gc8.Model.Enum.CharacterType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.EventType;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
-import it.polimi.ingws.gc8.Model.Enum.TotemColor;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -23,13 +22,53 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class MesosGame implements GameModel {
 
-    private List<Player> players;
+    /**
+     * The main game board that manages the decks, tracks, and cards currently in play.
+     */
     private Board board;
+
+    /**
+     * The total number of players participating in the game session.
+     */
     private int numPlayers;
+
+    /**
+     * The current round number within the active era.
+     */
     private int currentRound;
+
+    /**
+     * The current historical era (e.g., ERA_1, ERA_2, ERA_3) which dictates deck usage.
+     */
     private Era currentEra;
+
+    /**
+     * The current phase of the game state machine (e.g., PLACEMENT, RESOLUTION).
+     */
     private GamePhase phase;
+
+    /**
+     * The list of all players in the game, typically sorted by turn order.
+     */
+    private List<Player> players;
+
+    /**
+     * The list of observers registered to receive updates whenever the model's state changes.
+     */
     private final List<ModelObserver> observers;
+
+    /**
+     * Initializes a new game instance with default setup values.
+     * Sets the round to zero and the era to the first era.
+     * Initializes empty lists for both players and model observers.
+     */
+    public MesosGame() {
+        this.currentRound = 0;
+        this.currentEra = Era.ERA_1;
+        this.phase = GamePhase.SETUP;
+        this.players = new ArrayList<>();
+        this.observers = new CopyOnWriteArrayList<>();
+    }
 
     @Override
     public void addObserver(ModelObserver observer) {
@@ -43,6 +82,11 @@ public class MesosGame implements GameModel {
         observers.remove(observer);
     }
 
+    /**
+     * Notifies all registered observers of a change in the model's state.
+     * Iterates through the list of observers and calls their update method,
+     * passing the current game instance as the subject.
+     */
     private void notifyObservers() {
         for (ModelObserver o : observers) {
             o.onModelChanged(this);
@@ -55,37 +99,34 @@ public class MesosGame implements GameModel {
         notifyObservers();
     }
 
-
-    public MesosGame() {
-        this.players = new ArrayList<>();
-        this.currentRound = 0;
-        this.currentEra = Era.ERA_1;
-        this.phase = GamePhase.SETUP;
-        this.observers = new CopyOnWriteArrayList<>();
-    }
-
-    // SETUP
+    /**
+     * Sets up the initial state of the game for a specified number of players.
+     * This method initializes the board, players, and turn order, grants starting resources,
+     * sets the round to the first round, and alerts all observers that the setup is complete.
+     *
+     * @param numPlayers the number of players participating in the game.
+     */
     @Override
-    public void setupGame(int numPlayers) {
+    public void setupGame(int numPlayers, List<Player> players) {
+
+        // Parameters check
+        if(players.size() != numPlayers){
+            throw new IllegalArgumentException("Players list must be non-null and match the number of players.");
+        }
+
+        // Parameters assignment
+        this.currentRound = 1;
         this.numPlayers = numPlayers;
         this.board = new Board(numPlayers);
-        initializePlayers(numPlayers);
+        this.players = new ArrayList<>(players);
+
+        // Game initialization methods invocation
         randomizeTurnOrder();
         distributeInitialFood();
-        this.currentRound = 1;
+
+        // Notifies observers
         notifyObservers();
-    }
 
-
-    /**
-     * Creates Players with default names and sequential TotemColors.
-     */
-    private void initializePlayers(int numPlayers) {
-        players.clear(); //remove eventual player left from a previews configuration
-        TotemColor[] colors = TotemColor.values();
-        for (int i = 0; i < numPlayers; i++) {
-            players.add(new Player(i + 1, "Player " + (i + 1), colors[i]));
-        }
     }
 
     /**
@@ -170,11 +211,23 @@ public class MesosGame implements GameModel {
         return board.getOfferTrack().getAvailableTiles();
     }
 
+    /**
+     * Places the player's Totem on the specified Offer tile
+     *
+     * @param player    the player placing the Totem
+     * @param offerTile the chosen Offer tile (must be free)
+     * @return true if placement was successful, false otherwise (e.g., tile occupied)
+     */
     @Override
-    public void placeTotem(Player player, OfferTile offerTile) {
-        board.getOfferTrack().placeTotem(offerTile.getId(), player);
-        board.getTurnOrderTrack().returnTotem(player);
-        notifyObservers();
+    public boolean placeTotem(Player player, OfferTile offerTile) {
+        try {
+            board.getOfferTrack().placeTotem(offerTile.getId(), player);
+            board.getTurnOrderTrack().returnTotem(player);
+            notifyObservers();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
