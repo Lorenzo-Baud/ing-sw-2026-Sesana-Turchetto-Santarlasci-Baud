@@ -7,6 +7,7 @@ import it.polimi.ingws.gc8.Model.Cards.Card;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.*;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.*;
+import it.polimi.ingws.gc8.Model.Enum.CardType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.EventType;
 
@@ -102,6 +103,7 @@ public class Board {
         try {
             JsonNode root = mapper.readTree(new File("src/main/resources/character_cards.json"));
 
+            // Characters cards parsing
             for (JsonNode node : root) {
                 String type = node.get("type").asText();
                 String front = node.get("front").asText();
@@ -158,7 +160,7 @@ public class Board {
             e.printStackTrace();
         }
 
-        // PARSING CARTE EVENTO
+        // Event cards parsing
         try {
             JsonNode root = mapper.readTree(new File("src/main/resources/event_cards.json"));
 
@@ -220,14 +222,15 @@ public class Board {
             e.printStackTrace();
         }
 
-        // COMPOSIZIONE MAZZO FINALE
+        // Final deck composition
 
-        // mescola separatamente ogni Era
+        // Shuffles decks separately by era
         Collections.shuffle(eraI);
         Collections.shuffle(eraII);
         Collections.shuffle(eraIII);
 
-        // compone il mazzo: ERA_1 in cima, poi ERA_2, ERA_3, Evento Finale in fondo
+        // Final deck composition: Era I cards on top, then Era II, then
+        // Era III, and finally the final events on the bottom
         tribeDeck.clear();
         for (Card c : eraI)        tribeDeck.addLast(c);
         for (Card c : eraII)       tribeDeck.addLast(c);
@@ -351,6 +354,7 @@ public class Board {
         for (BuildingCard b : selectedEra2) era2BuildingDeck.addLast(b);
         era3BuildingDeck.clear();
         for (BuildingCard b : selectedEra3) era3BuildingDeck.addLast(b);
+
         return selectedEra1;
     }
 
@@ -390,6 +394,7 @@ public class Board {
      * </ul>
      */
     private void dealInitialRows(int playerCount, List<BuildingCard> era1Buildings) {
+
         int lowerTarget = playerCount + 1;
         int lowerFilled = 0;
         while (lowerFilled < lowerTarget && !tribeDeck.isEmpty()) {
@@ -408,6 +413,7 @@ public class Board {
         }
 
         upperRow.addAll(era1Buildings);
+
     }
 
 
@@ -495,14 +501,14 @@ public class Board {
      * Moves all upper row cards to the lower row
      */
     public void moveUpperRowTribeCardsToLower() {
-        List<Card> tribeCards = new ArrayList<>();
+        List<Card> cards = new ArrayList<>();
         for (Card card : upperRow) {
-            if (card instanceof CharacterCard || card instanceof EventCard) {
-                tribeCards.add(card);
+            if (card.getCardType() == CardType.CHARACTER || card.getCardType() == CardType.EVENT) {
+                cards.add(card);
             }
         }
-        upperRow.removeAll(tribeCards);
-        lowerRow.addAll(tribeCards);
+        upperRow.removeAll(cards);
+        lowerRow.addAll(cards);
     }
 
     /**

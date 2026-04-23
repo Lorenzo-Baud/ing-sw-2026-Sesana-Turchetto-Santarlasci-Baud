@@ -1,5 +1,6 @@
 package it.polimi.ingws.gc8.Model.Cards;
 
+import it.polimi.ingws.gc8.Model.Enum.CardType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +19,7 @@ class CardTest {
      */
     private static class ConcreteCard extends Card {
         public ConcreteCard(String front, String back, Era era) {
-            super(front, back, era);
+            super(front, back, era, CardType.CHARACTER);
         }
     }
 

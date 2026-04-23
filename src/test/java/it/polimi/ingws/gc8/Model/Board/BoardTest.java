@@ -6,6 +6,7 @@ import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Artist;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.EventCard;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.HuntEventCard;
+import it.polimi.ingws.gc8.Model.Enum.CardType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.EventType;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
@@ -173,7 +174,7 @@ class BoardTest {
 
         Deque<Card> newDeck = new ArrayDeque<>();
 
-        Card dummyCard = new Card("front", "back", Era.ERA_1) {
+        Card dummyCard = new Card("front", "back", Era.ERA_1, CardType.CHARACTER) {
         };
 
         newDeck.add(dummyCard);
@@ -190,7 +191,7 @@ class BoardTest {
 
         List<Card> newLowerRow = new ArrayList<>();
 
-        Card testCard = new Card("front_img", "back_img", Era.ERA_1) {
+        Card testCard = new Card("front_img", "back_img", Era.ERA_1, CardType.CHARACTER) {
         };
         newLowerRow.add(testCard);
 
@@ -205,7 +206,7 @@ class BoardTest {
 
         List<Card> newUpperRow = new ArrayList<>();
 
-        Card dummy = new Card("front_path", "back_path", Era.ERA_2) {};
+        Card dummy = new Card("front_path", "back_path", Era.ERA_2, CardType.CHARACTER) {};
         newUpperRow.add(dummy);
 
         board.setUpperRow(newUpperRow);
@@ -257,7 +258,7 @@ class BoardTest {
     void testGetLowerRowCard_Success() {
         Board board = new Board(2);
         List<Card> cards = new ArrayList<>();
-        Card dummy = new Card("f", "b", Era.ERA_1) {};
+        Card dummy = new Card("f", "b", Era.ERA_1, CardType.CHARACTER) {};
         cards.add(dummy);
         board.setLowerRow(cards);
 
@@ -268,7 +269,7 @@ class BoardTest {
     void testGetUpperRowCard_Success() {
         Board board = new Board(2);
         List<Card> cards = new ArrayList<>();
-        Card dummy = new Card("f", "b", Era.ERA_1) {};
+        Card dummy = new Card("f", "b", Era.ERA_1, CardType.CHARACTER) {};
         cards.add(dummy);
         board.setUpperRow(cards);
 
@@ -316,7 +317,7 @@ class BoardTest {
     void testRemoveLowerRowCard_Success() {
         Board board = new Board(2);
         List<Card> cards = new ArrayList<>();
-        Card dummy = new Card("f", "b", Era.ERA_1) {};
+        Card dummy = new Card("f", "b", Era.ERA_1, CardType.CHARACTER) {};
         cards.add(dummy);
         board.setLowerRow(cards);
 
@@ -329,7 +330,7 @@ class BoardTest {
     void testRemoveUpperRowCard_Success() {
         Board board = new Board(2);
         List<Card> cards = new ArrayList<>();
-        Card dummy = new Card("f", "b", Era.ERA_1) {};
+        Card dummy = new Card("f", "b", Era.ERA_1, CardType.CHARACTER) {};
         cards.add(dummy);
         board.setUpperRow(cards);
 

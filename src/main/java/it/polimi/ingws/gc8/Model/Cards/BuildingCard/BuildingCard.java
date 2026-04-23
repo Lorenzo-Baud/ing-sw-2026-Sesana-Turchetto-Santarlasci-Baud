@@ -3,6 +3,7 @@ package it.polimi.ingws.gc8.Model.Cards.BuildingCard;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.polimi.ingws.gc8.Model.Cards.Card;
+import it.polimi.ingws.gc8.Model.Enum.CardType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 
 import java.io.File;
@@ -19,7 +20,7 @@ public class BuildingCard extends Card {
     public BuildingCard(String id, int foodCost, int prestigeBonus,
                         Era era, String front, String back,
                         BuildingEffect effect) {
-        super(front, back, era);
+        super(front, back, era, CardType.BUILDING);
         this.id = id;
         this.foodCost = foodCost;
         this.prestigeBonus = prestigeBonus;

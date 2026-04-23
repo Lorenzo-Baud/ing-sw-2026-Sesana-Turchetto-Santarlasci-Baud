@@ -101,10 +101,10 @@ public class ActionResolutionState implements GameState {
                         "Not enough food to buy this building.");
                 return;
             }
-            model.takeBuildingCard(player, building);
+            model.pickBuildingCard(player, building);
             cardType = "BUILDING";
         } else if (targetCard instanceof CharacterCard) {
-            model.takeCharacterCard(player, (CharacterCard) targetCard);
+            model.pickCharacterCard(player, (CharacterCard) targetCard);
             cardType = "CHARACTER";
         } else {
             viewUpdater.notifyError(player.getPlayerId(), "INVALID_CARD",

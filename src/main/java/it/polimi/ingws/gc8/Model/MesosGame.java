@@ -2,6 +2,7 @@ package it.polimi.ingws.gc8.Model;
 
 import it.polimi.ingws.gc8.Model.Board.Board;
 import it.polimi.ingws.gc8.Model.Board.OfferTile;
+import it.polimi.ingws.gc8.Model.Board.OffertileId;
 import it.polimi.ingws.gc8.Model.Board.TurnOrderTrack;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.Card;
@@ -245,6 +246,16 @@ public class MesosGame implements GameModel {
         return order;
     }
 
+    @Override
+    public OfferTile getOfferTile(Player player) {
+        for (OfferTile tile : board.getOfferTrack().getTiles()) {
+            if (player.equals(tile.getOccupant())) {
+                return tile;
+            }
+        }
+        return null;
+    }
+
     /**
      * @param row selected board row
      * @return available (non-Event) cards in the requested row
@@ -279,7 +290,7 @@ public class MesosGame implements GameModel {
     }
 
     @Override
-    public void takeCharacterCard(Player player, CharacterCard card) {
+    public void pickCharacterCard(Player player, CharacterCard card) {
         board.getLowerRow().remove(card);
         board.getUpperRow().remove(card);
         player.addCharacterCard(card);
@@ -287,13 +298,22 @@ public class MesosGame implements GameModel {
     }
 
     @Override
-    public void takeBuildingCard(Player player, BuildingCard card) {
+    public boolean pickBuildingCard(Player player, BuildingCard card) {
         int discount = player.getTribe().getTotalBuilderDiscount();
+
+        // Check affordability before modifying the game state
+        if(card.getEffectiveCost(discount) > player.getFood()) {
+            return false;
+        }
+
         player.removeFood(card.getEffectiveCost(discount));
         board.getLowerRow().remove(card);
         board.getUpperRow().remove(card);
         player.addBuildingCard(card);
         notifyObservers();
+
+        return true;
+
     }
 
     @Override
@@ -343,9 +363,9 @@ public class MesosGame implements GameModel {
     @Override
     public void takeExtraCard(Player player, Card card) {
         if (card instanceof BuildingCard) {
-            takeBuildingCard(player, (BuildingCard) card);
+            pickBuildingCard(player, (BuildingCard) card);
         } else if (card instanceof CharacterCard) {
-            takeCharacterCard(player, (CharacterCard) card);
+            pickCharacterCard(player, (CharacterCard) card);
         }
     }
 
@@ -384,7 +404,6 @@ public class MesosGame implements GameModel {
 
     @Override
     public void moveUpperRowToLower() {
-
         board.moveUpperRowTribeCardsToLower();
         notifyObservers();
     }

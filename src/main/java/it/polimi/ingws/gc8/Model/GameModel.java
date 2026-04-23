@@ -116,6 +116,11 @@ public interface GameModel {
     List<Player> getPlayersInOfferOrder();
 
     /**
+     * @return offer tile on which the player is currently placed
+     */
+    OfferTile getOfferTile(Player player);
+
+    /**
      * @param row the row to pick from (upper or lower)
      * @return list of available cards in that row
      *         (excluding Event cards)
@@ -137,15 +142,17 @@ public interface GameModel {
      * @param player the player
      * @param card the chosen Character card
      */
-    void takeCharacterCard(Player player, CharacterCard card);
+    void pickCharacterCard(Player player, CharacterCard card);
 
     /**
      * The player buys a Building card: pays the cost
      * (with Builder discount) and adds it to the tribe.
+     *
      * @param player the player
-     * @param card the chosen Building card
+     * @param card   the chosen Building card
+     * @return
      */
-    void takeBuildingCard(Player player, BuildingCard card);
+    boolean pickBuildingCard(Player player, BuildingCard card);
 
     /**
      * The player takes 3 Food (tile A only, 5-player games).
