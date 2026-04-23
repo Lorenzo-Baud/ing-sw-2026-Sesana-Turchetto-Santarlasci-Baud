@@ -3,6 +3,7 @@ package it.polimi.ingws.gc8.Model.Board;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.Card;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Artist;
+import it.polimi.ingws.gc8.Model.Cards.CharacterCards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.EventCard;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.HuntEventCard;
 import it.polimi.ingws.gc8.Model.Enum.Era;
@@ -77,34 +78,30 @@ class BoardTest {
     }
 
     @Test
-    void setupInitialRows_distributesCardsBetweenRows() {
-        Board emptyBoard = new Board(
-                new ArrayDeque<>(),
-                new ArrayList<>(),
-                new ArrayList<>(),
-                new TurnOrderTrack(3),
-                new ArrayDeque<>(),
-                new ArrayDeque<>(),
-                new OfferTrack(3)
-        );
+    void constructor_withPlayerCount_appliesBuildingDeckSetupTable() {
+        assertBuildingSetup(2, 1, 2, 3);
+        assertBuildingSetup(3, 2, 2, 4);
+        assertBuildingSetup(4, 2, 3, 4);
+        assertBuildingSetup(5, 2, 3, 5);
+    }
 
-        List<BuildingCard> era1Buildings = List.of(
-                b1,
-                b2,
-                new BuildingCard("B6", 1, 1, Era.ERA_1, "f6", "bk6", null),
-                new BuildingCard("B7", 1, 1, Era.ERA_1, "f7", "bk7", null),
-                new BuildingCard("B8", 1, 1, Era.ERA_1, "f8", "bk8", null),
-                new BuildingCard("B9", 1, 1, Era.ERA_1, "f9", "bk9", null),
-                new BuildingCard("B10", 1, 1, Era.ERA_1, "f10", "bk10", null),
-                new BuildingCard("B11", 1, 1, Era.ERA_1, "f11", "bk11", null)
-        );
+    @Test
+    void constructor_withPlayerCount_filtersTribeCardsByMinimumPlayers() {
+        for (int playerCount = 2; playerCount <= 5; playerCount++) {
+            Board generatedBoard = new Board(playerCount);
+            List<Card> tribeCards = new ArrayList<>();
+            tribeCards.addAll(generatedBoard.getLowerRow());
+            tribeCards.addAll(generatedBoard.getUpperRow());
+            tribeCards.addAll(generatedBoard.getTribeDeck());
 
-        emptyBoard.setupInitialRows(3, era1Buildings);
-
-        assertEquals(4, emptyBoard.getLowerRow().size());
-        assertEquals(4, emptyBoard.getUpperRow().size());
-        assertEquals(era1Buildings.get(0), emptyBoard.getLowerRow().get(0));
-        assertEquals(era1Buildings.get(7), emptyBoard.getUpperRow().get(3));
+            for (Card card : tribeCards) {
+                if (card instanceof CharacterCard) {
+                    CharacterCard character = (CharacterCard) card;
+                    assertTrue(character.getNumberOfPlayers() == 0
+                            || character.getNumberOfPlayers() <= playerCount);
+                }
+            }
+        }
     }
 
     @Test
@@ -316,25 +313,6 @@ class BoardTest {
     }
 
     @Test
-    void refillUpperRow_drawsUpToPlayerCountPlusOne() {
-        List<Card> newCards = board.refillUpperRow(1);
-
-        assertEquals(2, newCards.size());
-        assertTrue(board.getUpperRow().containsAll(newCards));
-        assertTrue(board.getTribeDeck().isEmpty());
-    }
-
-    @Test
-    void refillUpperRow_withEmptyDeck_returnsEmptyList() {
-        board.getTribeDeck().clear();
-
-        List<Card> newCards = board.refillUpperRow(3);
-
-        assertTrue(newCards.isEmpty());
-        assertEquals(3, board.getUpperRow().size());
-    }
-
-    @Test
     void testRemoveLowerRowCard_Success() {
         Board board = new Board(2);
         List<Card> cards = new ArrayList<>();
@@ -423,5 +401,39 @@ class BoardTest {
         assertEquals(previousUpperSize + 1, board.getUpperRow().size());
         assertTrue(board.getEra3BuildingDeck().isEmpty());
         assertEquals(b5, board.getUpperRow().get(board.getUpperRow().size() - 1));
+    }
+
+    @Test
+    void revealEraBuildings_forFivePlayers_revealsAllEra3Buildings() {
+        Board generatedBoard = new Board(5);
+        int era3BuildingCount = generatedBoard.getEra3BuildingDeck().size();
+        int previousUpperSize = generatedBoard.getUpperRow().size();
+
+        assertEquals(5, era3BuildingCount);
+
+        generatedBoard.revealEraBuildings(3);
+
+        assertTrue(generatedBoard.getEra3BuildingDeck().isEmpty());
+        assertEquals(previousUpperSize + era3BuildingCount, generatedBoard.getUpperRow().size());
+    }
+
+    private void assertBuildingSetup(int playerCount, int era1Count, int era2Count, int era3Count) {
+        Board generatedBoard = new Board(playerCount);
+
+        assertEquals(playerCount + 1, generatedBoard.getLowerRow().size());
+        assertEquals(playerCount + 4 + era1Count, generatedBoard.getUpperRow().size());
+        assertEquals(era1Count, countBuildingsByEra(generatedBoard.getUpperRow(), Era.ERA_1));
+        assertEquals(era2Count, generatedBoard.getEra2BuildingDeck().size());
+        assertEquals(era3Count, generatedBoard.getEra3BuildingDeck().size());
+    }
+
+    private int countBuildingsByEra(List<Card> cards, Era era) {
+        int count = 0;
+        for (Card card : cards) {
+            if (card instanceof BuildingCard && card.getEra() == era) {
+                count++;
+            }
+        }
+        return count;
     }
 }

@@ -48,6 +48,8 @@ public class Board {
         this.offerTrack = new OfferTrack(playerCount);
         this.turnOrderTrack = new TurnOrderTrack(playerCount);
         loadTribeDeck(playerCount);
+        List<BuildingCard> era1Buildings = loadBuildingDecks(playerCount);
+        dealInitialRows(playerCount, era1Buildings);
     }
 
     /**
@@ -311,17 +313,101 @@ public class Board {
     public void setOfferTrack(OfferTrack offerTrack) { this.offerTrack = offerTrack; }
 
     /**
-     * Sets up initial cards in lower and upper rows based on player count
-     * @param playerCount number of players in game
-     * @param era1Building list of era 1 building cards to distribute
+     * Loads Building cards from JSON, splits them by Era and, randomly selects for each Era a subset of cards
+     * whose size depends on {@code playerCount}:
+     * <ul>
+     *   <li>2 players: 1 / 2 / 3 cards (Era I / II / III)</li>
+     *   <li>3 players: 2 / 2 / 4</li>
+     *   <li>4 players: 2 / 3 / 4</li>
+     *   <li>5 players: 2 / 3 / 5</li>
+     * </ul>
+     * The Era II and Era III subsets form the covered building decks on the
+     * board; the Era I subset is returned so that the caller can place those
+     * cards face up in the upper row next to the initial Tribe cards.
+     *
+     * @param playerCount number of players, used to size each Era subset
+     * @return the Era I Building cards selected for this game
      */
-    public void setupInitialRows(int playerCount, List<BuildingCard> era1Building) {
-        for (int i = 0; i < playerCount + 1; i++) {
-            lowerRow.add(era1Building.get(i));
+    private List<BuildingCard> loadBuildingDecks(int playerCount) {
+        List<BuildingCard> all = BuildingCard.loadFromJson(
+                "src/main/resources/buildings_cards.json");
+        List<BuildingCard> era1 = new ArrayList<>();
+        List<BuildingCard> era2 = new ArrayList<>();
+        List<BuildingCard> era3 = new ArrayList<>();
+        for (BuildingCard b : all) {
+            switch (b.getEra()) {
+                case ERA_1: era1.add(b); break;
+                case ERA_2: era2.add(b); break;
+                case ERA_3: era3.add(b); break;
+            }
         }
-        for (int i = playerCount + 1; i < playerCount * 2 + 2; i++) {
-            upperRow.add(era1Building.get(i));
+
+        int[] buildingCounts = buildingCountsFor(playerCount);
+        List<BuildingCard> selectedEra1 = selectRandomBuildings(era1, buildingCounts[0]);
+        List<BuildingCard> selectedEra2 = selectRandomBuildings(era2, buildingCounts[1]);
+        List<BuildingCard> selectedEra3 = selectRandomBuildings(era3, buildingCounts[2]);
+
+        era2BuildingDeck.clear();
+        for (BuildingCard b : selectedEra2) era2BuildingDeck.addLast(b);
+        era3BuildingDeck.clear();
+        for (BuildingCard b : selectedEra3) era3BuildingDeck.addLast(b);
+        return selectedEra1;
+    }
+
+    private int[] buildingCountsFor(int playerCount) {
+        switch (playerCount) {
+            case 2:
+                return new int[] {1, 2, 3};
+            case 3:
+                return new int[] {2, 2, 4};
+            case 4:
+                return new int[] {2, 3, 4};
+            case 5:
+                return new int[] {2, 3, 5};
+            default:
+                throw new IllegalArgumentException("Unsupported player count: " + playerCount);
         }
+    }
+
+    private List<BuildingCard> selectRandomBuildings(List<BuildingCard> cards, int count) {
+        if (cards.size() < count) {
+            throw new IllegalStateException("Not enough Building cards for setup");
+        }
+        Collections.shuffle(cards);
+        return new ArrayList<>(cards.subList(0, count));
+    }
+
+    /**
+     * Fills the lower and upper rows at game start, per the preparation rules:
+     * <ul>
+     *   <li>Rule 4: draw from the tribe deck until the lower row holds
+     *       {@code playerCount + 1} non-Event Tribe cards; any Event drawn is
+     *       redirected to the upper row.</li>
+     *   <li>Rule 5: complete the upper row up to {@code playerCount + 4} Tribe
+     *       cards, accounting for Events already placed there in step 4.</li>
+     *   <li>Rule 6a: append Era I Building cards to the upper row, to the right
+     *       of the Tribe cards.</li>
+     * </ul>
+     */
+    private void dealInitialRows(int playerCount, List<BuildingCard> era1Buildings) {
+        int lowerTarget = playerCount + 1;
+        int lowerFilled = 0;
+        while (lowerFilled < lowerTarget && !tribeDeck.isEmpty()) {
+            Card card = tribeDeck.removeFirst();
+            if (card instanceof EventCard) {
+                upperRow.add(card);
+            } else {
+                lowerRow.add(card);
+                lowerFilled++;
+            }
+        }
+
+        int upperTribeTarget = playerCount + 4;
+        while (upperRow.size() < upperTribeTarget && !tribeDeck.isEmpty()) {
+            upperRow.add(tribeDeck.removeFirst());
+        }
+
+        upperRow.addAll(era1Buildings);
     }
 
 
@@ -420,24 +506,6 @@ public class Board {
     }
 
     /**
-     * Refills the upper row with cards
-     *
-     * @param playerCount number of players
-     * @return list of new tribe cars added to upper row
-     */
-    public List<Card> refillUpperRow(int playerCount) {
-        List<Card> newTribeCards = new ArrayList<>();
-        for (int i = 0; i < playerCount + 1; i++) {
-            if (!tribeDeck.isEmpty()) {
-                Card card = tribeDeck.removeFirst();
-                upperRow.add(card);
-                newTribeCards.add(card);
-            }
-        }
-        return newTribeCards;
-    }
-
-    /**
      * Removes all building cards from lower row
      */
     public void discardLowerRowBuilding() {
@@ -465,10 +533,8 @@ public class Board {
      */
     public void revealEraBuildings(int era) {
         Deque<Card> buildingDeck = (era == 2) ? era2BuildingDeck : era3BuildingDeck;
-        for (int i = 0; i < 4; i++) {
-            if (!buildingDeck.isEmpty()) {
-                upperRow.add(buildingDeck.removeLast());
-            }
+        while (!buildingDeck.isEmpty()) {
+            upperRow.add(buildingDeck.removeLast());
         }
     }
 }

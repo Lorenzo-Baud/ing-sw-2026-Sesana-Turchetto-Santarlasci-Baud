@@ -61,7 +61,6 @@ public class MesosGame implements GameModel {
         this.currentRound = 0;
         this.currentEra = Era.ERA_1;
         this.phase = GamePhase.SETUP;
-        this.board = new Board(3);
         this.observers = new CopyOnWriteArrayList<>();
     }
 
@@ -69,8 +68,8 @@ public class MesosGame implements GameModel {
     @Override
     public void setupGame(int numPlayers) {
         this.numPlayers = numPlayers;
+        this.board = new Board(numPlayers);
         initializePlayers(numPlayers);
-        initializeBoard(numPlayers);
         randomizeTurnOrder();
         distributeInitialFood();
         this.currentRound = 1;
@@ -86,53 +85,6 @@ public class MesosGame implements GameModel {
         TotemColor[] colors = TotemColor.values();
         for (int i = 0; i < numPlayers; i++) {
             players.add(new Player(i + 1, "Player " + (i + 1), colors[i]));
-        }
-    }
-
-    /**
-     * Creates the Board, loads the Tribe deck, distributes Building cards
-     * into era decks, and fills the initial lower and upper rows.
-     */
-    private void initializeBoard(int numPlayers) {
-
-        board = new Board(numPlayers);
-        board.setTurnOrderTrack(new TurnOrderTrack(numPlayers));
-
-        // Load building cards and split by era
-        //TODO: da rivedere creazione mazzetti (spostare in board?)
-        List<BuildingCard> allBuildings = BuildingCard.loadFromJson(
-                "src/main/resources/buildings_cards.json");
-        Deque<Card> era2Buildings = new ArrayDeque<>();
-        Deque<Card> era3Buildings = new ArrayDeque<>();
-        List<BuildingCard> era1Buildings = new ArrayList<>();
-
-        for (BuildingCard b : allBuildings) {
-            switch (b.getEra()) {
-                case ERA_1: era1Buildings.add(b);  break;
-                case ERA_2: era2Buildings.add(b);  break;
-                case ERA_3: era3Buildings.add(b);  break;
-            }
-        }
-
-        board.setEra2BuildingDeck(era2Buildings);
-        board.setEra3BuildingDeck(era3Buildings);
-
-        // Era I buildings are visible in the upper row from the start
-        board.getUpperRow().addAll(era1Buildings);
-        //TODO: controlla (probabilmente da mettere in board
-
-        // Draw tribe cards for the lower row (numPlayers + 1)
-        for (int i = 0; i < numPlayers + 1; i++) {
-            if (!board.getTribeDeck().isEmpty()) {
-                board.getLowerRow().add(board.getTribeDeck().removeFirst());
-            }
-        }
-
-        // Draw tribe cards for the upper row (numPlayers + 4)
-        for (int i = 0; i < numPlayers + 4; i++) {
-            if (!board.getTribeDeck().isEmpty()) {
-                board.getUpperRow().add(board.getTribeDeck().removeFirst());
-            }
         }
     }
 
