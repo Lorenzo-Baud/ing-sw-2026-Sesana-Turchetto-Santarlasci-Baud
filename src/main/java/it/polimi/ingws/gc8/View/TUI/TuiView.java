@@ -305,16 +305,20 @@ public class TuiView extends View {
         System.out.println();
         Printer.printInfo("Cosa vuoi fare mentre aspetti?");
         System.out.println("  1) Stampa di nuovo la board");
-        System.out.println("  2) Vedi la tua tribù");
-        System.out.println("  3) Vedi la tribù di un altro giocatore");
+        System.out.println("  2) Vedi le carte della riga UPPER");
+        System.out.println("  3) Vedi le carte della riga LOWER");
+        System.out.println("  4) Vedi la tua tribù");
+        System.out.println("  5) Vedi la tribù di un altro giocatore");
         System.out.println("  0) Attendi il tuo turno (blocca input)");
 
-        int choice = chooseInRange(0, 3);
+        int choice = chooseInRange(0, 5);
         switch (choice) {
             case 0 -> waitForMyTurn();
             case 1 -> { /* la prossima iterazione ristampa */ }
-            case 2 -> { GamePrinter.printTribe(gameView, getNickname()); pressEnter(); }
-            case 3 -> showOtherPlayerTribe();
+            case 2 -> { GamePrinter.printRowDetails("UPPER", g.upperRowCards()); pressEnter(); }
+            case 3 -> { GamePrinter.printRowDetails("LOWER", g.lowerRowCards()); pressEnter(); }
+            case 4 -> { GamePrinter.printTribe(gameView, getNickname()); pressEnter(); }
+            case 5 -> showOtherPlayerTribe();
         }
     }
 

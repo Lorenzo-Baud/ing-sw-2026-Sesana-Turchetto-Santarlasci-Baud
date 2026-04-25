@@ -164,6 +164,26 @@ public final class GamePrinter {
         }
     }
 
+    /**
+     * Vista di dettaglio di una riga (UPPER o LOWER): ogni carta numerata
+     * con tipo e stato (fronte/retro).
+     */
+    public static void printRowDetails(String label, List<CardDTO> cards) {
+        System.out.println();
+        System.out.println(Printer.BOLD + "RIGA " + label + Printer.RESET);
+        if (cards == null || cards.isEmpty()) {
+            System.out.println(Printer.DIM + "  (vuota)" + Printer.RESET);
+            return;
+        }
+        for (int i = 0; i < cards.size(); i++) {
+            CardDTO c = cards.get(i);
+            String face  = c.isFlipped() ? c.back() : c.front();
+            String state = c.isFlipped() ? "[retro]" : "[fronte]";
+            System.out.println("  [" + (i + 1) + "] " + face
+                    + "   " + Printer.DIM + "(" + c.type() + ") " + state + Printer.RESET);
+        }
+    }
+
     /** Accesso pubblico alla mappa icone (per eventuali menu). */
     public static String iconFor(OffertileId id) {
         return TILE_ICON.getOrDefault(id, "?  ");
