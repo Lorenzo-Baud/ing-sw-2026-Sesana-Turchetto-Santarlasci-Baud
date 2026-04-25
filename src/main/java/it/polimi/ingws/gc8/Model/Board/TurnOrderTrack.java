@@ -3,6 +3,8 @@ package it.polimi.ingws.gc8.Model.Board;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.polimi.ingws.gc8.Model.Player;
+import it.polimi.ingws.gc8.Network.DTO.DtoMapper;
+import it.polimi.ingws.gc8.Network.DTO.PlayerDTO;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -188,5 +190,21 @@ public class TurnOrderTrack {
      * @return number of players
      */
     public int getPlayerCount() { return playerCount; }
+
+    /**
+     *
+     * @return array list containing
+     */
+    public List<PlayerDTO> toDto() {
+        List<PlayerDTO> dto = new ArrayList<>();
+        for(int i = 0; i < 5; i++) {
+            if(occupantsBySlot.get(i) == null) {;
+                dto.add(null);
+            } else {
+                dto.add(DtoMapper.toDTO(occupantsBySlot.get(i)));
+            }
+        }
+        return dto;
+    }
 
 }

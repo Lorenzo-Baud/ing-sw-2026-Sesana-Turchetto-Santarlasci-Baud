@@ -152,6 +152,8 @@ public class ViewUpdater implements ModelObserver {
 
         Era currentEra = model.getCurrentEra();
 
+        List<PlayerDTO> turnOrderTrack = new ArrayList<>(model.getBoard().getTurnOrderTrack().toDto());
+
         return new GameDTO(
                 numberOfPlayers,
                 currentPlayerIndex,
@@ -162,7 +164,8 @@ public class ViewUpdater implements ModelObserver {
                 currentPlayer,
                 phase,
                 currentRound,
-                currentEra
+                currentEra,
+                turnOrderTrack
         );
     }
 

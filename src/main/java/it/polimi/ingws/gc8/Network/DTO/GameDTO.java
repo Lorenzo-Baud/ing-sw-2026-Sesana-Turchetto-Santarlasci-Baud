@@ -18,9 +18,12 @@ import java.util.List;
  * @param lowerRowCards         cards currently available in the lower row of the board
  * @param offerTrack            DTO representation of the current offer track state
  * @param currentPlayer         DTO that represents the player whose turn is
- * @param phase
- * @param currentRound
- * @param currentEra
+ * @param phase                 current phase of the game
+ * @param currentRound          current round number in the game
+ * @param currentEra            current era of the game
+ * @param turnOrderTrack        list of players in the order in which they are placed on the turn order track. First
+ *                              element is placed on the top slot (will place the totem first),
+ *                              last element is placed on the bottom one
  */
 public record GameDTO(
     int numberOfPlayers,
@@ -32,6 +35,6 @@ public record GameDTO(
     PlayerDTO currentPlayer,
     GamePhase phase,
     int currentRound,
-    Era currentEra
-
+    Era currentEra,
+    List<PlayerDTO> turnOrderTrack
 ) implements Serializable {}
