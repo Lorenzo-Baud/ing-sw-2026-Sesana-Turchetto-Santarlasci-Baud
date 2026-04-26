@@ -4,9 +4,9 @@ import it.polimi.ingws.gc8.Controller.actions.PlaceTotemAction;
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Controller.actions.ReturnTotemAction;
 import it.polimi.ingws.gc8.Controller.actions.TakeCardAction;
-import it.polimi.ingws.gc8.Model.Enum.CardRow;
 import it.polimi.ingws.gc8.Controller.actions.TakeFoodAction;
 import it.polimi.ingws.gc8.Model.Board.OffertileId;
+import it.polimi.ingws.gc8.Model.Enum.CardRow;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 import it.polimi.ingws.gc8.Network.DTO.GameDTO;
@@ -274,19 +274,18 @@ public class TuiView extends View {
         System.out.println();
         Printer.printInfo("Carte disponibili nella riga " + label + ":");
         for (int i = 0; i < cards.size(); i++) {
-            CardDTO c = cards.get(i);
             System.out.println("  " + (i + 1) + ") "
-                    + (c.isFlipped() ? c.back() : c.front()));
+                    + GamePrinter.formatCardAttributes(cards.get(i)));
         }
         System.out.println("  0) Indietro");
 
         int choice = chooseInRange(0, cards.size());
         if (choice == 0) return;
 
-        CardDTO chosen = cards.get(choice - 1);
-        String cardName = chosen.isFlipped() ? chosen.back() : chosen.front();
-        Printer.printSuccess("Prendo: " + cardName);
-        notifyAllListeners(new TakeCardAction(myPlayerId(), cardName, row));
+        int cardIndex = choice - 1;
+        CardDTO chosen = cards.get(cardIndex);
+        Printer.printSuccess("Prendo: " + GamePrinter.formatCardAttributes(chosen));
+        notifyAllListeners(new TakeCardAction(myPlayerId(), cardIndex, row));
         waitForMyTurn();
     }
 
@@ -307,18 +306,20 @@ public class TuiView extends View {
         System.out.println("  1) Stampa di nuovo la board");
         System.out.println("  2) Vedi le carte della riga UPPER");
         System.out.println("  3) Vedi le carte della riga LOWER");
-        System.out.println("  4) Vedi la tua tribù");
-        System.out.println("  5) Vedi la tribù di un altro giocatore");
+        System.out.println("  4) Vedi gli edifici");
+        System.out.println("  5) Vedi la tua tribù");
+        System.out.println("  6) Vedi la tribù di un altro giocatore");
         System.out.println("  0) Attendi il tuo turno (blocca input)");
 
-        int choice = chooseInRange(0, 5);
+        int choice = chooseInRange(0, 6);
         switch (choice) {
             case 0 -> waitForMyTurn();
             case 1 -> { /* la prossima iterazione ristampa */ }
             case 2 -> { GamePrinter.printRowDetails("UPPER", g.upperRowCards()); pressEnter(); }
             case 3 -> { GamePrinter.printRowDetails("LOWER", g.lowerRowCards()); pressEnter(); }
-            case 4 -> { GamePrinter.printTribe(gameView, getNickname()); pressEnter(); }
-            case 5 -> showOtherPlayerTribe();
+            case 4 -> { GamePrinter.printBuildingsDetails(g); pressEnter(); }
+            case 5 -> { GamePrinter.printTribe(gameView, getNickname()); pressEnter(); }
+            case 6 -> showOtherPlayerTribe();
         }
     }
 

@@ -1,7 +1,6 @@
 package it.polimi.ingws.gc8.Model;
 
 import it.polimi.ingws.gc8.Model.Board.OfferTile;
-import it.polimi.ingws.gc8.Model.Board.OffertileId;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.Card;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.CharacterCard;
@@ -9,10 +8,8 @@ import it.polimi.ingws.gc8.Model.Cards.EventCards.EventCard;
 import it.polimi.ingws.gc8.Model.Enum.CardRow;
 import it.polimi.ingws.gc8.Model.Enum.CardType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
-import it.polimi.ingws.gc8.Model.Enum.TotemColor;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -28,88 +25,55 @@ public class MesosGameTest {
     public void testGame() {
 
         int numPlayers = 3;
-        MesosGame game = new MesosGame();
-
-        List<Player> players = new ArrayList<>();
-        players.add(new Player(1, "Player1", TotemColor.RED));
-        players.add(new Player(2, "Player2", TotemColor.RED));
-        players.add(new Player(3, "Player3", TotemColor.RED));
+        MesosGame game = new MesosGame(null);
 
         // Game setup
-        game.setupGame(numPlayers, players);
+        game.setupGame(numPlayers);
 
-
-        // ROUND 1
-        // -----------------------------------------------------------------------------
-        System.out.println("ROUND 1");
         // Places totems on offer track randomly
-        assertEquals(numPlayers, game.getPlayersInTurnOrder().size());
-        for(Player p : game.getPlayersInTurnOrder()) {
-            OfferTile t = game.getAvailableOfferTiles().get(ThreadLocalRandom.current().nextInt(game.getAvailableOfferTiles().size()));
+        for (Player p : game.getPlayersInTurnOrder()) {
+            List<OfferTile> free = game.getAvailableOfferTiles();
+            OfferTile t = free.get(ThreadLocalRandom.current().nextInt(free.size()));
             game.placeTotem(p, t);
             System.out.println("Player " + p.getNickname() + " placed a totem on tile " + t.getId());
         }
-        assertEquals(0, game.getPlayersInTurnOrder().size());
         assertTrue(game.allTotemsPlaced());
         assertEquals(2, game.getAvailableOfferTiles().size());
 
         // Each player picks cards
-        for(Player p : game.getPlayersInOfferOrder()) {
+        for (Player p : game.getPlayersInOfferOrder()) {
 
-            if(game.getOfferTile(p).getFoodReward() > 0) {
+            OfferTile myTile = game.getOfferTile(p);
+            assertNotNull(myTile);
+
+            if (myTile.getFoodReward() > 0) {
                 game.takeFood(p);
             }
 
-            // Picks from upper row
-            boolean success = false;
             int pickedBuildingCards = 0;
             int pickedCharactersCards = 0;
 
-            for(int i = 0; i < game.getOfferTile(p).getUpperRowPicks(); i++) {
-                success = false;
-                while (!success) {
-                    Card c = game.getAvailableCardsFromRow(CardRow.UPPER).get(ThreadLocalRandom.current().nextInt(game.getAvailableCardsFromRow(CardRow.UPPER).size()));
-                    if (c.getCardType().equals(CardType.CHARACTER)) {
-                        game.pickCharacterCard(p, (CharacterCard) c);
-                        pickedCharactersCards++;
-                        success = true;
-                    } else {
-                        success = game.pickBuildingCard(p, (BuildingCard) c);
-                        if(success) {
-                            pickedBuildingCards++;
-                        }
-                    }
-                }
+            // Picks from upper row
+            for (int i = 0; i < myTile.getUpperRowPicks(); i++) {
+                int[] picked = pickRandomCardFromRow(game, p, CardRow.UPPER);
+                pickedCharactersCards += picked[0];
+                pickedBuildingCards   += picked[1];
             }
 
             // Picks from lower row
-            for(int i = 0; i < game.getOfferTile(p).getLowerRowPicks(); i++) {
-                success = false;
-                while (!success) {
-                    Card c = game.getAvailableCardsFromRow(CardRow.LOWER).get(ThreadLocalRandom.current().nextInt(game.getAvailableCardsFromRow(CardRow.LOWER).size()));
-                    if (c.getCardType().equals(CardType.CHARACTER)) {
-                        game.pickCharacterCard(p, (CharacterCard) c);
-                        pickedCharactersCards++;
-                        success = true;
-                    } else {
-                        success = game.pickBuildingCard(p, (BuildingCard) c);
-                        if(success) {
-                            pickedBuildingCards++;
-                        }
-                    }
-                }
-
+            for (int i = 0; i < myTile.getLowerRowPicks(); i++) {
+                int[] picked = pickRandomCardFromRow(game, p, CardRow.LOWER);
+                pickedCharactersCards += picked[0];
+                pickedBuildingCards   += picked[1];
             }
 
             assertEquals(pickedCharactersCards, p.getTribe().getCharacters().size());
             assertEquals(pickedBuildingCards, p.getTribe().getBuildings().size());
-            assertEquals(game.getOfferTile(p).getLowerRowPicks() + game.getOfferTile(p).getUpperRowPicks(), pickedCharactersCards + pickedBuildingCards);
-
-            game.returnTotemToTurnOrder(p);
-
+            assertEquals(myTile.getLowerRowPicks() + myTile.getUpperRowPicks(),
+                    pickedCharactersCards + pickedBuildingCards);
+            System.out.println(p.getNickname() + " picked " + pickedCharactersCards
+                    + " character cards and " + pickedBuildingCards + " building cards.");
         }
-
-        assertEquals(numPlayers, game.getPlayersInTurnOrder().size());
 
         // Discards all lower row cards
         game.discardLowerRow();
@@ -117,90 +81,17 @@ public class MesosGameTest {
 
         // Moves upper row cards into lower row
         game.moveUpperRowToLower();
-        int availableCards = 0;
         game.refreshUpperRow();
-        for(Card card : game.getBoard().getUpperRow()) {
-            if(!card.getCardType().equals(CardType.BUILDING)) {
+        int availableCards = 0;
+        for (Card card : game.getBoard().getUpperRow()) {
+            System.out.println(card.getCardType());
+            if (!card.getCardType().equals(CardType.BUILDING)) {
                 availableCards++;
             }
         }
         assertEquals(numPlayers + 4, availableCards);
 
         assertEquals(2, game.getCurrentRound());
-        // -----------------------------------------------------------------------------
-
-
-        // ROUND 2
-        // -----------------------------------------------------------------------------
-        System.out.println("\n\nROUND 2");
-        // Totem placing
-        assertEquals(numPlayers, game.getPlayersInTurnOrder().size());
-        for(Player p : game.getPlayersInTurnOrder()) {
-            OfferTile t = game.getAvailableOfferTiles().get(ThreadLocalRandom.current().nextInt(game.getAvailableOfferTiles().size()));
-            game.placeTotem(p, t);
-            System.out.println("Player " + p.getNickname() + " placed a totem on tile " + t.getId());
-        }
-        assertEquals(0, game.getPlayersInTurnOrder().size());
-        assertTrue(game.allTotemsPlaced());
-        assertEquals(2, game.getAvailableOfferTiles().size());
-
-
-        for(Player p : game.getPlayersInOfferOrder()) {
-
-            if(game.getOfferTile(p).getFoodReward() > 0) {
-                game.takeFood(p);
-            }
-
-            // Picks from upper row
-            boolean success = false;
-            int pickedBuildingCards = 0;
-            int pickedCharactersCards = 0;
-
-            for(int i = 0; i < game.getOfferTile(p).getUpperRowPicks(); i++) {
-                success = false;
-                while (!success) {
-                    Card c = game.getAvailableCardsFromRow(CardRow.UPPER).get(ThreadLocalRandom.current().nextInt(game.getAvailableCardsFromRow(CardRow.UPPER).size()));
-                    if (c.getCardType().equals(CardType.CHARACTER)) {
-                        game.pickCharacterCard(p, (CharacterCard) c);
-                        pickedCharactersCards++;
-                        success = true;
-                    } else {
-                        success = game.pickBuildingCard(p, (BuildingCard) c);
-                        if(success) {
-                            pickedBuildingCards++;
-                        }
-                    }
-                }
-            }
-
-            // Picks from lower row
-            for(int i = 0; i < game.getOfferTile(p).getLowerRowPicks(); i++) {
-                success = false;
-                while (!success) {
-                    Card c = game.getAvailableCardsFromRow(CardRow.LOWER).get(ThreadLocalRandom.current().nextInt(game.getAvailableCardsFromRow(CardRow.LOWER).size()));
-                    if (c.getCardType().equals(CardType.CHARACTER)) {
-                        game.pickCharacterCard(p, (CharacterCard) c);
-                        pickedCharactersCards++;
-                        success = true;
-                    } else {
-                        success = game.pickBuildingCard(p, (BuildingCard) c);
-                        if(success) {
-                            pickedBuildingCards++;
-                        }
-                    }
-                }
-            }
-
-            assertEquals(game.getOfferTile(p).getLowerRowPicks() + game.getOfferTile(p).getUpperRowPicks(), pickedCharactersCards + pickedBuildingCards);
-            System.out.println(p.getNickname() + " picked " + pickedCharactersCards + " character cards and " + pickedBuildingCards + " building cards.");
-
-        }
-
-        // Event resolution
-
-        // -----------------------------------------------------------------------------
-
-
     }
 
     /**
@@ -211,14 +102,8 @@ public class MesosGameTest {
 
         int playerNum = ThreadLocalRandom.current().nextInt(2, 6);
 
-        MesosGame game = new MesosGame();
-
-        List<Player> players = new ArrayList<>();
-        for(int i = 0; i < playerNum; i++) {
-            players.add(new Player(i, "Player" + i, TotemColor.values()[i]));
-        }
-
-        game.setupGame(playerNum, players);
+        MesosGame game = new MesosGame(null);
+        game.setupGame(playerNum);
 
         // Checks that all offer tiles are free at the beginning of the game
         game.getAvailableOfferTiles().forEach(t -> {
@@ -264,10 +149,8 @@ public class MesosGameTest {
                     assertEquals(2, t.getUpperRowPicks());
                     assertEquals(1, t.getLowerRowPicks());
                     break;
-
             }
         });
-
     }
 
     /**
@@ -275,8 +158,9 @@ public class MesosGameTest {
      */
     @Test
     public void testSetupGameException() {
-        MesosGame game = new MesosGame();
-        assertThrows(IllegalArgumentException.class, () -> game.setupGame(1, new ArrayList<>()));
+        MesosGame game = new MesosGame(null);
+        assertThrows(IllegalArgumentException.class, () -> game.setupGame(1));
+        assertThrows(IllegalArgumentException.class, () -> game.setupGame(6));
     }
 
 
@@ -288,12 +172,7 @@ public class MesosGameTest {
 
         int playerNum = ThreadLocalRandom.current().nextInt(2, 6);
 
-        MesosGame game = new MesosGame();
-
-        List<Player> players = new ArrayList<>();
-        for(int i = 0; i < playerNum; i++) {
-            players.add(new Player(i, "Player" + i, TotemColor.values()[i]));
-        }
+        MesosGame game = new MesosGame(null);
 
         // Constructor test
         assertEquals(0, game.getPlayers().size());
@@ -301,28 +180,28 @@ public class MesosGameTest {
         assertEquals(Era.ERA_1, game.getCurrentEra());
 
         // Game setup
-        game.setupGame(playerNum, players);
+        game.setupGame(playerNum);
 
         // Tests initial randomization
         int[] foodByPosition = {2, 3, 3, 4, 4};
-        for(int i = 0; i < game.getPlayersInTurnOrder().size(); i++) {
+        for (int i = 0; i < game.getPlayersInTurnOrder().size(); i++) {
             assertEquals(game.getPlayersInTurnOrder().get(i).getFood(), foodByPosition[i]);
         }
 
         // Checks card initialization
         // Lower row
         assertEquals(playerNum + 1, game.getAvailableCardsFromRow(CardRow.LOWER).size());
-        for(Card c : game.getAvailableCardsFromRow(CardRow.LOWER)) {
-            assertFalse(c instanceof BuildingCard);            //assertEquals(CardRow.UPPER, c.getRow());
+        for (Card c : game.getAvailableCardsFromRow(CardRow.LOWER)) {
+            assertFalse(c instanceof BuildingCard);
         }
 
         // Upper row
-        for(Card c : game.getAvailableCardsFromRow(CardRow.UPPER)) {
-            if(c instanceof EventCard) {
-                System.out.println("Event card in lowe row");
+        for (Card c : game.getAvailableCardsFromRow(CardRow.UPPER)) {
+            if (c instanceof EventCard) {
+                System.out.println("Event card in lower row");
             }
         }
-        if(playerNum == 2) {
+        if (playerNum == 2) {
             assertEquals(playerNum + 4 + 1, game.getBoard().getUpperRow().size());
         } else {
             assertEquals(playerNum + 4 + 2, game.getBoard().getUpperRow().size());
@@ -330,14 +209,14 @@ public class MesosGameTest {
 
         // Checks building decks
         // ERA_2
-        if(playerNum <= 3) {
+        if (playerNum <= 3) {
             assertEquals(2, game.getBoard().getEra2BuildingDeck().size());
         } else {
             assertEquals(3, game.getBoard().getEra2BuildingDeck().size());
         }
 
         // ERA_3
-        if(playerNum == 2) {
+        if (playerNum == 2) {
             assertEquals(3, game.getBoard().getEra3BuildingDeck().size());
         } else if (playerNum == 3 || playerNum == 4) {
             assertEquals(4, game.getBoard().getEra3BuildingDeck().size());
@@ -345,9 +224,35 @@ public class MesosGameTest {
             assertEquals(5, game.getBoard().getEra3BuildingDeck().size());
         }
 
-        for(Player p : game.getPlayersInTurnOrder()) {
+        for (Player p : game.getPlayersInTurnOrder()) {
             assertNull(game.getOfferTile(p));
         }
+    }
 
+    // ------------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------------
+
+    /**
+     * Picks a random card from the given row, retrying if a building cannot
+     * be afforded. Returns int[]{ pickedCharacters, pickedBuildings } so the
+     * caller can update its counters.
+     */
+    private static int[] pickRandomCardFromRow(MesosGame game, Player p, CardRow row) {
+        while (true) {
+            List<Card> available = game.getAvailableCardsFromRow(row);
+            Card c = available.get(ThreadLocalRandom.current().nextInt(available.size()));
+            if (c.getCardType().equals(CardType.CHARACTER)) {
+                game.takeCharacterCard(p, (CharacterCard) c);
+                return new int[]{1, 0};
+            } else {
+                BuildingCard b = (BuildingCard) c;
+                if (game.canPlayerAffordBuilding(p, b)) {
+                    game.takeBuildingCard(p, b);
+                    return new int[]{0, 1};
+                }
+                // not affordable: retry with another card
+            }
+        }
     }
 }

@@ -25,10 +25,8 @@ public interface GameModel {
      * Initializes a new game: creates players, board, decks,
      * distributes initial food and randomizes turn order.
      * @param numPlayers number of players (2-5)
-     * @param players list of Player objects representing the players in the game
-     * @throws IllegalArgumentException if numPlayers is out of range or players list is invalid
      */
-    void setupGame(int numPlayers, List<Player> players) throws IllegalArgumentException;
+    void setupGame(int numPlayers);
 
     /**
      * @return number of players in the game
@@ -51,8 +49,9 @@ public interface GameModel {
     GamePhase getPhase();
 
     /**
-     * Sets the current game phase and notifies observers.
-     * Called by the Controller when transitioning between phases.
+     * Updates the current game phase and notifies the view.
+     * Called by the controller during state transitions.
+     * @param phase the new game phase
      */
     void setPhase(GamePhase phase);
 
@@ -70,16 +69,14 @@ public interface GameModel {
      * @return the player who must act at this moment
      */
     Player getCurrentPlayer();
-
     /**
-     * Registers an observer that will be notified on each model change.
+     * notifies to the view a model update
+     * @param model (the current model)
      */
-    void addObserver(ModelObserver observer);
+    void notifyUpdate(GameModel model);
 
-    /**
-     * Unregisters a previously added observer.
-     */
-    void removeObserver(ModelObserver observer);
+
+    public void setCurrentPlayer(Player player);
 
     // PHASE 1: TOTEM PLACEMENT
 
@@ -95,12 +92,10 @@ public interface GameModel {
 
     /**
      * Places the player's Totem on the chosen Offer tile.
-     *
-     * @param player    the player placing the Totem
+     * @param player the player placing the Totem
      * @param offerTile the chosen Offer tile (must be free)
-     * @return
      */
-    boolean placeTotem(Player player, OfferTile offerTile);
+    void placeTotem(Player player, OfferTile offerTile);
 
     /**
      * @return true if all players have placed their Totem
@@ -114,11 +109,6 @@ public interface GameModel {
      *         (left to right, tile A to G)
      */
     List<Player> getPlayersInOfferOrder();
-
-    /**
-     * @return offer tile on which the player is currently placed
-     */
-    OfferTile getOfferTile(Player player);
 
     /**
      * @param row the row to pick from (upper or lower)
@@ -142,17 +132,15 @@ public interface GameModel {
      * @param player the player
      * @param card the chosen Character card
      */
-    void pickCharacterCard(Player player, CharacterCard card);
+    void takeCharacterCard(Player player, CharacterCard card);
 
     /**
      * The player buys a Building card: pays the cost
      * (with Builder discount) and adds it to the tribe.
-     *
      * @param player the player
-     * @param card   the chosen Building card
-     * @return
+     * @param card the chosen Building card
      */
-    boolean pickBuildingCard(Player player, BuildingCard card);
+    void takeBuildingCard(Player player, BuildingCard card);
 
     /**
      * The player takes 3 Food (tile A only, 5-player games).

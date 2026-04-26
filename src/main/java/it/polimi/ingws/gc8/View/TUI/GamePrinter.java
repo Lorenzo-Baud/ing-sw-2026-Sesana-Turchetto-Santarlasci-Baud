@@ -1,12 +1,14 @@
 package it.polimi.ingws.gc8.View.TUI;
 
 import it.polimi.ingws.gc8.Model.Board.OffertileId;
+import it.polimi.ingws.gc8.Model.Enum.CardType;
 import it.polimi.ingws.gc8.Model.Enum.TotemColor;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 import it.polimi.ingws.gc8.Network.DTO.GameDTO;
 import it.polimi.ingws.gc8.Network.DTO.OfferTileDTO;
 import it.polimi.ingws.gc8.Network.DTO.PlayerDTO;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -51,15 +53,25 @@ public final class GamePrinter {
     // Schermate complete
     // ------------------------------------------------------------------
 
-    /** Stampa completa della board: header + righe carte + offer track + classifica. */
+    /**
+     * Stampa completa della board.
+     * <p>
+     * Logica del layout (rispecchia la plancia fisica): le carte tribù
+     * (CHARACTER + EVENT) occupano UPPER e LOWER a sinistra, dove la LOWER
+     * contiene quelle che erano in UPPER nel round precedente. Gli edifici
+     * (BUILDING), che il modello tiene mescolati nelle stesse liste, vengono
+     * filtrati e mostrati a parte nella sezione BUILDING (a destra).
+     * </p>
+     */
     public static void printBoard(GameDTO g, String myNickname) {
         if (g == null) {
             Printer.printInfo("(in attesa di stato dal server…)");
             return;
         }
         printHeader(g);
-        printCardRow("UPPER", g.upperRowCards());
-        printCardRow("LOWER", g.lowerRowCards());
+        printCardRow("UPPER", filterTribe(g.upperRowCards()));
+        printCardRow("LOWER", filterTribe(g.lowerRowCards()));
+        printBuildings(collectBuildings(g.upperRowCards(), g.lowerRowCards()));
         printOfferTrack(g.offerTrack(), g.players());
         printLeaderboard(g.players(), g.currentPlayer(), myNickname);
     }
@@ -92,9 +104,25 @@ public final class GamePrinter {
         }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < cards.size(); i++) {
-            CardDTO c = cards.get(i);
-            String face = c.isFlipped() ? c.back() : c.front();
-            sb.append('[').append(i + 1).append("] ").append(face).append("   ");
+            sb.append('[').append(i + 1).append("] ").append(shortLabel(cards.get(i))).append("   ");
+        }
+        System.out.println(sb.toString());
+    }
+
+    /**
+     * Stampa la sezione edifici (a destra della plancia) come elenco compatto
+     * dei soli identificativi (es. {@code E1_01}). Per i dettagli usare
+     * {@link #printBuildingsDetails(GameDTO)}.
+     */
+    public static void printBuildings(List<CardDTO> buildings) {
+        System.out.print(Printer.BOLD + pad("BUILD", 6) + Printer.RESET + " | ");
+        if (buildings == null || buildings.isEmpty()) {
+            System.out.println(Printer.DIM + "(nessun edificio)" + Printer.RESET);
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < buildings.size(); i++) {
+            sb.append('[').append(i + 1).append("] ").append(shortLabel(buildings.get(i))).append("   ");
         }
         System.out.println(sb.toString());
     }
@@ -157,30 +185,44 @@ public final class GamePrinter {
             return;
         }
         for (int i = 0; i < tribe.size(); i++) {
-            CardDTO c = tribe.get(i);
-            String face = c.isFlipped() ? c.back() : c.front();
-            System.out.println("  [" + (i + 1) + "] " + face
-                    + "   " + Printer.DIM + "(" + c.type() + ")" + Printer.RESET);
+            System.out.println("  [" + (i + 1) + "] " + formatCardAttributes(tribe.get(i)));
         }
     }
 
     /**
-     * Vista di dettaglio di una riga (UPPER o LOWER): ogni carta numerata
-     * con tipo e stato (fronte/retro).
+     * Vista di dettaglio di una riga (UPPER o LOWER).
+     * Filtra i BUILDING: nelle righe upper/lower si mostrano solo le carte
+     * tribù (CHARACTER + EVENT). Per il dettaglio degli edifici usare
+     * {@link #printBuildingsDetails(GameDTO)}.
      */
     public static void printRowDetails(String label, List<CardDTO> cards) {
+        List<CardDTO> tribe = filterTribe(cards);
         System.out.println();
         System.out.println(Printer.BOLD + "RIGA " + label + Printer.RESET);
-        if (cards == null || cards.isEmpty()) {
+        if (tribe.isEmpty()) {
             System.out.println(Printer.DIM + "  (vuota)" + Printer.RESET);
             return;
         }
-        for (int i = 0; i < cards.size(); i++) {
-            CardDTO c = cards.get(i);
-            String face  = c.isFlipped() ? c.back() : c.front();
-            String state = c.isFlipped() ? "[retro]" : "[fronte]";
-            System.out.println("  [" + (i + 1) + "] " + face
-                    + "   " + Printer.DIM + "(" + c.type() + ") " + state + Printer.RESET);
+        for (int i = 0; i < tribe.size(); i++) {
+            System.out.println("  [" + (i + 1) + "] " + formatCardAttributes(tribe.get(i)));
+        }
+    }
+
+    /** Vista di dettaglio degli edifici della plancia (aggregati da upper+lower). */
+    public static void printBuildingsDetails(GameDTO g) {
+        System.out.println();
+        System.out.println(Printer.BOLD + "EDIFICI" + Printer.RESET);
+        if (g == null) {
+            System.out.println(Printer.DIM + "  (vuoto)" + Printer.RESET);
+            return;
+        }
+        List<CardDTO> buildings = collectBuildings(g.upperRowCards(), g.lowerRowCards());
+        if (buildings.isEmpty()) {
+            System.out.println(Printer.DIM + "  (nessun edificio)" + Printer.RESET);
+            return;
+        }
+        for (int i = 0; i < buildings.size(); i++) {
+            System.out.println("  [" + (i + 1) + "] " + formatBuilding(buildings.get(i)));
         }
     }
 
@@ -190,8 +232,81 @@ public final class GamePrinter {
     }
 
     // ------------------------------------------------------------------
+    // Formattazione carte
+    // ------------------------------------------------------------------
+
+    /** Descrizione completa di una carta basata sui suoi attributi DTO. */
+    public static String formatCardAttributes(CardDTO c) {
+        if (c.type() == null) return "?";
+        return switch (c.type()) {
+            case CHARACTER -> formatCharacter(c);
+            case BUILDING  -> formatBuilding(c);
+            case EVENT     -> formatEvent(c);
+        };
+    }
+
+    /** Etichetta breve per la riga summary della board. */
+    private static String shortLabel(CardDTO c) {
+        if (c.type() == null) return "?";
+        return switch (c.type()) {
+            case CHARACTER -> c.characterType() != null ? c.characterType().name() : "CHAR";
+            case BUILDING  -> c.buildingId()    != null ? c.buildingId()           : "BLDG";
+            case EVENT     -> c.eventType()     != null ? c.eventType().name()      : "EVT";
+        };
+    }
+
+    private static String formatCharacter(CardDTO c) {
+        String base = pad(c.characterType() != null ? c.characterType().name() : "?", 10)
+                + "  min:" + c.numberOfPlayers() + "p";
+        if (c.shamanIcons()           != null) return base + "  icons:" + c.shamanIcons();
+        if (c.hunterBonus()           != null) return base + "  bonus:" + (c.hunterBonus() ? "si" : "no");
+        if (c.builderFoodBonus()      != null) return base + "  +F:" + c.builderFoodBonus() + "  PP:" + c.builderPrestigePoints();
+        if (c.collectorFoodDiscount() != null) return base + "  -F:" + c.collectorFoodDiscount();
+        if (c.inventorIcon()          != null) return base + "  icon#" + c.inventorIcon();
+        return base;
+    }
+
+    private static String formatBuilding(CardDTO c) {
+        return pad(c.buildingId() != null ? c.buildingId() : "?", 6)
+                + "  cost:" + c.buildingFoodCost() + "F"
+                + "  +" + c.buildingPrestigeBonus() + "PP"
+                + (c.buildingEffect() != null ? "  " + c.buildingEffect() : "");
+    }
+
+    private static String formatEvent(CardDTO c) {
+        StringBuilder sb = new StringBuilder(
+                pad(c.eventType() != null ? c.eventType().name() : "?", 13));
+        if (Boolean.TRUE.equals(c.eventIsFinal()))  sb.append(" [FINALE]");
+        if (c.eventPrestigeBonus() != null) sb.append("  +PP:").append(c.eventPrestigeBonus());
+        if (c.eventPrestigeMalus() != null) sb.append("  -PP:").append(c.eventPrestigeMalus());
+        if (c.eventBonusArtists()  != null) sb.append("  bonus>=").append(c.eventBonusArtists()).append("art");
+        if (c.eventMalusArtists()  != null) sb.append("  malus<").append(c.eventMalusArtists()).append("art");
+        if (c.eventBonusPoints()   != null) sb.append("  +").append(c.eventBonusPoints()).append("pp/art");
+        if (c.eventMalusPoints()   != null) sb.append("  -").append(c.eventMalusPoints()).append("pp");
+        return sb.toString();
+    }
+
+    // ------------------------------------------------------------------
     // Helper
     // ------------------------------------------------------------------
+
+    /** Tiene solo CHARACTER + EVENT (le carte "tribù" delle righe upper/lower). */
+    private static List<CardDTO> filterTribe(List<CardDTO> cards) {
+        List<CardDTO> out = new ArrayList<>();
+        if (cards == null) return out;
+        for (CardDTO c : cards) {
+            if (c != null && c.type() != CardType.BUILDING) out.add(c);
+        }
+        return out;
+    }
+
+    /** Raccoglie i BUILDING da upper+lower (sul tabellone occupano la sezione di destra). */
+    private static List<CardDTO> collectBuildings(List<CardDTO> upper, List<CardDTO> lower) {
+        List<CardDTO> out = new ArrayList<>();
+        if (upper != null) for (CardDTO c : upper) if (c != null && c.type() == CardType.BUILDING) out.add(c);
+        if (lower != null) for (CardDTO c : lower) if (c != null && c.type() == CardType.BUILDING) out.add(c);
+        return out;
+    }
 
     private static PlayerDTO resolveOccupant(int idx, List<PlayerDTO> players) {
         if (idx < 0 || players == null || idx >= players.size()) return null;

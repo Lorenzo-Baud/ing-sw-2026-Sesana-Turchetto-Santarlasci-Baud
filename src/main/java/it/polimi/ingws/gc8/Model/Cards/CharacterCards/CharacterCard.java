@@ -20,7 +20,7 @@ public class CharacterCard extends Card {
         this.characterType = characterType;
     }
 
-    // Getter
+    // Getters
     public int getNumberOfPlayers() {
         return numberOfPlayers;
     }

@@ -1,7 +1,6 @@
 package it.polimi.ingws.gc8.Controller.states;
 
 import it.polimi.ingws.gc8.Controller.GameController;
-import it.polimi.ingws.gc8.Network.ViewUpdater;
 import it.polimi.ingws.gc8.Controller.actions.*;
 import it.polimi.ingws.gc8.Model.GameModel;
 import it.polimi.ingws.gc8.Model.Player;
@@ -9,6 +8,8 @@ import it.polimi.ingws.gc8.Model.Cards.Card;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
+import it.polimi.ingws.gc8.Network.ViewUpdater;
+
 
 import java.util.List;
 
@@ -63,6 +64,11 @@ public class ActionResolutionState implements GameState {
         List<Player> offerOrder = context.getModel().getPlayersInOfferOrder();
         context.setOfferOrder(offerOrder);
         context.setOfferOrderIndex(0);
+
+        if (!offerOrder.isEmpty()) {
+            Player firstPlayer = offerOrder.get(0);
+            context.getModel().setCurrentPlayer(firstPlayer); // Questo scatena notifyUpdate!
+        }
     }
 
     @Override
@@ -76,21 +82,15 @@ public class ActionResolutionState implements GameState {
         GameModel model = context.getModel();
         ViewUpdater viewUpdater = context.getViewUpdater();
 
-        // Find the card in the specified row
+        // Find the card by its index in the row's available list
         List<Card> availableCards = model.getAvailableCardsFromRow(action.getRow());
-        Card targetCard = null;
-        for (Card card : availableCards) {
-            if (card.getFront().equals(action.getCardName())) {
-                targetCard = card;
-                break;
-            }
-        }
-
-        if (targetCard == null) {
+        int idx = action.getCardIndex();
+        if (idx < 0 || idx >= availableCards.size()) {
             viewUpdater.notifyError(player.getPlayerId(), "INVALID_CARD",
-                    "Card not found or not available in the specified row.");
+                    "Card index out of range for the specified row.");
             return;
         }
+        Card targetCard = availableCards.get(idx);
 
         // Determine card type and execute
         String cardType;
@@ -101,10 +101,10 @@ public class ActionResolutionState implements GameState {
                         "Not enough food to buy this building.");
                 return;
             }
-            model.pickBuildingCard(player, building);
+            model.takeBuildingCard(player, building);
             cardType = "BUILDING";
         } else if (targetCard instanceof CharacterCard) {
-            model.pickCharacterCard(player, (CharacterCard) targetCard);
+            model.takeCharacterCard(player, (CharacterCard) targetCard);
             cardType = "CHARACTER";
         } else {
             viewUpdater.notifyError(player.getPlayerId(), "INVALID_CARD",
@@ -132,6 +132,10 @@ public class ActionResolutionState implements GameState {
 
         if (nextIndex >= offerOrder.size()) {
             context.transitionTo(GamePhase.END_ROUND);
+        } else {
+
+            Player nextPlayer = offerOrder.get(nextIndex);
+            context.getModel().setCurrentPlayer(nextPlayer);
         }
     }
 

@@ -2,7 +2,6 @@ package it.polimi.ingws.gc8.Model;
 
 import it.polimi.ingws.gc8.Model.Board.Board;
 import it.polimi.ingws.gc8.Model.Board.OfferTile;
-import it.polimi.ingws.gc8.Model.Board.OffertileId;
 import it.polimi.ingws.gc8.Model.Board.TurnOrderTrack;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.Card;
@@ -13,9 +12,10 @@ import it.polimi.ingws.gc8.Model.Enum.CharacterType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.EventType;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
+import it.polimi.ingws.gc8.Model.Enum.TotemColor;
+import it.polimi.ingws.gc8.Network.ViewUpdater;
 
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Concrete implementation of the MESOS game model.
@@ -23,111 +23,79 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class MesosGame implements GameModel {
 
-    /**
-     * The main game board that manages the decks, tracks, and cards currently in play.
-     */
-    private Board board;
-
-    /**
-     * The total number of players participating in the game session.
-     */
-    private int numPlayers;
-
-    /**
-     * The current round number within the active era.
-     */
-    private int currentRound;
-
-    /**
-     * The current historical era (e.g., ERA_1, ERA_2, ERA_3) which dictates deck usage.
-     */
-    private Era currentEra;
-
-    /**
-     * The current phase of the game state machine (e.g., PLACEMENT, RESOLUTION).
-     */
-    private GamePhase phase;
-
-    /**
-     * The list of all players in the game, typically sorted by turn order.
-     */
     private List<Player> players;
+    private Board board;
+    private int numPlayers;
+    private int currentRound;
+    private Era currentEra;
+    private GamePhase phase;
+    private int currentPlayerIndex;
+    ViewUpdater viewUpdater;
 
-    /**
-     * The list of observers registered to receive updates whenever the model's state changes.
-     */
-    private final List<ModelObserver> observers;
+    @Override
+    public void notifyUpdate(GameModel model){
+        if (viewUpdater != null) {
+            viewUpdater.broadcastModel(model);
+        }
+    }
 
-    /**
-     * Initializes a new game instance with default setup values.
-     * Sets the round to zero and the era to the first era.
-     * Initializes empty lists for both players and model observers.
-     */
-    public MesosGame() {
+    @Override
+    public void setCurrentPlayer(Player player) {
+        this.currentPlayerIndex = this.players.indexOf(player);
+        notifyUpdate(this);
+    }
+
+
+    public MesosGame(ViewUpdater viewUpdater) {
+        this.players = new ArrayList<>();
         this.currentRound = 0;
         this.currentEra = Era.ERA_1;
         this.phase = GamePhase.SETUP;
-        this.players = new ArrayList<>();
-        this.observers = new CopyOnWriteArrayList<>();
+        this.currentPlayerIndex = 0;
+        this.board = new Board(3);
+        this.viewUpdater = viewUpdater;
     }
 
+    // SETUP
     @Override
-    public void addObserver(ModelObserver observer) {
-        if (observer != null && !observers.contains(observer)) {
-            observers.add(observer);
+    public void setupGame(int numPlayers) {
+        if (numPlayers < 2 || numPlayers > 5) {
+            throw new IllegalArgumentException(
+                    "Number of players must be between 2 and 5 (got " + numPlayers + ").");
         }
-    }
-
-    @Override
-    public void removeObserver(ModelObserver observer) {
-        observers.remove(observer);
-    }
-
-    /**
-     * Notifies all registered observers of a change in the model's state.
-     * Iterates through the list of observers and calls their update method,
-     * passing the current game instance as the subject.
-     */
-    private void notifyObservers() {
-        for (ModelObserver o : observers) {
-            o.onModelChanged(this);
-        }
-    }
-
-    @Override
-    public void setPhase(GamePhase phase) {
-        this.phase = phase;
-        notifyObservers();
-    }
-
-    /**
-     * Sets up the initial state of the game for a specified number of players.
-     * This method initializes the board, players, and turn order, grants starting resources,
-     * sets the round to the first round, and alerts all observers that the setup is complete.
-     *
-     * @param numPlayers the number of players participating in the game.
-     */
-    @Override
-    public void setupGame(int numPlayers, List<Player> players) {
-
-        // Parameters check
-        if(players.size() != numPlayers){
-            throw new IllegalArgumentException("Players list must be non-null and match the number of players.");
-        }
-
-        // Parameters assignment
-        this.currentRound = 1;
         this.numPlayers = numPlayers;
-        this.board = new Board(numPlayers);
-        this.players = new ArrayList<>(players);
-
-        // Game initialization methods invocation
+        initializePlayers(numPlayers);
+        initializeBoard(numPlayers);
         randomizeTurnOrder();
         distributeInitialFood();
+        this.currentRound = 1;
+        this.phase = GamePhase.POSITIONING;
+        notifyUpdate(this);
+    }
 
-        // Notifies observers
-        notifyObservers();
 
+    /**
+     * Creates Players with default names and sequential TotemColors.
+     */
+    private void initializePlayers(int numPlayers) {
+        players.clear(); //remove eventual player left from a previews configuration
+        TotemColor[] colors = TotemColor.values();
+        for (int i = 0; i < numPlayers; i++) {
+            players.add(new Player(i + 1, "Player " + (i + 1), colors[i]));
+        }
+    }
+
+    /**
+     * Creates the Board for the given number of players.
+     * <p>
+     * The {@link Board} constructor already loads the tribe deck, splits the
+     * building cards by era (storing Era II / Era III decks internally), and
+     * deals the initial lower/upper rows according to the rules
+     * (see {@code Board.dealInitialRows}). No additional setup is needed here.
+     * </p>
+     */
+    private void initializeBoard(int numPlayers) {
+        board = new Board(numPlayers);
     }
 
     /**
@@ -171,6 +139,12 @@ public class MesosGame implements GameModel {
     public GamePhase getPhase() { return phase; }
 
     @Override
+    public void setPhase(GamePhase phase) {
+        this.phase = phase;
+        notifyUpdate(this);
+    }
+
+    @Override
     public List<Player> getPlayers() { return players; }
 
     @Override
@@ -179,22 +153,7 @@ public class MesosGame implements GameModel {
     @Override
     public Player getCurrentPlayer() {
         if (players.isEmpty()) return null;
-        switch (phase) {
-            case POSITIONING:
-                // Primo giocatore nell'ordine di turno che non ha ancora piazzato il Totem.
-                for (Player p : board.getTurnOrderTrack().getCurrentOrder()) {
-                    if (p != null && !board.getOfferTrack().containsPlayer(p)) {
-                        return p;
-                    }
-                }
-                return null;
-            case ACTION_RESOLUTION:
-                // Giocatore con il Totem più a sinistra sul tracciato Offerte.
-                List<OfferTile> resolutionOrder = board.getOfferTrack().getResolutionOrder();
-                return resolutionOrder.isEmpty() ? null : resolutionOrder.get(0).getOccupant();
-            default:
-                return null;
-        }
+        return players.get(currentPlayerIndex);
     }
 
     // PHASE 1: TOTEM PLACEMENT
@@ -213,22 +172,31 @@ public class MesosGame implements GameModel {
     }
 
     /**
-     * Places the player's Totem on the specified Offer tile
-     *
-     * @param player    the player placing the Totem
-     * @param offerTile the chosen Offer tile (must be free)
-     * @return true if placement was successful, false otherwise (e.g., tile occupied)
+     * Returns the offer tile currently occupied by the given player,
+     * or {@code null} if the player has not placed a totem.
+     * @param player the player to look up
+     * @return the offer tile occupied by the player, or null if none
      */
-    @Override
-    public boolean placeTotem(Player player, OfferTile offerTile) {
-        try {
-            board.getOfferTrack().placeTotem(offerTile.getId(), player);
-            board.getTurnOrderTrack().returnTotem(player);
-            notifyObservers();
-            return true;
-        } catch (Exception e) {
-            return false;
+    public OfferTile getOfferTile(Player player) {
+        if (player == null) return null;
+        for (OfferTile tile : board.getOfferTrack().getTiles()) {
+            Player occupant = tile.getOccupant();
+            if (occupant != null && occupant.getPlayerId() == player.getPlayerId()) {
+                return tile;
+            }
         }
+        return null;
+    }
+
+    @Override
+    public void placeTotem(Player player, OfferTile offerTile) {
+        board.getOfferTrack().placeTotem(offerTile.getId(), player);
+        currentPlayerIndex = (currentPlayerIndex + 1) % numPlayers;
+        if (allTotemsPlaced()) {
+            phase = GamePhase.ACTION_RESOLUTION;
+            currentPlayerIndex = 0;
+        }
+        notifyUpdate(this);
     }
 
     @Override
@@ -244,16 +212,6 @@ public class MesosGame implements GameModel {
             order.add(tile.getOccupant());
         }
         return order;
-    }
-
-    @Override
-    public OfferTile getOfferTile(Player player) {
-        for (OfferTile tile : board.getOfferTrack().getTiles()) {
-            if (player.equals(tile.getOccupant())) {
-                return tile;
-            }
-        }
-        return null;
     }
 
     /**
@@ -290,36 +248,27 @@ public class MesosGame implements GameModel {
     }
 
     @Override
-    public void pickCharacterCard(Player player, CharacterCard card) {
+    public void takeCharacterCard(Player player, CharacterCard card) {
         board.getLowerRow().remove(card);
         board.getUpperRow().remove(card);
         player.addCharacterCard(card);
-        notifyObservers();
+        notifyUpdate(this);
     }
 
     @Override
-    public boolean pickBuildingCard(Player player, BuildingCard card) {
+    public void takeBuildingCard(Player player, BuildingCard card) {
         int discount = player.getTribe().getTotalBuilderDiscount();
-
-        // Check affordability before modifying the game state
-        if(card.getEffectiveCost(discount) > player.getFood()) {
-            return false;
-        }
-
         player.removeFood(card.getEffectiveCost(discount));
         board.getLowerRow().remove(card);
         board.getUpperRow().remove(card);
         player.addBuildingCard(card);
-        notifyObservers();
-
-        return true;
-
+        notifyUpdate(this);
     }
 
     @Override
     public void takeFood(Player player) {
         player.addFood(3);
-        notifyObservers();
+        notifyUpdate(this);
     }
 
     @Override
@@ -352,7 +301,7 @@ public class MesosGame implements GameModel {
                 player.addPrestigePoints(track.getLastSlotPrestigePenalty());
             }
         }
-        notifyObservers();
+        notifyUpdate(this);
     }
 
     @Override
@@ -363,10 +312,11 @@ public class MesosGame implements GameModel {
     @Override
     public void takeExtraCard(Player player, Card card) {
         if (card instanceof BuildingCard) {
-            pickBuildingCard(player, (BuildingCard) card);
+            takeBuildingCard(player, (BuildingCard) card);
         } else if (card instanceof CharacterCard) {
-            pickCharacterCard(player, (CharacterCard) card);
+            takeCharacterCard(player, (CharacterCard) card);
         }
+        notifyUpdate(this);
     }
 
     // END OF ROUND: EVENT RESOLUTION
@@ -399,13 +349,14 @@ public class MesosGame implements GameModel {
     @Override
     public void discardLowerRow() {
         board.discardLowerRowTribeCards();
-        notifyObservers();
+        notifyUpdate(this);
     }
 
     @Override
     public void moveUpperRowToLower() {
+
         board.moveUpperRowTribeCardsToLower();
-        notifyObservers();
+        notifyUpdate(this);
     }
 
     @Override
@@ -416,7 +367,7 @@ public class MesosGame implements GameModel {
             }
         }
         currentRound++;
-        notifyObservers();
+        notifyUpdate(this);
     }
 
     @Override
@@ -465,7 +416,7 @@ public class MesosGame implements GameModel {
 
             // Inventor PP: count × distinct invention icons
             int inventorPP = tribe.countByType(CharacterType.INVENTOR)
-                           * tribe.getDistinctInventionIcons();
+                    * tribe.getDistinctInventionIcons();
 
             // Artist PP: 10 PP per pair
             int artistPP = tribe.getArtistPairs() * 10;
@@ -482,7 +433,7 @@ public class MesosGame implements GameModel {
             player.addPrestigePoints(inventorPP + artistPP + builderPP
                     + printedBuildingPP + effectPP);
         }
-        notifyObservers();
+        notifyUpdate(this);
     }
 
     @Override

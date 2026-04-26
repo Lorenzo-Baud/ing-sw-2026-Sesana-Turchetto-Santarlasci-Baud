@@ -39,8 +39,7 @@ public class GameController {
     private int offerOrderIndex;
 
     public GameController(ViewUpdater viewUpdater) {
-        this.model = new MesosGame();
-        this.model.addObserver(viewUpdater);
+        this.model = new MesosGame(viewUpdater);
         this.viewUpdater = viewUpdater;
         this.gameLock = new ReentrantLock();
         this.states = new EnumMap<>(GamePhase.class);
@@ -102,7 +101,7 @@ public class GameController {
     public void startGame(int numPlayers) {
         gameLock.lock();
         try {
-            model.setupGame(numPlayers, playerMap.values().stream().toList());
+            model.setupGame(numPlayers);
 
             playerMap.clear();
             for (Player p : model.getPlayers()) {

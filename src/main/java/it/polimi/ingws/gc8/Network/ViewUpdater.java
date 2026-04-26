@@ -7,7 +7,6 @@ import it.polimi.ingws.gc8.Model.Enum.CardRow;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 import it.polimi.ingws.gc8.Model.GameModel;
-import it.polimi.ingws.gc8.Model.ModelObserver;
 import it.polimi.ingws.gc8.Model.Player;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 import it.polimi.ingws.gc8.Network.DTO.DtoMapper;
@@ -21,15 +20,16 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Bridges the model layer to the view layer.
- * Registers as a {@link ModelObserver} on the {@link GameModel} and broadcasts
- * snapshots to a list of {@link GameEventListener}s (typically ClientHandlers).
+ * Bridges the controller/model layer to the view layer.
+ * Maintains a list of {@link GameEventListener} instances and broadcasts
+ * game notifications to all of them.
  * <p>
+ * All notify methods build immutable data from the model and broadcast it.
  * ViewUpdater never holds a persistent reference to the model;
- * it receives it as a parameter whenever a snapshot is needed.
+ * it receives it as a parameter when a full snapshot is needed.
  * </p>
  */
-public class ViewUpdater implements ModelObserver {
+public class ViewUpdater {
 
     private final List<GameEventListener> listeners;
 
@@ -77,18 +77,9 @@ public class ViewUpdater implements ModelObserver {
     }
 
     /**
-     * {@link ModelObserver} callback: the model signals a state change here,
-     * and the updater rebroadcasts a snapshot to every listener.
-     */
-    @Override
-    public void onModelChanged(GameModel snapshot) {
-        broadcastModel(snapshot);
-    }
-
-    /**
-     * Builds a snapshot message for the given model and sends it to every listener.
+     * Utility method to send a message to all registered listeners.
      *
-     * @param model the current game model
+     * @param model the network message to broadcast
      */
     public void broadcastModel(GameModel model) {
         ModelUpdateMessage modelUpdate = new ModelUpdateMessage(buildGameDTO(model));
@@ -98,14 +89,14 @@ public class ViewUpdater implements ModelObserver {
     }
 
     /**
-     * Sends a full model snapshot to a single listener (used on reconnection,
-     * so the rejoining client gets the current state without broadcasting to others).
+     * Sends a full game snapshot to a single listener (used during reconnection
+     * to bring a returning client back in sync without disturbing the others).
      *
-     * @param listener the target listener (e.g., the reconnecting ClientHandler)
+     * @param listener the target listener (typically the reconnecting client handler)
      * @param model    the current game model
      */
     public void sendFullSnapshotTo(GameEventListener listener, GameModel model) {
-        if (listener == null) return;
+        if (listener == null || model == null) return;
         listener.onGameUpdate(new ModelUpdateMessage(buildGameDTO(model)));
     }
 
@@ -152,7 +143,12 @@ public class ViewUpdater implements ModelObserver {
 
         Era currentEra = model.getCurrentEra();
 
-        List<PlayerDTO> turnOrderTrack = new ArrayList<>(model.getBoard().getTurnOrderTrack().toDto());
+        List<PlayerDTO> turnOrderTrackDTO = new ArrayList<>();
+        if (model.getBoard() != null && model.getBoard().getTurnOrderTrack() != null) {
+            for (Player p : model.getBoard().getTurnOrderTrack().getCurrentOrder()) {
+                turnOrderTrackDTO.add(DtoMapper.toDTO(p));
+            }
+        }
 
         return new GameDTO(
                 numberOfPlayers,
@@ -165,11 +161,12 @@ public class ViewUpdater implements ModelObserver {
                 phase,
                 currentRound,
                 currentEra,
-                turnOrderTrack
+                turnOrderTrackDTO
         );
     }
 
     // --- Game lifecycle notifications ---
+
 
 
 
