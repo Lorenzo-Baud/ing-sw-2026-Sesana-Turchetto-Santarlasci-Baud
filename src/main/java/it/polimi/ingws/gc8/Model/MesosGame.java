@@ -56,6 +56,18 @@ public class MesosGame implements GameModel {
         this.viewUpdater = viewUpdater;
     }
 
+    // Constructor used for test purposes
+    public MesosGame() {
+        this.players = new ArrayList<>();
+        this.currentRound = 0;
+        this.currentEra = Era.ERA_1;
+        this.phase = GamePhase.SETUP;
+        this.currentPlayerIndex = 0;
+        this.board = new Board(3);
+        viewUpdater = null;
+    }
+
+
     // SETUP
     @Override
     public void setupGame(int numPlayers) {
@@ -65,6 +77,21 @@ public class MesosGame implements GameModel {
         }
         this.numPlayers = numPlayers;
         initializePlayers(numPlayers);
+        initializeBoard(numPlayers);
+        randomizeTurnOrder();
+        distributeInitialFood();
+        this.currentRound = 1;
+        this.phase = GamePhase.POSITIONING;
+        notifyUpdate(this);
+    }
+
+    public void setupGame(int numPlayers, List<Player> players) {
+        if (numPlayers < 2 || numPlayers > 5) {
+            throw new IllegalArgumentException(
+                    "Number of players must be between 2 and 5 (got " + numPlayers + ").");
+        }
+        this.numPlayers = numPlayers;
+        this.players = new ArrayList<>(players);
         initializeBoard(numPlayers);
         randomizeTurnOrder();
         distributeInitialFood();
@@ -191,6 +218,7 @@ public class MesosGame implements GameModel {
     @Override
     public void placeTotem(Player player, OfferTile offerTile) {
         board.getOfferTrack().placeTotem(offerTile.getId(), player);
+        board.getTurnOrderTrack().returnTotem(player);
         currentPlayerIndex = (currentPlayerIndex + 1) % numPlayers;
         if (allTotemsPlaced()) {
             phase = GamePhase.ACTION_RESOLUTION;
