@@ -73,7 +73,14 @@ public class TuiView extends View {
         Printer.printInfo("       MESOS — TUI client");
         Printer.printInfo("=====================================");
 
-        askNickname();
+        // Il nickname è impostato da ClientMain via setNickname() prima di run().
+        // Guardia difensiva nel caso la View venga avviata in altri contesti.
+        if (getNickname() == null || getNickname().isBlank()) {
+            Printer.printError("Nickname non impostato — abortisco.");
+            return;
+        }
+        Printer.printSuccess("Ciao, " + getNickname() + "!");
+
         waitForLobbyStart();
 
         // Loop principale: ogni iterazione è un turno per il giocatore.
@@ -103,22 +110,8 @@ public class TuiView extends View {
     }
 
     // ------------------------------------------------------------------
-    // Preludio: nickname + lobby
+    // Preludio: lobby
     // ------------------------------------------------------------------
-
-    private void askNickname() {
-        while (nickname == null || nickname.isBlank()) {
-            Printer.printPrompt("Scegli il tuo nickname: ");
-            String n = readLine();
-            if (n != null && !n.isBlank()) {
-                setNickname(n.trim());
-                Printer.printSuccess("Ciao, " + getNickname() + "!");
-            } else {
-                Printer.printError("Nickname non valido.");
-            }
-        }
-        // Quando esisterà una SetNicknameAction: notifyAllListeners(new SetNicknameAction(nickname));
-    }
 
     /** Attende la prima snapshot di gioco, stampando gli aggiornamenti lobby. */
     private void waitForLobbyStart() {
@@ -378,8 +371,14 @@ public class TuiView extends View {
             // run() rileva GAME_OVER e termina
 
         } else if (msg instanceof LobbyUpdateMessage m) {
+            String names = m.getNicknames().isEmpty()
+                    ? ""
+                    : " — [" + String.join(", ", m.getNicknames()) + "]";
+            String expected = (m.getExpectedPlayers() > 0)
+                    ? String.valueOf(m.getExpectedPlayers())
+                    : "?";
             Printer.printInfo("Lobby: " + m.getCurrentPlayers()
-                    + "/" + m.getExpectedPlayers() + " giocatori");
+                    + "/" + expected + " giocatori" + names);
 
         } else if (msg instanceof ErrorMessage m) {
             Printer.printError("[" + m.getError() + "] " + m.getErrorDetail());

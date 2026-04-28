@@ -204,9 +204,11 @@ public class ViewUpdater {
      *
      * @param currentPlayers  the number of players currently connected
      * @param expectedPlayers the target number of players required to start the game
+     * @param nicknames       the nicknames currently in the lobby
      */
-    public void notifyLobbyUpdate(int currentPlayers, int expectedPlayers) {
-        broadcast(new LobbyUpdateMessage(currentPlayers, expectedPlayers));
+    public void notifyLobbyUpdate(int currentPlayers, int expectedPlayers,
+                                  java.util.List<String> nicknames) {
+        broadcast(new LobbyUpdateMessage(currentPlayers, expectedPlayers, nicknames));
     }
 
     // --- Connection notifications ---

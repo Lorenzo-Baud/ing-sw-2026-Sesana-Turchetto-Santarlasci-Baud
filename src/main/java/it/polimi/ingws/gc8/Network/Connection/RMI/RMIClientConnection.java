@@ -1,112 +1,84 @@
 package it.polimi.ingws.gc8.Network.Connection.RMI;
 
+import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Network.Connection.ClientConnection;
+import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * Server-client communication, this class is used by the Server to send messages
- * to the Client and receive messages from the Client via RMI. It implements the ClientConnection
- * interface for the Server's use and the RemoteConnectionInterface for the Client's use.
+ * Server-side adapter for a single RMI client connection.
+ * Implements {@link ClientConnection} keeping it transport-agnostic:
+ * <ul>
+ *   <li><b>Outbound</b>: directly invokes the client's {@link RemoteView}
+ *       stub (callback). No outbound queue on the server side.</li>
+ *   <li><b>Inbound</b>: {@link PlayerAction}s received from
+ *       {@link RMIServer#submitAction(PlayerAction)} are enqueued here
+ *       and consumed by the {@code ClientHandler.run()} thread.</li>
+ * </ul>
+ *
+ * <p>This class is NOT a remote object: the remote object is
+ * {@link RMIServer}, shared among all clients. The reverse direction
+ * (server → client) goes through the {@code RemoteView} stub provided
+ * at login time.</p>
  */
-public class RMIClientConnection extends UnicastRemoteObject implements ClientConnection, RemoteConnectionInterface {
+public class RMIClientConnection implements ClientConnection {
 
-    // Queue for messages waiting to be sent to the client
-    private BlockingQueue<Object> outboundQueue;
+    /** Server-internal marker used to unblock {@link #receiveMessage()} on close. */
+    public static final class PoisonPill {}
 
-    // Queue for messages received from the client
-    private BlockingQueue<Object> inboundQueue;
+    private final RemoteView remoteView;
+    private final BlockingQueue<Object> inboundQueue;
+    private volatile boolean active;
 
-    private boolean active;
-
-    /**
-     * A special message used to unblock receiveMessage() when close() is called.
-    */
-    public static class PoisonPill {};
-
-    /**
-     * Constructs the RMI connection and exports it.
-     * @throws RemoteException if the RMI export fails
-     */
-    public RMIClientConnection() throws RemoteException {
-        super(); // Exports this object to the RMI runtime
-        this.outboundQueue = new LinkedBlockingQueue<>();
+    public RMIClientConnection(RemoteView remoteView) {
+        this.remoteView = remoteView;
         this.inboundQueue = new LinkedBlockingQueue<>();
         this.active = true;
     }
 
-    /**
-     * Sends a message to the client. Must be thread-safe:
-     * multiple threads (e.g., ViewUpdater broadcasting) may call this concurrently.
-     *
-     * @param message the message to send
-     */
     @Override
     public void sendMessage(Object message) {
-        if (active) {
-            outboundQueue.offer(message);
+        if (!active) return;
+        if (!(message instanceof NetworkMessage networkMessage)) return;
+        try {
+            remoteView.onGameUpdate(networkMessage);
+        } catch (RemoteException e) {
+            active = false;
         }
     }
 
-    /**
-     * Blocking read: waits for and returns the next message from the client.
-     *
-     * @return the received message
-     * @throws Exception if the connection is lost or an error occurs
-     */
     @Override
     public Object receiveMessage() throws Exception {
-        Object message = inboundQueue.take(); // Blocks here if queue is empty
+        Object message = inboundQueue.take();
         if (message instanceof PoisonPill) {
-            throw new Exception("Connection closed: Poison Pill received.");
+            throw new Exception("Connection closed: PoisonPill received");
         }
         return message;
     }
 
-    /**
-     * Closes the connection and releases resources.
-     */
     @Override
     public void close() {
         if (active) {
             active = false;
             inboundQueue.offer(new PoisonPill());
-            outboundQueue.offer(new PoisonPill());
         }
     }
 
-    /**
-     * @return true if the connection is still active
-     */
     @Override
     public boolean isConnected() {
         return active;
     }
 
     /**
-     * Called by the Client (via RMI stub) to send an action/message to the Server.
+     * Enqueues an action received from the client through {@link RMIServer}.
+     * Package-private: only {@code RMIServer} is expected to call it.
      */
-    public void pushMessageToServer(Object message) throws RemoteException {
-        if (!active) throw new RemoteException("Connection is closed.");
-        inboundQueue.offer(message);
-    }
-
-    /**
-     * Called by the Client (via RMI stub) to fetch messages waiting on the Server.
-     * This implements a "Long Polling" or "Blocking Pull" pattern.
-     */
-    public Object pullMessageFromServer() throws RemoteException {
-        if (!active) return new PoisonPill();
-        try {
-            // Wait for the server to put something in the outbound queue
-            return outboundQueue.take();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RemoteException("Thread interrupted during RMI pull", e);
+    void enqueueAction(PlayerAction action) {
+        if (active && action != null) {
+            inboundQueue.offer(action);
         }
     }
-
 }

@@ -4,7 +4,6 @@ import it.polimi.ingws.gc8.Controller.MainController;
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Controller.events.GameEventListener;
 import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
-import it.polimi.ingws.gc8.Network.Connection.RMI.RMIClientConnection;
 
 /**
  * Handles the bidirectional communication with a single connected player.
@@ -36,16 +35,20 @@ public class ClientHandler implements Runnable, GameEventListener {
 
     //Input loop (Runnable)
 
+    /**
+     * Reads in-game {@link PlayerAction}s from the client and forwards them
+     * to the {@link MainController}.
+     *
+     * <p>Lobby commands (login, setExpectedPlayers, requestStartGame) do NOT
+     * travel on this channel: they are invoked through dedicated
+     * {@code RemoteServer} RMI methods and processed by the server before a
+     * {@code ClientHandler} thread is even started.</p>
+     */
     @Override
     public void run() {
         try {
             while (connection.isConnected()) {
                 Object message = connection.receiveMessage();
-
-                // RMI close() sends a PoisonPill to unblock receiveMessage()
-                if (message instanceof RMIClientConnection.PoisonPill) {
-                    break;
-                }
 
                 if (message instanceof PlayerAction) {
                     PlayerAction action = (PlayerAction) message;
@@ -58,7 +61,6 @@ public class ClientHandler implements Runnable, GameEventListener {
 
                     mainController.dispatchAction(action);
                 }
-                // TODO: handle lobby messages (e.g., start game request)
             }
         } catch (Exception e) {
             // Connection lost or protocol error
