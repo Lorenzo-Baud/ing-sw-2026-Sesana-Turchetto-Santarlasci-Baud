@@ -54,12 +54,18 @@ public class RMIServerConnection implements ServerConnection {
 
     @Override
     public void sendAction(Object action) {
-        if (!connected) return;
-        if (!(action instanceof PlayerAction playerAction)) return;
+        if (!connected) {
+            throw new IllegalStateException("Not connected to server");
+        }
+        if (!(action instanceof PlayerAction playerAction)) {
+            throw new IllegalArgumentException("Unsupported action type: "
+                    + (action == null ? "null" : action.getClass().getName()));
+        }
         try {
             remoteServer.submitAction(playerAction);
         } catch (RemoteException e) {
             connected = false;
+            throw new IllegalStateException("Connection lost while sending action", e);
         }
     }
 

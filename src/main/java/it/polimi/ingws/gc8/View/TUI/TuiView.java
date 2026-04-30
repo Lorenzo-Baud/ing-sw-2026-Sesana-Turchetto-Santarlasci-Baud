@@ -61,6 +61,9 @@ public class TuiView extends View {
     /** Thread che drena la coda {@code messages} in background. */
     private Thread updateDispatcher;
 
+    /** Timestamp dell'ultimo ErrorMessage ricevuto (epoch ms). */
+    private volatile long lastErrorMessageAt;
+
     // ------------------------------------------------------------------
     // Entry point
     // ------------------------------------------------------------------
@@ -73,14 +76,7 @@ public class TuiView extends View {
         Printer.printInfo("       MESOS — TUI client");
         Printer.printInfo("=====================================");
 
-        // Il nickname è impostato da ClientMain via setNickname() prima di run().
-        // Guardia difensiva nel caso la View venga avviata in altri contesti.
-        if (getNickname() == null || getNickname().isBlank()) {
-            Printer.printError("Nickname non impostato — abortisco.");
-            return;
-        }
-        Printer.printSuccess("Ciao, " + getNickname() + "!");
-
+        askNickname();
         waitForLobbyStart();
 
         // Loop principale: ogni iterazione è un turno per il giocatore.
@@ -110,8 +106,22 @@ public class TuiView extends View {
     }
 
     // ------------------------------------------------------------------
-    // Preludio: lobby
+    // Preludio: nickname + lobby
     // ------------------------------------------------------------------
+
+    private void askNickname() {
+        while (nickname == null || nickname.isBlank()) {
+            Printer.printPrompt("Scegli il tuo nickname: ");
+            String n = readLine();
+            if (n != null && !n.isBlank()) {
+                setNickname(n.trim());
+                Printer.printSuccess("Ciao, " + getNickname() + "!");
+            } else {
+                Printer.printError("Nickname non valido.");
+            }
+        }
+        // Quando esisterà una SetNicknameAction: notifyAllListeners(new SetNicknameAction(nickname));
+    }
 
     /** Attende la prima snapshot di gioco, stampando gli aggiornamenti lobby. */
     private void waitForLobbyStart() {
@@ -154,9 +164,7 @@ public class TuiView extends View {
         OfferTileDTO chosen = free.get(choice - 1);
         PlayerAction action = new PlaceTotemAction(myPlayerId(), chosen.id().name());
         Printer.printSuccess("Piazzo totem su tile " + chosen.id() + "…");
-        notifyAllListeners(action);
-
-        waitForMyTurn();
+        sendAndAwaitUpdate(action);
     }
 
     // ------------------------------------------------------------------
@@ -211,13 +219,11 @@ public class TuiView extends View {
             case "LOWER" -> takeCardFromRow(g.lowerRowCards(), CardRow.LOWER, "LOWER");
             case "FOOD"  -> {
                 Printer.printSuccess("Prendo food…");
-                notifyAllListeners(new TakeFoodAction(myPlayerId()));
-                waitForMyTurn();
+                sendAndAwaitUpdate(new TakeFoodAction(myPlayerId()));
             }
             case "RETURN" -> {
                 Printer.printSuccess("Restituisco il totem…");
-                notifyAllListeners(new ReturnTotemAction(myPlayerId()));
-                waitForMyTurn();
+                sendAndAwaitUpdate(new ReturnTotemAction(myPlayerId()));
             }
         }
     }
@@ -225,9 +231,10 @@ public class TuiView extends View {
     /** Cerca la tile occupata dal giocatore di turno. */
     private static OfferTileDTO findMyTile(GameDTO g) {
         if (g == null || g.offerTrack() == null) return null;
-        int myIdx = g.currentPlayerIndex();
+        if (g.currentPlayer() == null) return null;
+        int currentPlayerId = g.currentPlayer().playerId();
         for (OfferTileDTO t : g.offerTrack()) {
-            if (t.playerIndexOccupant() == myIdx) return t;
+            if (t.playerIndexOccupant() == currentPlayerId) return t;
         }
         return null;
     }
@@ -278,8 +285,7 @@ public class TuiView extends View {
         int cardIndex = choice - 1;
         CardDTO chosen = cards.get(cardIndex);
         Printer.printSuccess("Prendo: " + GamePrinter.formatCardAttributes(chosen));
-        notifyAllListeners(new TakeCardAction(myPlayerId(), cardIndex, row));
-        waitForMyTurn();
+        sendAndAwaitUpdate(new TakeCardAction(myPlayerId(), cardIndex, row));
     }
 
     // ------------------------------------------------------------------
@@ -290,9 +296,7 @@ public class TuiView extends View {
         GameDTO g = gameView;
         if (g == null) { sleep(100); return; }
 
-        Printer.printHeader("ATTESA — turno di "
-                + (g.currentPlayer() == null ? "?" : g.currentPlayer().nickname()));
-        GamePrinter.printBoard(g, getNickname());
+        printSpectatorBoard(g);
 
         System.out.println();
         Printer.printInfo("Cosa vuoi fare mentre aspetti?");
@@ -339,6 +343,13 @@ public class TuiView extends View {
         pressEnter();
     }
 
+    /** Stampa la board completa nella modalità spettatore. */
+    private void printSpectatorBoard(GameDTO g) {
+        Printer.printHeader("ATTESA — turno di "
+                + (g.currentPlayer() == null ? "?" : g.currentPlayer().nickname()));
+        GamePrinter.printBoard(g, getNickname());
+    }
+
     // ------------------------------------------------------------------
     // Update dispatcher: drena la coda server -> aggiorna gameView
     // ------------------------------------------------------------------
@@ -363,24 +374,27 @@ public class TuiView extends View {
 
     /** Applica un messaggio server: aggiorna {@code gameView} o stampa errori. */
     private void applyMessage(NetworkMessage msg) {
+        System.out.println("[DEBUG TuiView] applyMessage msg=" + msg.getClass().getSimpleName());
         if (msg instanceof ModelUpdateMessage m) {
-            setGameView(m.getGameModelDTO());
+            GameDTO newView = m.getGameModelDTO();
+            System.out.println("[DEBUG TuiView] applyMessage ModelUpdate"
+                    + " currentPlayer=" + (newView == null || newView.currentPlayer() == null ? "null" : newView.currentPlayer().nickname())
+                    + " phase=" + (newView == null ? "null" : newView.phase()));
+            setGameView(newView);
+            if (newView != null && !isMyTurn()) {
+                printSpectatorBoard(newView);
+            }
 
         } else if (msg instanceof GameOverMessage m) {
             setGameView(m.getFinalState());
             // run() rileva GAME_OVER e termina
 
         } else if (msg instanceof LobbyUpdateMessage m) {
-            String names = m.getNicknames().isEmpty()
-                    ? ""
-                    : " — [" + String.join(", ", m.getNicknames()) + "]";
-            String expected = (m.getExpectedPlayers() > 0)
-                    ? String.valueOf(m.getExpectedPlayers())
-                    : "?";
             Printer.printInfo("Lobby: " + m.getCurrentPlayers()
-                    + "/" + expected + " giocatori" + names);
+                    + "/" + m.getExpectedPlayers() + " giocatori");
 
         } else if (msg instanceof ErrorMessage m) {
+            lastErrorMessageAt = System.currentTimeMillis();
             Printer.printError("[" + m.getError() + "] " + m.getErrorDetail());
 
         } else if (msg instanceof PhaseUpdateMessage || msg instanceof TurnUpdateMessage) {
@@ -411,8 +425,56 @@ public class TuiView extends View {
         }
     }
 
+    /**
+     * Invia un'azione al server e aspetta che arrivi un nuovo snapshot del
+     * gameView (cioè la conferma che il server l'ha processata).
+     *
+     * <p>Senza questa attesa, dopo {@code notifyAllListeners} il loop principale
+     * rivedrebbe il vecchio {@code gameView} (con il turno ancora del giocatore
+     * locale) e ridisegnerebbe immediatamente il prompt prima che la risposta
+     * del server arrivi — race condition tipica di chi spedisce e poi legge
+     * stato condiviso senza barriera.</p>
+     *
+     * <p>Confronto per identità di riferimento: il dispatcher sostituisce
+     * {@code gameView} con un nuovo {@code GameDTO} ad ogni
+     * {@code ModelUpdateMessage}, quindi {@code gameView != before} è il segnale
+     * che il server ha risposto.</p>
+     *
+     * <p>Timeout di 3 secondi per evitare hang in caso il server non risponda
+     * (errore silenzioso, connessione persa, ecc.): scaduto il timeout il
+     * controllo torna al loop principale, che ricalibrerà sullo stato attuale.</p>
+     */
+    private void sendAndAwaitUpdate(Object action) {
+        GameDTO before = gameView;
+        long errorBefore = lastErrorMessageAt;
+        System.out.println("[DEBUG TuiView] sendAndAwaitUpdate ENTRY action=" + action.getClass().getSimpleName()
+                + " currentPlayerBefore=" + (before == null || before.currentPlayer() == null ? "null" : before.currentPlayer().nickname())
+                + " myPlayerId=" + myPlayerId());
+        notifyAllListeners(action);
+        long deadline = System.currentTimeMillis() + 3000;
+        while (running && System.currentTimeMillis() < deadline) {
+            if (gameView != before) {
+                GameDTO after = gameView;
+                System.out.println("[DEBUG TuiView] sendAndAwaitUpdate EXIT (snapshot cambiato)"
+                        + " currentPlayerAfter=" + (after == null || after.currentPlayer() == null ? "null" : after.currentPlayer().nickname()));
+                return;
+            }
+            if (lastErrorMessageAt != errorBefore) {
+                System.out.println("[DEBUG TuiView] sendAndAwaitUpdate EXIT (ricevuto ErrorMessage)");
+                return;
+            }
+            sleep(50);
+        }
+        System.out.println("[DEBUG TuiView] sendAndAwaitUpdate EXIT (TIMEOUT 3s — il server non ha risposto)");
+    }
+
     /** Recupera il mio playerId dalla snapshot corrente. -1 se non noto. */
     private int myPlayerId() {
+        int id = getPlayerId();
+        //se ho già un id reale assegnato dal server (1,2,3,...) usalo subito
+        if (id > 0) return id;
+
+        // Fallback difensivo per compatibilità con vecchi flussi che non impostano playerId.
         GameDTO g = gameView;
         if (g == null || getNickname() == null) return -1;
         for (PlayerDTO p : g.players()) {

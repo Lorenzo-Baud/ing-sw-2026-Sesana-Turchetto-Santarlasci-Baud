@@ -67,7 +67,6 @@ public class MesosGame implements GameModel {
         viewUpdater = null;
     }
 
-
     // SETUP
 
     public void setupGame(int numPlayers, List<Player> players) {
@@ -202,6 +201,10 @@ public class MesosGame implements GameModel {
 
     @Override
     public void placeTotem(Player player, OfferTile offerTile) {
+        System.out.println("[DEBUG MesosGame] placeTotem ENTRY  player=" + player.getNickname()
+                + " tile=" + offerTile.getId()
+                + " currentPlayerIndex(prima)=" + currentPlayerIndex
+                + " numPlayers=" + numPlayers);
         board.getOfferTrack().placeTotem(offerTile.getId(), player);
         board.getTurnOrderTrack().returnTotem(player);
         currentPlayerIndex = (currentPlayerIndex + 1) % numPlayers;
@@ -209,6 +212,10 @@ public class MesosGame implements GameModel {
             phase = GamePhase.ACTION_RESOLUTION;
             currentPlayerIndex = 0;
         }
+        System.out.println("[DEBUG MesosGame] placeTotem EXIT   currentPlayerIndex(dopo)=" + currentPlayerIndex
+                + " phase=" + phase
+                + " currentPlayer=" + (getCurrentPlayer() == null ? "null" : getCurrentPlayer().getNickname())
+                + " allTotemsPlaced=" + allTotemsPlaced());
         notifyUpdate(this);
     }
 

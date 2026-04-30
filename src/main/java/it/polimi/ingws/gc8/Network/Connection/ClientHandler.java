@@ -3,6 +3,7 @@ package it.polimi.ingws.gc8.Network.Connection;
 import it.polimi.ingws.gc8.Controller.MainController;
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Controller.events.GameEventListener;
+import it.polimi.ingws.gc8.Network.Messages.ErrorMessage;
 import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
 
 /**
@@ -81,7 +82,7 @@ public class ClientHandler implements Runnable, GameEventListener {
     //Helpers
 
     public void sendError(String message) {
-        connection.sendMessage("ERROR:GENERIC:" + message);
+        connection.sendMessage(new ErrorMessage("GENERIC", message));
     }
 
     //Getters

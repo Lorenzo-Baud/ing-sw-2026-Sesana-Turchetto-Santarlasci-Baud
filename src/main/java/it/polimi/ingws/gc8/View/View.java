@@ -40,6 +40,9 @@ public abstract class View {
     /** Nickname scelto dall'utente, impostato in fase di login. */
     protected volatile String nickname;
 
+    /** PlayerId assegnato dal server in fase di login. */
+    protected volatile int playerId = -1;
+
     /** Ultimo snapshot autoritativo del gioco ricevuto dal server. */
     protected volatile GameDTO gameView;
 
@@ -93,6 +96,8 @@ public abstract class View {
 
     public String getNickname()          { return nickname; }
     public void   setNickname(String n)  { this.nickname = n; }
+    public int    getPlayerId()          { return playerId; }
+    public void   setPlayerId(int id)    { this.playerId = id; }
     public GameDTO getGameView()         { return gameView; }
     public void    setGameView(GameDTO v){ this.gameView = v; }
 

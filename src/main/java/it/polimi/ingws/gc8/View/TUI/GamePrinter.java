@@ -127,7 +127,7 @@ public final class GamePrinter {
         System.out.println(sb.toString());
     }
 
-    /** Stampa l'offer track come sequenza di tile con icona + colore occupante. */
+    /** Stampa l'offer track come sequenza di tile con icona + nickname/colore occupante. */
     public static void printOfferTrack(List<OfferTileDTO> tiles, List<PlayerDTO> players) {
         System.out.print(Printer.BOLD + pad("OFFER", 6) + Printer.RESET + " | ");
         if (tiles == null || tiles.isEmpty()) {
@@ -138,7 +138,9 @@ public final class GamePrinter {
         for (OfferTileDTO t : tiles) {
             String icon  = TILE_ICON.getOrDefault(t.id(), "?  ");
             PlayerDTO occ = resolveOccupant(t.playerIndexOccupant(), players);
-            String owner = (occ == null) ? "   " : pad(occ.totemColor().name(), 3);
+            String owner = (occ == null)
+                    ? "-"
+                    : pad(occ.nickname(), 6);
             String color = (occ == null) ? Printer.DIM : ansiFor(occ.totemColor());
             sb.append('[')
                     .append(t.id())
@@ -308,9 +310,12 @@ public final class GamePrinter {
         return out;
     }
 
-    private static PlayerDTO resolveOccupant(int idx, List<PlayerDTO> players) {
-        if (idx < 0 || players == null || idx >= players.size()) return null;
-        return players.get(idx);
+    private static PlayerDTO resolveOccupant(int playerId, List<PlayerDTO> players) {
+        if (playerId < 0 || players == null) return null;
+        for (PlayerDTO p : players) {
+            if (p != null && p.playerId() == playerId) return p;
+        }
+        return null;
     }
 
     private static PlayerDTO findByNickname(GameDTO g, String nickname) {

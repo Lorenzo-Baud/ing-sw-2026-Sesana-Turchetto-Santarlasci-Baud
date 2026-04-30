@@ -1,13 +1,13 @@
 package it.polimi.ingws.gc8.Network;
 
 import it.polimi.ingws.gc8.Controller.events.GameEventListener;
+import it.polimi.ingws.gc8.Model.GameModel;
+import it.polimi.ingws.gc8.Model.Player;
 import it.polimi.ingws.gc8.Model.Board.OfferTile;
 import it.polimi.ingws.gc8.Model.Cards.Card;
 import it.polimi.ingws.gc8.Model.Enum.CardRow;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
-import it.polimi.ingws.gc8.Model.GameModel;
-import it.polimi.ingws.gc8.Model.Player;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 import it.polimi.ingws.gc8.Network.DTO.DtoMapper;
 import it.polimi.ingws.gc8.Network.DTO.GameDTO;
@@ -82,7 +82,13 @@ public class ViewUpdater {
      * @param model the network message to broadcast
      */
     public void broadcastModel(GameModel model) {
-        ModelUpdateMessage modelUpdate = new ModelUpdateMessage(buildGameDTO(model));
+        GameDTO dto = buildGameDTO(model);
+        System.out.println("[DEBUG ViewUpdater] broadcastModel"
+                + " currentPlayer=" + (dto.currentPlayer() == null ? "null" : dto.currentPlayer().nickname())
+                + " currentPlayerIndex=" + dto.currentPlayerIndex()
+                + " phase=" + dto.phase()
+                + " listeners=" + listeners.size());
+        ModelUpdateMessage modelUpdate = new ModelUpdateMessage(dto);
         for (GameEventListener listener : listeners) {
             listener.onGameUpdate(modelUpdate);
         }
@@ -128,7 +134,7 @@ public class ViewUpdater {
         }
 
         List<OfferTileDTO> offerTrackDTO = new ArrayList<>();
-        for (OfferTile t : model.getBoard().getOfferTrack().getAvailableTiles()) {
+        for (OfferTile t : model.getBoard().getOfferTrack().getTiles()) {
             offerTrackDTO.add(DtoMapper.toDTO(t));
         }
 
@@ -146,7 +152,8 @@ public class ViewUpdater {
         List<PlayerDTO> turnOrderTrackDTO = new ArrayList<>();
         if (model.getBoard() != null && model.getBoard().getTurnOrderTrack() != null) {
             for (Player p : model.getBoard().getTurnOrderTrack().getCurrentOrder()) {
-                turnOrderTrackDTO.add(DtoMapper.toDTO(p));
+                // Dopo returnTotem alcuni slot possono essere vuoti.
+                turnOrderTrackDTO.add(p == null ? null : DtoMapper.toDTO(p));
             }
         }
 
@@ -204,10 +211,9 @@ public class ViewUpdater {
      *
      * @param currentPlayers  the number of players currently connected
      * @param expectedPlayers the target number of players required to start the game
-     * @param nicknames       the nicknames currently in the lobby
+     * @param nicknames       lista dei nickname dei giocatori già in lobby
      */
-    public void notifyLobbyUpdate(int currentPlayers, int expectedPlayers,
-                                  java.util.List<String> nicknames) {
+    public void notifyLobbyUpdate(int currentPlayers, int expectedPlayers, java.util.List<String> nicknames) {
         broadcast(new LobbyUpdateMessage(currentPlayers, expectedPlayers, nicknames));
     }
 

@@ -57,6 +57,7 @@ public class ClientMain {
 
             view.setNickname(cfg.nickname());
             LoginResult login = connection.login(cfg.nickname());
+            view.setPlayerId(login.playerId());
             Printer.printSuccess("[Client] Logged in as '" + cfg.nickname()
                     + "' (playerId=" + login.playerId()
                     + (login.isFirst() ? ", host" : "") + ")");
