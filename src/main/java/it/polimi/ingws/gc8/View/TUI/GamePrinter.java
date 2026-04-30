@@ -70,9 +70,9 @@ public final class GamePrinter {
         }
         printHeader(g);
         printCardRow("UPPER", filterTribe(g.upperRowCards()));
+        printOfferTrack(g.offerTrack(), g.players());
         printCardRow("LOWER", filterTribe(g.lowerRowCards()));
         printBuildings(collectBuildings(g.upperRowCards(), g.lowerRowCards()));
-        printOfferTrack(g.offerTrack(), g.players());
         printLeaderboard(g.players(), g.currentPlayer(), myNickname);
     }
 

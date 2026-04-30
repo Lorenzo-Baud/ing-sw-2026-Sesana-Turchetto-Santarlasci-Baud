@@ -96,19 +96,16 @@ public class GameController {
      * Initializes and starts the game.
      * Called by {@link MainController} when enough players are in the lobby.
      *
-     * @param numPlayers number of players (2-5)
+     * @param players list of players (2-5)
      */
-    public void startGame(int numPlayers) {
+    public void startGame(List<Player> players) {
         gameLock.lock();
         try {
-            model.setupGame(numPlayers);
-
+            model.setupGame(players.size(), players);
             playerMap.clear();
             for (Player p : model.getPlayers()) {
                 playerMap.put(p.getPlayerId(), p);
             }
-
-
             transitionTo(GamePhase.POSITIONING);
         } finally {
             gameLock.unlock();

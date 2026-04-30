@@ -26,7 +26,7 @@ public interface GameModel {
      * distributes initial food and randomizes turn order.
      * @param numPlayers number of players (2-5)
      */
-    void setupGame(int numPlayers);
+    void setupGame(int numPlayers, List<Player> players);
 
     /**
      * @return number of players in the game

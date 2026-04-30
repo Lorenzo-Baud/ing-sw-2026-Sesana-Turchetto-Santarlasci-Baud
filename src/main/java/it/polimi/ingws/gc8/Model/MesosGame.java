@@ -69,21 +69,6 @@ public class MesosGame implements GameModel {
 
 
     // SETUP
-    @Override
-    public void setupGame(int numPlayers) {
-        if (numPlayers < 2 || numPlayers > 5) {
-            throw new IllegalArgumentException(
-                    "Number of players must be between 2 and 5 (got " + numPlayers + ").");
-        }
-        this.numPlayers = numPlayers;
-        initializePlayers(numPlayers);
-        initializeBoard(numPlayers);
-        randomizeTurnOrder();
-        distributeInitialFood();
-        this.currentRound = 1;
-        this.phase = GamePhase.POSITIONING;
-        notifyUpdate(this);
-    }
 
     public void setupGame(int numPlayers, List<Player> players) {
         if (numPlayers < 2 || numPlayers > 5) {

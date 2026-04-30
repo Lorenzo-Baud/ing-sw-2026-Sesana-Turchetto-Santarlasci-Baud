@@ -1,6 +1,8 @@
 package it.polimi.ingws.gc8.Controller;
 
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
+import it.polimi.ingws.gc8.Model.Enum.TotemColor;
+import it.polimi.ingws.gc8.Model.Player;
 import it.polimi.ingws.gc8.Network.ViewUpdater;
 import it.polimi.ingws.gc8.Network.Connection.ClientHandler;
 import it.polimi.ingws.gc8.Network.Messages.LobbyUpdateMessage;
@@ -242,8 +244,13 @@ public class MainController {
         }
 
         gameController = new GameController(viewUpdater);
-        gameController.startGame(lobby.size());
-    }
+        TotemColor[] colors = TotemColor.values();
+        List<Player> players = new ArrayList<>();
+        for (int i = 0; i < lobby.size(); i++) {
+            ClientHandler ch = lobby.get(i);
+            players.add(new Player(ch.getPlayerId(), ch.getNickname(), colors[i]));
+        }
+        gameController.startGame(players);    }
 
     /**
      * Caller MUST hold {@link #lobbyLock}.
