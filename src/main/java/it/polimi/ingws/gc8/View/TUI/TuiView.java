@@ -175,55 +175,59 @@ public class TuiView extends View {
         GameDTO g = gameView;
         if (g == null) return;
 
-        Printer.printHeader("TUO TURNO — RISOLUZIONE AZIONI");
-        GamePrinter.printBoard(g, getNickname());
-
-        // Trova la tile su cui ho piazzato il totem: è quella occupata dal
-        // giocatore di indice g.currentPlayerIndex() (siamo qui solo se è il
-        // mio turno, quindi l'indice corrente È il mio).
         OfferTileDTO myTile = findMyTile(g);
+        String tileLabel = myTile == null ? "?" : myTile.id() + " " + GamePrinter.iconFor(myTile.id());
+        int maxUpper = myTile == null ? 1 : maxUpperPicks(myTile.id());
+        int maxLower = myTile == null ? 1 : maxLowerPicks(myTile.id());
+        boolean canFood = myTile != null && allowsFood(myTile.id());
 
-        // Calcola le azioni permesse dalle regole della tile.
-        // Se per qualche motivo non trovo la tile (stato inconsistente),
-        // abilito tutto come fallback: sarà il server a rifiutare.
-        boolean canUpper, canLower, canFood;
-        String tileLabel;
-        if (myTile == null) {
-            canUpper = true; canLower = true; canFood = hasTileA(g);
-            tileLabel = "?";
-        } else {
-            canUpper  = allowsUpperPick(myTile.id());
-            canLower  = allowsLowerPick(myTile.id());
-            canFood   = allowsFood(myTile.id());
-            tileLabel = myTile.id() + " " + GamePrinter.iconFor(myTile.id());
-        }
+        int upperTaken = 0;
+        int lowerTaken = 0;
+        boolean foodTaken = false;
 
-        System.out.println();
-        Printer.printInfo("Sei sulla tile " + tileLabel + ". Cosa vuoi fare?");
+        while (running && isMyTurn()) {
+            g = gameView;
+            if (g == null || g.phase() != GamePhase.ACTION_RESOLUTION) return;
 
-        // Costruisco il menu in modo dinamico: ogni opzione mappa il numero
-        // visualizzato al suo "tag" d'azione (UPPER/LOWER/FOOD/RETURN/BACK).
-        List<String> tags = new ArrayList<>();
-        int n = 1;
-        if (canUpper) { System.out.println("  " + n++ + ") Prendi carta dalla riga UPPER"); tags.add("UPPER"); }
-        if (canLower) { System.out.println("  " + n++ + ") Prendi carta dalla riga LOWER"); tags.add("LOWER"); }
-        if (canFood)  { System.out.println("  " + n++ + ") Prendi food"); tags.add("FOOD"); }
-        System.out.println("  " + n++ + ") Restituisci totem (chiudi turno)"); tags.add("RETURN");
-        System.out.println("  0) Indietro");
+            Printer.printHeader("TUO TURNO — RISOLUZIONE AZIONI");
+            GamePrinter.printBoard(g, getNickname());
 
-        int choice = chooseInRange(0, tags.size());
-        if (choice == 0) return;
+            System.out.println();
+            Printer.printInfo("Sei sulla tile " + tileLabel + ". Cosa vuoi fare?");
 
-        switch (tags.get(choice - 1)) {
-            case "UPPER" -> takeCardFromRow(g.upperRowCards(), CardRow.UPPER, "UPPER");
-            case "LOWER" -> takeCardFromRow(g.lowerRowCards(), CardRow.LOWER, "LOWER");
-            case "FOOD"  -> {
-                Printer.printSuccess("Prendo food…");
-                sendAndAwaitUpdate(new TakeFoodAction(myPlayerId()));
+            List<String> tags = new ArrayList<>();
+            int n = 1;
+            if (upperTaken < maxUpper) {
+                System.out.println("  " + n++ + ") Prendi carta dalla riga UPPER (" + upperTaken + "/" + maxUpper + ")");
+                tags.add("UPPER");
             }
-            case "RETURN" -> {
-                Printer.printSuccess("Restituisco il totem…");
-                sendAndAwaitUpdate(new ReturnTotemAction(myPlayerId()));
+            if (lowerTaken < maxLower) {
+                System.out.println("  " + n++ + ") Prendi carta dalla riga LOWER (" + lowerTaken + "/" + maxLower + ")");
+                tags.add("LOWER");
+            }
+            if (canFood && !foodTaken) {
+                System.out.println("  " + n++ + ") Prendi food");
+                tags.add("FOOD");
+            }
+            System.out.println("  " + n + ") Restituisci totem (chiudi turno)"); tags.add("RETURN");
+            System.out.println("  0) Indietro");
+
+            int choice = chooseInRange(0, tags.size());
+            if (choice == 0) return;
+
+            switch (tags.get(choice - 1)) {
+                case "UPPER" -> { if (takeCardFromRow(g.upperRowCards(), CardRow.UPPER, "UPPER")) upperTaken++; }
+                case "LOWER" -> { if (takeCardFromRow(g.lowerRowCards(), CardRow.LOWER, "LOWER")) lowerTaken++; }
+                case "FOOD"  -> {
+                    Printer.printSuccess("Prendo food…");
+                    sendAndAwaitUpdate(new TakeFoodAction(myPlayerId()));
+                    foodTaken = true;
+                }
+                case "RETURN" -> {
+                    Printer.printSuccess("Restituisco il totem…");
+                    sendAndAwaitUpdate(new ReturnTotemAction(myPlayerId()));
+                    return;
+                }
             }
         }
     }
@@ -256,6 +260,26 @@ public class TuiView extends View {
         return id == OffertileId.A;
     }
 
+    private static int maxUpperPicks(OffertileId id) {
+        return switch (id) {
+            case C -> 1;
+            case E -> 1;
+            case F -> 2;
+            case G -> 2;
+            default -> 0;
+        };
+    }
+
+    private static int maxLowerPicks(OffertileId id) {
+        return switch (id) {
+            case B -> 1;
+            case D -> 2;
+            case E -> 1;
+            case G -> 1;
+            default -> 0;
+        };
+    }
+
     /** True se l'offer track contiene la tile A (partita a 5 giocatori). */
     private static boolean hasTileA(GameDTO g) {
         if (g == null || g.offerTrack() == null) return false;
@@ -265,11 +289,11 @@ public class TuiView extends View {
         return false;
     }
 
-    /** Sotto-menu: sceglie una carta da una delle due righe. */
-    private void takeCardFromRow(List<CardDTO> cards, CardRow row, String label) {
+    /** Sotto-menu: sceglie una carta da una delle due righe. Ritorna true se la carta è stata presa. */
+    private boolean takeCardFromRow(List<CardDTO> cards, CardRow row, String label) {
         if (cards == null || cards.isEmpty()) {
             Printer.printError("La riga " + label + " è vuota.");
-            return;
+            return false;
         }
         System.out.println();
         Printer.printInfo("Carte disponibili nella riga " + label + ":");
@@ -280,44 +304,86 @@ public class TuiView extends View {
         System.out.println("  0) Indietro");
 
         int choice = chooseInRange(0, cards.size());
-        if (choice == 0) return;
+        if (choice == 0) return false;
 
         int cardIndex = choice - 1;
         CardDTO chosen = cards.get(cardIndex);
         Printer.printSuccess("Prendo: " + GamePrinter.formatCardAttributes(chosen));
         sendAndAwaitUpdate(new TakeCardAction(myPlayerId(), cardIndex, row));
+        return true;
     }
 
     // ------------------------------------------------------------------
     // Spectator menu: non è il mio turno
     // ------------------------------------------------------------------
 
+    /**
+     * Mostra la board e si aggiorna automaticamente ogni volta che il server
+     * invia un nuovo snapshot, senza richiedere input all'utente.
+     *
+     * Usa {@code System.in.available()} per rilevare input senza bloccare:
+     * se l'utente non ha premuto nulla, il loop dorme 50 ms e ricontrolla
+     * se {@code gameView} è cambiato (update automatico) o se c'è input.
+     */
     private void runSpectatorMenu() {
         GameDTO g = gameView;
         if (g == null) { sleep(100); return; }
 
         printSpectatorBoard(g);
+        printSpectatorOptions();
 
+        GameDTO snapshot = g;
+        while (running) {
+            if (isMyTurn()) return;
+            GameDTO cur = gameView;
+            if (cur != null && cur.phase() == GamePhase.GAME_OVER) return;
+
+            // Auto-refresh: nuovo snapshot dal server → ristampa board immediatamente
+            if (cur != snapshot) {
+                snapshot = cur;
+                if (cur != null && !isMyTurn()) {
+                    System.out.println();
+                    Printer.printInfo(">>> Board aggiornata <<<");
+                    printSpectatorBoard(cur);
+                    printSpectatorOptions();
+                } else {
+                    return; // è diventato il mio turno
+                }
+                continue;
+            }
+
+            // Input non-bloccante: legge solo se c'è già qualcosa nel buffer
+            try {
+                if (System.in.available() > 0) {
+                    int choice = readInt(-1);
+                    GameDTO current = gameView;
+                    if (current == null) current = snapshot;
+                    switch (choice) {
+                        case 2 -> { GamePrinter.printRowDetails("UPPER", current.upperRowCards()); pressEnter(); }
+                        case 3 -> { GamePrinter.printRowDetails("LOWER", current.lowerRowCards()); pressEnter(); }
+                        case 4 -> { GamePrinter.printBuildingsDetails(current); pressEnter(); }
+                        case 5 -> { GamePrinter.printTribe(gameView, getNickname()); pressEnter(); }
+                        case 6 -> showOtherPlayerTribe();
+                        default -> {} // 1, 0 o non valido: il return sotto ristampa la board
+                    }
+                    return; // il loop principale richiama runSpectatorMenu (ristampa la board)
+                }
+            } catch (java.io.IOException ignored) {}
+
+            sleep(50);
+        }
+    }
+
+    /** Stampa il menu opzioni dello spettatore. */
+    private void printSpectatorOptions() {
         System.out.println();
-        Printer.printInfo("Cosa vuoi fare mentre aspetti?");
-        System.out.println("  1) Stampa di nuovo la board");
+        Printer.printInfo("La board si aggiorna automaticamente. Premi INVIO per ristamparla.");
         System.out.println("  2) Vedi le carte della riga UPPER");
         System.out.println("  3) Vedi le carte della riga LOWER");
         System.out.println("  4) Vedi gli edifici");
         System.out.println("  5) Vedi la tua tribù");
         System.out.println("  6) Vedi la tribù di un altro giocatore");
-        System.out.println("  0) Attendi il tuo turno (blocca input)");
-
-        int choice = chooseInRange(0, 6);
-        switch (choice) {
-            case 0 -> waitForMyTurn();
-            case 1 -> { /* la prossima iterazione ristampa */ }
-            case 2 -> { GamePrinter.printRowDetails("UPPER", g.upperRowCards()); pressEnter(); }
-            case 3 -> { GamePrinter.printRowDetails("LOWER", g.lowerRowCards()); pressEnter(); }
-            case 4 -> { GamePrinter.printBuildingsDetails(g); pressEnter(); }
-            case 5 -> { GamePrinter.printTribe(gameView, getNickname()); pressEnter(); }
-            case 6 -> showOtherPlayerTribe();
-        }
+        Printer.printPrompt("> ");
     }
 
     private void showOtherPlayerTribe() {
