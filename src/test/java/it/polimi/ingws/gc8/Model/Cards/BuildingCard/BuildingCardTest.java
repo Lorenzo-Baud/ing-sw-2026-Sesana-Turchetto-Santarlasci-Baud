@@ -1,7 +1,10 @@
 package it.polimi.ingws.gc8.Model.Cards.BuildingCard;
 
+import it.polimi.ingws.gc8.Model.Cards.CharacterCards.*;
 import it.polimi.ingws.gc8.Model.Enum.CardType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
+import it.polimi.ingws.gc8.Model.Enum.TotemColor;
+import it.polimi.ingws.gc8.Model.Player;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -66,4 +69,55 @@ class BuildingCardTest {
         assertTrue(cards.isEmpty());
     }
 
+    @Test
+    void testInventorPairEffect() {
+        Player player = new Player(1, "TestPlayer", TotemColor.RED);
+        BuildingEffect effect = new InventorPairEffect(3); // Example: 3 food reward
+
+        Inventor inventor1 = new Inventor("building_front", "building_back", Era.ERA_1, 2, 4);
+
+        player.getTribe().addCharacter(player, inventor1);
+        effect.onCardAdded(player, inventor1);
+        assertEquals(0, player.getFood(), "The first inventor should grant no food");
+
+        Inventor inventor2 = new Inventor("f2", "building_back", Era.ERA_2, 5, 6);
+        player.getTribe().addCharacter(player, inventor2);
+        effect.onCardAdded(player, inventor2);
+        assertEquals(0, player.getFood(), "The second inventor with an icon different from the icon of the first inventor should grant no food");
+
+        Inventor inventor3 = new Inventor("building_front", "building_back", Era.ERA_2, 5, 6);
+        player.getTribe().addCharacter(player, inventor3);
+        effect.onCardAdded(player, inventor2);
+        assertEquals(3, player.getFood(), "The third inventor has the same icon of the second inventor so should grant 3 food points");
+
+        Inventor inventor4 = new Inventor("building_front", "building_back", Era.ERA_1, 5, 4);
+        player.getTribe().addCharacter(player, inventor4);
+        effect.onCardAdded(player, inventor2);
+        assertEquals(6, player.getFood(), "The fourth inventor has the same icon of the first inventor so should grant 3 food points");
+
+    }
+
+    @Test
+    void testSetCompletionEffect() {
+        Player player = new Player(1, "TestPlayer", TotemColor.RED);
+
+        SetCompletionEffect setCompletionEffect = new SetCompletionEffect(3);
+
+        player.getTribe().addCharacter(player, new Inventor("building_front", "building_back", Era.ERA_1, 2, 4));
+        player.getTribe().addCharacter(player, new Shaman("shaman_front", "shaman_back", Era.ERA_1, 5, 6));
+        player.getTribe().addCharacter(player, new Artist("artist_front", "artist_back", Era.ERA_1, 5));
+        player.getTribe().addCharacter(player, new Builder("builder_front", "builder_back", Era.ERA_1,4,2, 5));
+        Collector collector = new Collector("collector_front", "collector_back", Era.ERA_1,5,3);
+        player.getTribe().addCharacter(player, collector);
+        setCompletionEffect.onCardAdded(player,collector);
+
+        assertEquals(0, player.getFood(), "5 characters of different type should grant no food points");
+        Hunter hunter = new Hunter("hunter_front", "hunter_back", Era.ERA_1, 5, false);
+        player.getTribe().addCharacter(player, hunter);
+        setCompletionEffect.onCardAdded(player,hunter);
+
+        assertEquals(5, player.getFood(), "6 characters of different type should grant 5 food points");
+
+
+    }
 }
