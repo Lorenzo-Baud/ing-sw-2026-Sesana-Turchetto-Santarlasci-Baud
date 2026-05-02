@@ -1,20 +1,19 @@
 package it.polimi.ingws.gc8.View.TUI;
 
 /**
- * Costanti ANSI e helper di stampa per la TUI.
+ * ANSI constants and printing helpers for the TUI.
  *
- * La TUI lavora in modalità append-mode (nessun clear screen, nessuna
- * gestione raw-mode del terminale): ogni ridisegno scrive una nuova schermata
- * in fondo allo stdout. Questo evita le trappole tipiche di Windows cmd
- * (che non supporta ANSI di default su installazioni vecchie) e resta
- * compatibile con qualunque terminale.
+ * The TUI works in append-mode (no clear screen, no raw-mode terminal
+ * management): every redraw writes a new screen to the bottom of stdout.
+ * This avoids the typical traps of Windows cmd (which doesn't support ANSI
+ * by default on older installations) and remains compatible with any terminal.
  *
- * Tutti i metodi sono thread-safe perché delegano a {@code System.out}
- * (PrintStream è internamente sincronizzato).
+ * All methods are thread-safe because they delegate to {@code System.out}
+ * (PrintStream is internally synchronized).
  */
 public final class Printer {
 
-    private Printer() { /* classe di utilità */ }
+    private Printer() { /* utility class */ }
 
     // Reset
     public static final String RESET  = "\u001B[0m";
@@ -29,7 +28,7 @@ public final class Printer {
     public static final String CYAN   = "\u001B[36m";
     public static final String WHITE  = "\u001B[37m";
 
-    // Stili
+    // Styles
     public static final String BOLD   = "\u001B[1m";
     public static final String DIM    = "\u001B[2m";
 
@@ -41,33 +40,33 @@ public final class Printer {
     public static final String BG_BLUE   = "\u001B[44m";
     public static final String BG_WHITE  = "\u001B[47m";
 
-    /** Info generica (cyan). */
+    /** Generic info (cyan). */
     public static void printInfo(String msg) {
         System.out.println(CYAN + msg + RESET);
     }
 
-    /** Messaggio di successo (green). */
+    /** Success message (green). */
     public static void printSuccess(String msg) {
         System.out.println(GREEN + msg + RESET);
     }
 
-    /** Errore (red). */
+    /** Error (red). */
     public static void printError(String msg) {
         System.out.println(RED + "[ERR] " + msg + RESET);
     }
 
-    /** Prompt in bold + senza newline finale (così l'utente scrive sulla stessa riga). */
+    /** Prompt in bold + no trailing newline (so the user types on the same line). */
     public static void printPrompt(String msg) {
         System.out.print(BOLD + msg + RESET);
     }
 
-    /** Intestazione di sezione, preceduta da riga vuota. */
+    /** Section header, preceded by a blank line. */
     public static void printHeader(String title) {
         System.out.println();
         System.out.println(BOLD + YELLOW + "=== " + title + " ===" + RESET);
     }
 
-    /** Separatore orizzontale lungo {@code width} caratteri. */
+    /** Horizontal separator of {@code width} characters. */
     public static void printSeparator(int width) {
         System.out.println("-".repeat(Math.max(0, width)));
     }

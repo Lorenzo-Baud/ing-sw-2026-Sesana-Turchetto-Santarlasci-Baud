@@ -9,41 +9,41 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * Classe base per ogni View (TUI / futura GUI).
+ * Base class for every View (TUI / future GUI).
  *
- * <h2>Responsabilità</h2>
+ * <h2>Responsibilities</h2>
  * <ul>
- *   <li>Mantiene l'elenco dei {@link ViewListener} (il controller di rete).</li>
- *   <li>Mantiene una coda bloccante di {@link NetworkMessage} in ingresso:
- *       il thread di rete vi inserisce i messaggi, il thread UI li consuma.</li>
- *   <li>Mantiene lo stato "morbido" della UI: {@code nickname} scelto
- *       dall'utente e ultimo snapshot {@code gameView} ricevuto dal server.</li>
+ *   <li>Maintains the list of {@link ViewListener} (the network controller).</li>
+ *   <li>Maintains a blocking queue of incoming {@link NetworkMessage}:
+ *       the network thread inserts messages, the UI thread consumes them.</li>
+ *   <li>Maintains the "soft" state of the UI: {@code nickname} chosen
+ *       by the user and the last {@code gameView} snapshot received from the server.</li>
  * </ul>
  *
  * <h2>Threading</h2>
- * La coda {@code messages} è una {@code LinkedBlockingQueue} (thread-safe).
- * {@code gameView} e {@code nickname} sono {@code volatile}: scritti da un
- * thread (update dispatcher / main loop), letti da un altro (stampa).
+ * The {@code messages} queue is a {@code LinkedBlockingQueue} (thread-safe).
+ * {@code gameView} and {@code nickname} are {@code volatile}: written by one
+ * thread (update dispatcher / main loop), read by another (printing).
  *
  * <h2>Lifecycle</h2>
- * La sottoclassa implementa {@link #run()} con la logica procedurale
- * della propria UI (per la TUI: menu iniziale, fasi di gioco, ecc.).
+ * The subclass implements {@link #run()} with its own procedural UI logic
+ * (for TUI: initial menu, game phases, etc.).
  */
 public abstract class View {
 
-    /** Listener registrati (tipicamente un solo ClientController). */
+    /** Registered listeners (typically a single ClientController). */
     protected final List<ViewListener> listeners = new ArrayList<>();
 
-    /** Coda di messaggi provenienti dal server, consumata dal thread UI. */
+    /** Queue of messages from the server, consumed by the UI thread. */
     protected final LinkedBlockingQueue<NetworkMessage> messages = new LinkedBlockingQueue<>();
 
-    /** Nickname scelto dall'utente, impostato in fase di login. */
+    /** Nickname chosen by the user, set during login. */
     protected volatile String nickname;
 
-    /** PlayerId assegnato dal server in fase di login. */
+    /** PlayerId assigned by the server during login. */
     protected volatile int playerId = -1;
 
-    /** Ultimo snapshot autoritativo del gioco ricevuto dal server. */
+    /** Last authoritative game snapshot received from the server. */
     protected volatile GameDTO gameView;
 
     // ------------------------------------------------------------------
@@ -59,8 +59,8 @@ public abstract class View {
     }
 
     /**
-     * Notifica tutti i listener che l'utente ha prodotto un input/azione.
-     * Il {@code message} è tipicamente un {@code PlayerAction}.
+     * Notifies all listeners that the user has produced input/action.
+     * The {@code message} is typically a {@code PlayerAction}.
      */
     protected void notifyAllListeners(Object message) {
         for (ViewListener l : listeners) {
@@ -72,14 +72,14 @@ public abstract class View {
     // Message queue: server -> view
     // ------------------------------------------------------------------
 
-    /** Inserisce in coda un messaggio server. Chiamato dal pump di rete. */
+    /** Inserts a server message into the queue. Called by the network pump. */
     public void addMessage(NetworkMessage msg) {
         if (msg != null) messages.offer(msg);
     }
 
     /**
-     * Attende (bloccante) il prossimo messaggio dal server.
-     * Interrompibile: se il thread viene interrotto restituisce {@code null}.
+     * Waits (blocking) for the next message from the server.
+     * Interruptible: returns {@code null} if the thread is interrupted.
      */
     protected NetworkMessage waitForMessage() {
         try {
@@ -91,7 +91,7 @@ public abstract class View {
     }
 
     // ------------------------------------------------------------------
-    // Accesso allo stato "morbido"
+    // Access to "soft" state
     // ------------------------------------------------------------------
 
     public String getNickname()          { return nickname; }
@@ -105,6 +105,6 @@ public abstract class View {
     // Entry point
     // ------------------------------------------------------------------
 
-    /** Ciclo di vita della UI: bloccante, chiamato dal main del client. */
+    /** Lifecycle of the UI: blocking, called from the client main. */
     public abstract void run();
 }

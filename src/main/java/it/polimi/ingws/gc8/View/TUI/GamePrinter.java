@@ -13,32 +13,32 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Classe di utilità (solo metodi statici) per stampare lo stato di Mesos
- * in modalità testuale.
+ * Utility class (static methods only) to print the state of Mesos
+ * in text mode.
  *
- * Non conosce Scanner né interazione: ogni metodo traduce un pezzo di
- * {@link GameDTO} in output su {@code System.out}. La {@link TuiView}
- * compone questi mattoni per costruire le schermate.
+ * Unknown Scanner or interaction: every method translates a piece of
+ * {@link GameDTO} into output to {@code System.out}. {@link TuiView}
+ * composes these building blocks to construct the screens.
  *
- * <h2>Icone offer tile</h2>
- * Il contenuto delle sette offer tile (A..G) è fisso dal regolamento, quindi
- * le icone sono hardcoded qui e non lette a run-time da {@code offer_tiles.json}:
- * il client deve funzionare anche se non ha accesso alle risorse server.
+ * <h2>Offer tile icons</h2>
+ * The content of the seven offer tiles (A..G) is fixed by the rules, so
+ * the icons are hardcoded here and not read at runtime from {@code offer_tiles.json}:
+ * the client must work even without access to server resources.
  * <pre>
- *   A → F+3  (3 food reward, 5 giocatori)
+ *   A → F+3  (3 food reward, 5 players)
  *   B → ↓    (1 pick lower)
  *   C → ↑    (1 pick upper)
- *   D → ↓↓   (2 pick lower, 3+ giocatori)
+ *   D → ↓↓   (2 pick lower, 3+ players)
  *   E → ↓↑   (1 lower + 1 upper)
  *   F → ↑↑   (2 pick upper)
- *   G → ↓↑↑  (1 lower + 2 upper, 4+ giocatori)
+ *   G → ↓↑↑  (1 lower + 2 upper, 4+ players)
  * </pre>
  */
 public final class GamePrinter {
 
-    private GamePrinter() { /* classe di utilità */ }
+    private GamePrinter() { /* utility class */ }
 
-    /** Icone offer tile derivate dalle regole (cfr. {@code offer_tiles.json}). */
+    /** Offer tile icons derived from the rules (cfr. {@code offer_tiles.json}). */
     private static final Map<OffertileId, String> TILE_ICON = Map.of(
             OffertileId.A, "F+3",
             OffertileId.B, "↓  ",
@@ -50,22 +50,22 @@ public final class GamePrinter {
     );
 
     // ------------------------------------------------------------------
-    // Schermate complete
+    // Complete screens
     // ------------------------------------------------------------------
 
     /**
-     * Stampa completa della board.
+     * Complete board printout.
      * <p>
-     * Logica del layout (rispecchia la plancia fisica): le carte tribù
-     * (CHARACTER + EVENT) occupano UPPER e LOWER a sinistra, dove la LOWER
-     * contiene quelle che erano in UPPER nel round precedente. Gli edifici
-     * (BUILDING), che il modello tiene mescolati nelle stesse liste, vengono
-     * filtrati e mostrati a parte nella sezione BUILDING (a destra).
+     * Layout logic (mirrors the physical board): tribe cards
+     * (CHARACTER + EVENT) occupy UPPER and LOWER on the left, where LOWER
+     * contains what was in UPPER in the previous round. Buildings
+     * (BUILDING), which the model keeps mixed in the same lists, are
+     * filtered and shown separately in the BUILDING section (on the right).
      * </p>
      */
     public static void printBoard(GameDTO g, String myNickname) {
         if (g == null) {
-            Printer.printInfo("(in attesa di stato dal server…)");
+            Printer.printInfo("(waiting for state from server…)");
             return;
         }
         printHeader(g);
@@ -76,7 +76,7 @@ public final class GamePrinter {
         printLeaderboard(g.players(), g.currentPlayer(), myNickname);
     }
 
-    /** Header con era, round, fase, turno corrente. */
+    /** Header with era, round, phase, current turn. */
     public static void printHeader(GameDTO g) {
         String era   = (g.currentEra() == null) ? "?" : g.currentEra().name().replace("ERA_", "");
         String phase = (g.phase() == null) ? "?" : g.phase().name();
@@ -85,21 +85,21 @@ public final class GamePrinter {
         System.out.println(Printer.BOLD + Printer.YELLOW
                 + "ERA " + era
                 + "   |   Round " + g.currentRound()
-                + "   |   Fase " + phase
-                + "   |   Turno di: " + cur
+                + "   |   Phase " + phase
+                + "   |   Turn of: " + cur
                 + Printer.RESET);
         Printer.printSeparator(70);
     }
 
     // ------------------------------------------------------------------
-    // Mattoni
+    // Building blocks
     // ------------------------------------------------------------------
 
-    /** Stampa una riga di carte (upper o lower) con etichetta. */
+    /** Prints a row of cards (upper or lower) with label. */
     public static void printCardRow(String label, List<CardDTO> cards) {
         System.out.print(Printer.BOLD + pad(label, 6) + Printer.RESET + " | ");
         if (cards == null || cards.isEmpty()) {
-            System.out.println(Printer.DIM + "(vuota)" + Printer.RESET);
+            System.out.println(Printer.DIM + "(empty)" + Printer.RESET);
             return;
         }
         StringBuilder sb = new StringBuilder();
@@ -110,14 +110,14 @@ public final class GamePrinter {
     }
 
     /**
-     * Stampa la sezione edifici (a destra della plancia) come elenco compatto
-     * dei soli identificativi (es. {@code E1_01}). Per i dettagli usare
+     * Prints the buildings section (on the right of the board) as a compact list
+     * of identifiers only (e.g. {@code E1_01}). For details use
      * {@link #printBuildingsDetails(GameDTO)}.
      */
     public static void printBuildings(List<CardDTO> buildings) {
         System.out.print(Printer.BOLD + pad("BUILD", 6) + Printer.RESET + " | ");
         if (buildings == null || buildings.isEmpty()) {
-            System.out.println(Printer.DIM + "(nessun edificio)" + Printer.RESET);
+            System.out.println(Printer.DIM + "(no buildings)" + Printer.RESET);
             return;
         }
         StringBuilder sb = new StringBuilder();
@@ -127,11 +127,11 @@ public final class GamePrinter {
         System.out.println(sb.toString());
     }
 
-    /** Stampa l'offer track come sequenza di tile con icona + nickname/colore occupante. */
+    /** Prints the offer track as a sequence of tiles with icon + nickname/color occupant. */
     public static void printOfferTrack(List<OfferTileDTO> tiles, List<PlayerDTO> players) {
         System.out.print(Printer.BOLD + pad("OFFER", 6) + Printer.RESET + " | ");
         if (tiles == null || tiles.isEmpty()) {
-            System.out.println(Printer.DIM + "(vuoto)" + Printer.RESET);
+            System.out.println(Printer.DIM + "(empty)" + Printer.RESET);
             return;
         }
         StringBuilder sb = new StringBuilder();
@@ -151,12 +151,12 @@ public final class GamePrinter {
         System.out.println(sb.toString());
     }
 
-    /** Classifica giocatori: freccia sul corrente, stella sul "me". */
+    /** Players ranking: arrow on current, star on "me". */
     public static void printLeaderboard(List<PlayerDTO> players, PlayerDTO current, String myNickname) {
         System.out.println();
-        System.out.println(Printer.BOLD + "GIOCATORI" + Printer.RESET);
+        System.out.println(Printer.BOLD + "PLAYERS" + Printer.RESET);
         if (players == null || players.isEmpty()) {
-            System.out.println(Printer.DIM + "  (nessuno)" + Printer.RESET);
+            System.out.println(Printer.DIM + "  (none)" + Printer.RESET);
             return;
         }
         for (PlayerDTO p : players) {
@@ -171,19 +171,19 @@ public final class GamePrinter {
         }
     }
 
-    /** Stampa la tribù (mano di carte) del giocatore con il nickname indicato. */
+    /** Prints the tribe (hand of cards) of the player with the given nickname. */
     public static void printTribe(GameDTO g, String nickname) {
         PlayerDTO p = findByNickname(g, nickname);
         if (p == null) {
-            Printer.printError("Giocatore non trovato: " + nickname);
+            Printer.printError("Player not found: " + nickname);
             return;
         }
         System.out.println();
-        System.out.println(Printer.BOLD + "TRIBÙ di " + p.nickname()
+        System.out.println(Printer.BOLD + "TRIBE of " + p.nickname()
                 + " (" + ansiFor(p.totemColor()) + p.totemColor().name() + Printer.RESET + ")" + Printer.RESET);
         List<CardDTO> tribe = p.tribe();
         if (tribe == null || tribe.isEmpty()) {
-            System.out.println(Printer.DIM + "  (nessuna carta)" + Printer.RESET);
+            System.out.println(Printer.DIM + "  (no cards)" + Printer.RESET);
             return;
         }
         for (int i = 0; i < tribe.size(); i++) {
@@ -192,17 +192,17 @@ public final class GamePrinter {
     }
 
     /**
-     * Vista di dettaglio di una riga (UPPER o LOWER).
-     * Filtra i BUILDING: nelle righe upper/lower si mostrano solo le carte
-     * tribù (CHARACTER + EVENT). Per il dettaglio degli edifici usare
+     * Detailed view of a row (UPPER or LOWER).
+     * Filters BUILDING: in upper/lower rows only tribe cards are shown
+     * (CHARACTER + EVENT). For building details use
      * {@link #printBuildingsDetails(GameDTO)}.
      */
     public static void printRowDetails(String label, List<CardDTO> cards) {
         List<CardDTO> tribe = filterTribe(cards);
         System.out.println();
-        System.out.println(Printer.BOLD + "RIGA " + label + Printer.RESET);
+        System.out.println(Printer.BOLD + "ROW " + label + Printer.RESET);
         if (tribe.isEmpty()) {
-            System.out.println(Printer.DIM + "  (vuota)" + Printer.RESET);
+            System.out.println(Printer.DIM + "  (empty)" + Printer.RESET);
             return;
         }
         for (int i = 0; i < tribe.size(); i++) {
@@ -210,17 +210,17 @@ public final class GamePrinter {
         }
     }
 
-    /** Vista di dettaglio degli edifici della plancia (aggregati da upper+lower). */
+    /** Detailed view of board buildings (aggregated from upper+lower). */
     public static void printBuildingsDetails(GameDTO g) {
         System.out.println();
-        System.out.println(Printer.BOLD + "EDIFICI" + Printer.RESET);
+        System.out.println(Printer.BOLD + "BUILDINGS" + Printer.RESET);
         if (g == null) {
-            System.out.println(Printer.DIM + "  (vuoto)" + Printer.RESET);
+            System.out.println(Printer.DIM + "  (empty)" + Printer.RESET);
             return;
         }
         List<CardDTO> buildings = collectBuildings(g.upperRowCards(), g.lowerRowCards());
         if (buildings.isEmpty()) {
-            System.out.println(Printer.DIM + "  (nessun edificio)" + Printer.RESET);
+            System.out.println(Printer.DIM + "  (no buildings)" + Printer.RESET);
             return;
         }
         for (int i = 0; i < buildings.size(); i++) {
@@ -228,16 +228,16 @@ public final class GamePrinter {
         }
     }
 
-    /** Accesso pubblico alla mappa icone (per eventuali menu). */
+    /** Public access to icon map (for menu purposes). */
     public static String iconFor(OffertileId id) {
         return TILE_ICON.getOrDefault(id, "?  ");
     }
 
     // ------------------------------------------------------------------
-    // Formattazione carte
+    // Card formatting
     // ------------------------------------------------------------------
 
-    /** Descrizione completa di una carta basata sui suoi attributi DTO. */
+    /** Complete description of a card based on its DTO attributes. */
     public static String formatCardAttributes(CardDTO c) {
         if (c.type() == null) return "?";
         return switch (c.type()) {
@@ -247,7 +247,7 @@ public final class GamePrinter {
         };
     }
 
-    /** Etichetta breve per la riga summary della board. */
+    /** Short label for the board summary row. */
     private static String shortLabel(CardDTO c) {
         if (c.type() == null) return "?";
         return switch (c.type()) {
@@ -261,7 +261,7 @@ public final class GamePrinter {
         String base = pad(c.characterType() != null ? c.characterType().name() : "?", 10)
                 + "  min:" + c.numberOfPlayers() + "p";
         if (c.shamanIcons()           != null) return base + "  icons:" + c.shamanIcons();
-        if (c.hunterBonus()           != null) return base + "  bonus:" + (c.hunterBonus() ? "si" : "no");
+        if (c.hunterBonus()           != null) return base + "  bonus:" + (c.hunterBonus() ? "yes" : "no");
         if (c.builderFoodBonus()      != null) return base + "  +F:" + c.builderFoodBonus() + "  PP:" + c.builderPrestigePoints();
         if (c.collectorFoodDiscount() != null) return base + "  -F:" + c.collectorFoodDiscount();
         if (c.inventorIcon()          != null) return base + "  icon#" + c.inventorIcon();
@@ -278,7 +278,7 @@ public final class GamePrinter {
     private static String formatEvent(CardDTO c) {
         StringBuilder sb = new StringBuilder(
                 pad(c.eventType() != null ? c.eventType().name() : "?", 13));
-        if (Boolean.TRUE.equals(c.eventIsFinal()))  sb.append(" [FINALE]");
+        if (Boolean.TRUE.equals(c.eventIsFinal()))  sb.append(" [FINAL]");
         if (c.eventPrestigeBonus() != null) sb.append("  +PP:").append(c.eventPrestigeBonus());
         if (c.eventPrestigeMalus() != null) sb.append("  -PP:").append(c.eventPrestigeMalus());
         if (c.eventBonusArtists()  != null) sb.append("  bonus>=").append(c.eventBonusArtists()).append("art");
@@ -292,7 +292,7 @@ public final class GamePrinter {
     // Helper
     // ------------------------------------------------------------------
 
-    /** Tiene solo CHARACTER + EVENT (le carte "tribù" delle righe upper/lower). */
+    /** Keeps only CHARACTER + EVENT (the "tribe" cards from upper/lower rows). */
     private static List<CardDTO> filterTribe(List<CardDTO> cards) {
         List<CardDTO> out = new ArrayList<>();
         if (cards == null) return out;
@@ -302,7 +302,7 @@ public final class GamePrinter {
         return out;
     }
 
-    /** Raccoglie i BUILDING da upper+lower (sul tabellone occupano la sezione di destra). */
+    /** Collects BUILDING from upper+lower (on the board they occupy the section on the right). */
     private static List<CardDTO> collectBuildings(List<CardDTO> upper, List<CardDTO> lower) {
         List<CardDTO> out = new ArrayList<>();
         if (upper != null) for (CardDTO c : upper) if (c != null && c.type() == CardType.BUILDING) out.add(c);
@@ -326,7 +326,7 @@ public final class GamePrinter {
         return null;
     }
 
-    /** Mappa TotemColor → sequenza ANSI di foreground. */
+    /** Maps TotemColor → ANSI foreground sequence. */
     private static String ansiFor(TotemColor color) {
         if (color == null) return Printer.RESET;
         return switch (color) {
@@ -334,7 +334,7 @@ public final class GamePrinter {
             case BLUE   -> Printer.BLUE;
             case YELLOW -> Printer.YELLOW;
             case WHITE  -> Printer.WHITE;
-            case BLACK  -> Printer.DIM; // BLACK puro è invisibile su terminale scuro
+            case BLACK  -> Printer.DIM; // Pure BLACK is invisible on dark terminal
         };
     }
 

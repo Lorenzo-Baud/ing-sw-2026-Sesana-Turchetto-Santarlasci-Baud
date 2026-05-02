@@ -50,32 +50,32 @@ public final class Bootstrap {
      * @throws IOException if stdin closes unexpectedly
      */
     public static int askExpectedPlayers(int min, int max) throws IOException {
-        Printer.printInfo("Sei il primo giocatore: scegli il numero di partecipanti.");
-        return chooseInRange("Numero di giocatori (" + min + "-" + max + ")", min, max);
+        Printer.printInfo("You are the first player: choose the number of participants.");
+        return chooseInRange("Number of players (" + min + "-" + max + ")", min, max);
     }
 
     // Sub-prompts
 
     private static UiFlavor askUiFlavor() throws IOException {
         while (true) {
-            Printer.printInfo("Quale interfaccia vuoi usare?");
+            Printer.printInfo("Which interface do you want to use?");
             System.out.println("  1) TUI (terminal)");
-            System.out.println("  2) GUI (non disponibile)");
-            int c = chooseInRange("Scelta", 1, 2);
+            System.out.println("  2) GUI (not yet available)");
+            int c = chooseInRange("Choice", 1, 2);
             if (c == 1) return UiFlavor.TUI;
-            Printer.printError("GUI non ancora disponibile. Scegli TUI.");
+            Printer.printError("GUI is not yet available. Choose TUI.");
         }
     }
 
     private static String askHost() throws IOException {
-        Printer.printPrompt("Host del server [" + DEFAULT_HOST + "]: ");
+        Printer.printPrompt("Server host [" + DEFAULT_HOST + "]: ");
         String line = readLine();
         return (line == null || line.isBlank()) ? DEFAULT_HOST : line.trim();
     }
 
     private static int askPort() throws IOException {
         while (true) {
-            Printer.printPrompt("Porta [" + DEFAULT_PORT + "]: ");
+            Printer.printPrompt("Port [" + DEFAULT_PORT + "]: ");
             String line = readLine();
             if (line == null || line.isBlank()) return DEFAULT_PORT;
             try {
@@ -84,7 +84,7 @@ public final class Bootstrap {
             } catch (NumberFormatException ignored) {
                 // fall through to error
             }
-            Printer.printError("Porta non valida.");
+            Printer.printError("Invalid port.");
         }
     }
 
@@ -93,7 +93,7 @@ public final class Bootstrap {
             Printer.printPrompt("Nickname: ");
             String line = readLine();
             if (line != null && !line.isBlank()) return line.trim();
-            Printer.printError("Nickname non valido.");
+            Printer.printError("Invalid nickname.");
         }
     }
 
@@ -110,7 +110,7 @@ public final class Bootstrap {
             } catch (NumberFormatException ignored) {
                 // fall through
             }
-            Printer.printError("Inserisci un numero tra " + min + " e " + max + ".");
+            Printer.printError("Please enter a number between " + min + " and " + max + ".");
         }
     }
 
