@@ -169,4 +169,17 @@ class OfferTrackTest {
         offerTrack.placeTotem(id, player1);
         assertFalse(offerTrack.isFull(4));
     }
+
+    @Test
+    void testOfferTileGetTile() {
+        OfferTrack test = new OfferTrack(2);
+        assertNull(test.getTileById(OffertileId.A));
+        assertNotNull(test.getTileById(OffertileId.B));
+        assertNotNull(test.getTileById(OffertileId.C));
+        assertNull(test.getTileById(OffertileId.D));
+        assertNotNull(test.getTileById(OffertileId.E));
+        assertNotNull(test.getTileById(OffertileId.F));
+        assertNull(test.getTileById(OffertileId.G));
+    }
+
 }

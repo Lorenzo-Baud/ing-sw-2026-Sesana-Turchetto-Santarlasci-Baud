@@ -46,11 +46,15 @@ public class TurnOrderTrack {
      *
      * @param playerCount number of players in game
      */
-    public TurnOrderTrack(int playerCount) {
+    public TurnOrderTrack(int playerCount) throws RuntimeException {
         this.playerCount = playerCount;
-        // inizializza tutti gli slot a null (nessun occupante)
+        // Initializes all slots to null, indicating they are empty
         this.occupantsBySlot = new ArrayList<>(Collections.nCopies(playerCount, null));
-        loadConfig(playerCount);
+        try {
+            loadConfig(playerCount);
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     /**
@@ -81,7 +85,7 @@ public class TurnOrderTrack {
             this.lastSlotPrestigePenalty = config.getLastSlotPrestigePenalty();
 
         } catch (Exception e) {
-            throw new RuntimeException("Errore caricamento turn_order_track.json", e);
+            throw new RuntimeException("Error while loading turn_order_track.json", e);
         }
     }
 
@@ -197,7 +201,7 @@ public class TurnOrderTrack {
      */
     public List<PlayerDTO> toDto() {
         List<PlayerDTO> dto = new ArrayList<>();
-        for(int i = 0; i < 5; i++) {
+        for(int i = 0; i < occupantsBySlot.size(); i++) {
             if(occupantsBySlot.get(i) == null) {;
                 dto.add(null);
             } else {

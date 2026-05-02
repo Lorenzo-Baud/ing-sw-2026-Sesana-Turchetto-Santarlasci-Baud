@@ -65,4 +65,5 @@ class BuildingCardTest {
         List<BuildingCard> cards = BuildingCard.loadFromJson("non_existent_file.json");
         assertTrue(cards.isEmpty());
     }
+
 }
