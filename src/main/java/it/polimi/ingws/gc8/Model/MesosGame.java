@@ -84,18 +84,6 @@ public class MesosGame implements GameModel {
         notifyUpdate(this);
     }
 
-
-    /**
-     * Creates Players with default names and sequential TotemColors.
-     */
-    private void initializePlayers(int numPlayers) {
-        players.clear(); //remove eventual player left from a previews configuration
-        TotemColor[] colors = TotemColor.values();
-        for (int i = 0; i < numPlayers; i++) {
-            players.add(new Player(i + 1, "Player " + (i + 1), colors[i]));
-        }
-    }
-
     /**
      * Creates the Board for the given number of players.
      * <p>
@@ -132,6 +120,8 @@ public class MesosGame implements GameModel {
             Player player = order.get(i);
             if (player != null) {
                 player.addFood(foodByPosition[i]);
+            } else {
+                throw new IllegalStateException("Null player found");
             }
         }
     }
@@ -456,23 +446,43 @@ public class MesosGame implements GameModel {
         notifyUpdate(this);
     }
 
+    /**
+     * Determines the winner of the game based on prestige points and food reserves.
+     *
+     * <p>The winner is decided using the following tie-breaking hierarchy:
+     * <ol>
+     *   <li>The player with the highest number of Prestige Points.</li>
+     *   <li>In case of a tie, the player with the most remaining Food units.</li>
+     * </ol>
+     * </p>
+     *
+     * @return the winning {@link Player} instance; {@code null} if the player list
+     *         is empty or if a perfect tie exists after all tie-breaking rules
+     *         are applied.
+     */
     @Override
     public Player getWinner() {
         if (players.isEmpty()) return null;
         Player best = players.get(0);
         boolean tied = false;
+
         for (int i = 1; i < players.size(); i++) {
             Player p = players.get(i);
+
+            // Primary criteria: Prestige Points
             int ppCmp = Integer.compare(p.getPrestigePoints(), best.getPrestigePoints());
+
             if (ppCmp > 0) {
                 best = p;
                 tied = false;
             } else if (ppCmp == 0) {
+                // Secondary criteria (Tie-breaker): Food reserves
                 int foodCmp = Integer.compare(p.getFood(), best.getFood());
                 if (foodCmp > 0) {
                     best = p;
                     tied = false;
                 } else if (foodCmp == 0) {
+                    // Persistent tie across all criteria
                     tied = true;
                 }
             }

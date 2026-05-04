@@ -1,5 +1,8 @@
 package it.polimi.ingws.gc8.Model.Enum;
 
+/**
+ * Enum representing the different phases of the game.
+ */
 public enum GamePhase {
     SETUP,
     POSITIONING,

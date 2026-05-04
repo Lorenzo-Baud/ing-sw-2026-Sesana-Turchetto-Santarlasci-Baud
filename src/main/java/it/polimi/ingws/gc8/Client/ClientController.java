@@ -6,24 +6,27 @@ import it.polimi.ingws.gc8.Network.Connection.ServerConnection;
 import it.polimi.ingws.gc8.View.View;
 
 /**
- * Collante tra rete e UI
- * Adattatore di rete lato client. Non mantiene più stato di gioco: lo stato
- * vive dentro {@link View#getGameView()} ed è scritto dal dispatcher della
- * View stessa.
+ * Network adapter for the client-side infrastructure, serving as the bridge between
+ * the networking layer and the UI.
  *
- * <h2>Ruolo</h2>
+ * This component is stateless regarding game logic; the authoritative client-side
+ * state resides within {@link View#getGameView()} and is managed exclusively by
+ * the View's internal dispatcher.
+ *
+ * <h2>Responsibilities</h2>
  * <ul>
- *   <li>Implementa {@link ViewListener}: riceve le azioni prodotte dalla
- *       View (via {@code notifyAllListeners}) e le inoltra al server tramite
- *       {@link ServerConnection#sendAction(Object)}.</li>
- *   <li>Fa girare un thread "network pump" che fa polling su
- *       {@link ServerConnection#receive()} e inserisce i {@link NetworkMessage}
- *       in {@link View#addMessage(NetworkMessage)}.</li>
+ *   <li><b>Upstream:</b> Implements {@link ViewListener} to intercept UI-triggered
+ *       actions (via {@code notifyAllListeners}) and dispatch them to the remote
+ *       endpoint through {@link ServerConnection#sendAction(Object)}.</li>
+ *   <li><b>Downstream:</b> Manages a dedicated daemon thread (Network Pump) that
+ *       polls {@link ServerConnection#receive()} and enqueues incoming
+ *       {@link NetworkMessage} instances into {@link View#addMessage(NetworkMessage)}.</li>
  * </ul>
  *
- * <h2>Threading</h2>
- * Un solo thread dedicato al pump (daemon). La View è già thread-safe rispetto
- * alla sua coda ({@code LinkedBlockingQueue}), quindi non servono lock qui.
+ * <h2>Concurrency Model</h2>
+ * Networking is handled by a single background daemon thread. Since the View
+ * utilizes a thread-safe message queue ({@code LinkedBlockingQueue}), no
+ * additional synchronization or locking is required within this adapter.
  */
 public class ClientController implements ViewListener {
 
@@ -42,7 +45,7 @@ public class ClientController implements ViewListener {
     // Lifecycle
     // ------------------------------------------------------------------
 
-    /** Registra questo controller come listener della View e avvia il pump. */
+    /** Registers this controller as listener of the view. */
     public void start() {
         if (running) return;
         running = true;
@@ -59,17 +62,17 @@ public class ClientController implements ViewListener {
     }
 
     // ------------------------------------------------------------------
-    // Incoming: server -> view queue (in ingresso)
+    // Incoming: server -> view queue
     // ------------------------------------------------------------------
 
     private void pumpLoop() {
         while (running) {
             try {
-                Object raw = serverConnection.receive(); //blocca finché arriva qualcosa
+                Object raw = serverConnection.receive(); // Blocks until a message arrives
                 if (raw instanceof NetworkMessage m) {
-                    view.addMessage(m);                 //lo mette in coda alla View
+                    view.addMessage(m);                 // Queues the message into the queue
                 }
-                // Tipi sconosciuti vengono silenziosamente scartati.
+                // Unknown messages are discarded
             } catch (InterruptedException ie) {
                 Thread.currentThread().interrupt();
                 return;
@@ -84,13 +87,14 @@ public class ClientController implements ViewListener {
     }
 
     // ------------------------------------------------------------------
-    // Outgoing: view -> server (in uscita)
+    // Outgoing: view -> server
     // ------------------------------------------------------------------
 
     /**
-     * Callback {@link ViewListener}: la View ha prodotto un input dell'utente.
-     * Tipicamente {@code message} è un
-     * {@link it.polimi.ingws.gc8.Controller.actions.PlayerAction}.
+     * {@link ViewListener} callback invoked when the View captures user input.
+     * Typically, the {@code message} argument encapsulates a
+     * {@link it.polimi.ingws.gc8.Controller.actions.PlayerAction} to be
+     * processed by the controller or dispatched across the network.
      */
     @Override
     public void updateFromView(Object message) {

@@ -4,6 +4,8 @@ import it.polimi.ingws.gc8.Model.Board.Board;
 import it.polimi.ingws.gc8.Model.Board.OfferTile;
 import it.polimi.ingws.gc8.Model.Board.OffertileId;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
+import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingEffect;
+import it.polimi.ingws.gc8.Model.Cards.BuildingCard.SetCompletionEffect;
 import it.polimi.ingws.gc8.Model.Cards.Card;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.*;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.EventCard;
@@ -468,4 +470,93 @@ public class MesosGameTest {
         }
 
     }
+
+    @Test
+    void otherMethodsTest() {
+
+        int numPlayers = 3;
+        MesosGame game = new MesosGame();
+
+        // getCurrentPlayer
+        assertNull(game.getCurrentPlayer());
+
+        // getOfferTile
+        assertNull(game.getOfferTile(null));
+
+        List<Player> players = new ArrayList<>();
+        players.add(new Player(1, "Player1", TotemColor.RED));
+        players.add(new Player(2, "Player2", TotemColor.RED));
+        players.add(new Player(3, "Player3", TotemColor.RED));
+
+        // Game setup
+        game.setupGame(numPlayers, players);
+
+        // canPlayerAffordBuilding test
+        assertFalse(game.canPlayerAffordBuilding(players.getFirst(), new BuildingCard("", 4, 0, Era.ERA_1, "", "", new SetCompletionEffect(3)) ));
+        assertTrue(game.canPlayerAffordBuilding(players.getFirst(), new BuildingCard("", 0, 0, Era.ERA_1, "", "", new SetCompletionEffect(3)) ));
+
+        // takeFood
+        int previousFood = players.getFirst().getFood();
+        game.takeFood(players.getFirst());
+        assertEquals(previousFood + 3, players.getFirst().getFood());
+
+        // returnTotemToTurnOrder
+        assertThrows(IllegalStateException.class, () -> {
+            game.returnTotemToTurnOrder(players.getFirst());
+        });
+
+
+        // canPickExtraCard
+        assertFalse(game.canPickExtraCard(players.getFirst()));
+
+        // takeExtraCard
+        game.takeExtraCard(players.getFirst(), new Hunter(
+                "", "", Era.ERA_1, 3, false
+        ));
+
+        game.takeExtraCard(players.getFirst(), new BuildingCard("", 4, 0, Era.ERA_1, "", "", new SetCompletionEffect(3)));
+        assertEquals( 1, players.getFirst().getTribe().getCharacters().size());
+        assertEquals( 1, players.getFirst().getTribe().getBuildings().size());
+        assertEquals(1, players.getFirst().getTotalCharacters());
+        assertEquals(0, players.getFirst().getTotalShamans());
+        assertEquals(0, players.getFirst().getTotalBuildingDiscount());
+
+
+
+        // setCurrentPlayer
+        game.setCurrentPlayer(players.getFirst());
+        assertEquals(players.getFirst(), game.getCurrentPlayer());
+
+        // setupGame Exception
+        assertThrows(IllegalArgumentException.class, () -> game.setupGame(1, new ArrayList<>()));
+
+        // getNumPlayers
+        assertEquals(3, game.getNumPlayers());
+
+        // getPhase
+        assertEquals(GamePhase.POSITIONING, game.getPhase());
+
+        // setPhase
+        game.setPhase(GamePhase.SETUP);
+        assertEquals(GamePhase.SETUP, game.getPhase());
+
+    }
+
+    @Test
+    void initializeTestMethodException() {
+        int numPlayers = 3;
+        MesosGame game = new MesosGame();
+
+
+        List<Player> players = new ArrayList<>();
+        players.add(new Player(1, "Player1", TotemColor.RED));
+        players.add(new Player(2, "Player2", TotemColor.RED));
+        players.add(null);
+
+        // Game setup
+        assertThrows(IllegalStateException.class, () -> game.setupGame(numPlayers, players));
+
+
+    }
+
 }

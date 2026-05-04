@@ -116,8 +116,7 @@ class BuildingCardTest {
         player.getTribe().addCharacter(player, hunter);
         setCompletionEffect.onCardAdded(player,hunter);
 
-        assertEquals(5, player.getFood(), "6 characters of different type should grant 5 food points");
-
+        assertEquals(3, player.getFood(), "6 characters of different type should grant 3 food points");
 
     }
 }

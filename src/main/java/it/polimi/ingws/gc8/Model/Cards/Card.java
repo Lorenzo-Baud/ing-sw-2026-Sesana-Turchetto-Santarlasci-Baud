@@ -3,6 +3,9 @@ package it.polimi.ingws.gc8.Model.Cards;
 import it.polimi.ingws.gc8.Model.Enum.CardType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 
+/**
+ * Interface representing a card
+ */
 public abstract class Card {
 
     /** Era this card belongs to */
