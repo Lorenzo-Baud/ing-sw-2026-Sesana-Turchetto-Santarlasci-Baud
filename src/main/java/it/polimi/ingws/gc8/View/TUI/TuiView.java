@@ -341,9 +341,15 @@ public class TuiView extends View {
             GameDTO cur = gameView;
             if (cur != null && cur.phase() == GamePhase.GAME_OVER) return;
 
-            // Auto-refresh: new snapshot from server → reprint board immediately
+            // Auto-refresh: new snapshot from server → reprint board.
+            // Debounce: when multiple ModelUpdates arrive within a short window
+            // (e.g. placeTotem + setPhase during POSITIONING→ACTION_RESOLUTION),
+            // wait briefly and pick up the latest snapshot, so we print once.
             if (cur != snapshot) {
+                sleep(80);
+                cur = gameView;
                 snapshot = cur;
+                if (cur != null && cur.phase() == GamePhase.GAME_OVER) return;
                 if (cur != null && !isMyTurn()) {
                     System.out.println();
                     Printer.printInfo(">>> Board updated <<<");
@@ -441,18 +447,18 @@ public class TuiView extends View {
         }
     }
 
-    /** Applies a server message: updates {@code gameView} or prints errors. */
+    /**
+     * Applies a server message: updates {@code gameView} or prints errors.
+     *
+     * <p>Only updates state. Does NOT print the spectator board: that is the
+     * sole responsibility of the UI thread inside {@code runSpectatorMenu()},
+     * which polls {@code gameView} and reprints atomically. Printing here
+     * (from the dispatcher thread) would interleave with the UI thread and
+     * produce duplicate boards plus a missing options menu.</p>
+     */
     private void applyMessage(NetworkMessage msg) {
-        System.out.println("[DEBUG TuiView] applyMessage msg=" + msg.getClass().getSimpleName());
         if (msg instanceof ModelUpdateMessage m) {
-            GameDTO newView = m.getGameModelDTO();
-            System.out.println("[DEBUG TuiView] applyMessage ModelUpdate"
-                    + " currentPlayer=" + (newView == null || newView.currentPlayer() == null ? "null" : newView.currentPlayer().nickname())
-                    + " phase=" + (newView == null ? "null" : newView.phase()));
-            setGameView(newView);
-            if (newView != null && !isMyTurn()) {
-                printSpectatorBoard(newView);
-            }
+            setGameView(m.getGameModelDTO());
 
         } else if (msg instanceof GameOverMessage m) {
             setGameView(m.getFinalState());
