@@ -220,7 +220,7 @@ public class Tribe {
             }
             if (count < min) min = count;
         }
-        return min == Integer.MAX_VALUE ? 0 : min;
+        return min;
     }
 
     // BUILDING EFFECT TRIGGERS

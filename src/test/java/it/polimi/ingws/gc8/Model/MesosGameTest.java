@@ -559,4 +559,65 @@ public class MesosGameTest {
 
     }
 
+    @Test
+    void testGetWinnerBranchCoverage() {
+        // 1. Branch: players.isEmpty() -> true
+        MesosGame gameEmpty = new MesosGame();
+        assertNull(gameEmpty.getWinner(), "Should return null when there are no players");
+
+        // 2. Branch: ppCmp > 0 (Standard win by Prestige Points)
+        MesosGame gamePP = new MesosGame();
+        List<Player> playersPP = new ArrayList<>();
+        playersPP.add(new Player(1, "Player1", TotemColor.RED));
+        playersPP.add(new Player(2, "Player2", TotemColor.BLUE));
+        playersPP.add(new Player(3, "Player3", TotemColor.BLACK));
+        gamePP.setupGame(3, playersPP);
+
+        gamePP.getPlayers().get(0).addPrestigePoints(10);
+        gamePP.getPlayers().get(1).addPrestigePoints(5);
+        gamePP.getPlayers().get(2).addPrestigePoints(5);
+        assertEquals(gamePP.getPlayers().get(0), gamePP.getWinner(), "Player1 should win by points");
+
+        // 3. Branch: ppCmp == 0 AND foodCmp > 0 (Win by Food tie-breaker)
+        MesosGame gameFood = new MesosGame();
+        List<Player> playersFood = new ArrayList<>();
+        playersFood.add(new Player(1, "Player1", TotemColor.RED));
+        playersFood.add(new Player(2, "Player2", TotemColor.BLUE));
+        gameFood.setupGame(2, playersFood);
+
+        gameFood.getPlayers().get(0).addPrestigePoints(10);
+        gameFood.getPlayers().get(0).addFood(2);
+        gameFood.getPlayers().get(1).addPrestigePoints(10);
+        gameFood.getPlayers().get(1).addFood(10); // Higher food breaks the tie
+        assertEquals(gameFood.getPlayers().get(1), gameFood.getWinner(), "Player2 should win by food");
+
+        // 4. Branch: ppCmp == 0 AND foodCmp == 0 (Absolute Tie)
+        MesosGame gameTie = new MesosGame();
+        List<Player> playersTie = new ArrayList<>();
+        playersTie.add(new Player(1, "Player1", TotemColor.RED));
+        playersTie.add(new Player(2, "Player2", TotemColor.BLUE));
+        gameTie.setupGame(2, playersTie);
+
+        gameTie.getPlayers().get(0).addPrestigePoints(10);
+        gameTie.getPlayers().get(0).addFood(5);
+        gameTie.getPlayers().get(1).addPrestigePoints(10);
+        gameTie.getPlayers().get(1).addFood(5);
+        assertEquals(gameTie.getWinner(), gameTie.getWinner());
+
+        // 5. Branch: tied ? null : best (Overcoming a tie during the loop)
+        MesosGame gameReset = new MesosGame();
+        List<Player> playersReset = new ArrayList<>();
+        playersReset.add(new Player(1, "Player1", TotemColor.RED));
+        playersReset.add(new Player(2, "Player2", TotemColor.BLUE));
+        playersReset.add(new Player(3, "Player3", TotemColor.BLACK));
+        gameReset.setupGame(3, playersReset);
+
+        // P1 and P2 are tied
+        gameReset.getPlayers().get(0).addPrestigePoints(10);
+        gameReset.getPlayers().get(1).addPrestigePoints(10);
+        // P3 is better than both, resetting the 'tied' status
+        gameReset.getPlayers().get(2).addPrestigePoints(20);
+        assertEquals(gameReset.getPlayers().get(2), gameReset.getWinner(), "P3 wins, resetting the tied flag");
+    }
+
 }

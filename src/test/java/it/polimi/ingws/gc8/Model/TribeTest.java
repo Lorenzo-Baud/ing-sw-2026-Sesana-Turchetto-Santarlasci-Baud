@@ -3,6 +3,7 @@ package it.polimi.ingws.gc8.Model;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.ConfigurableEffect;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.SetCompletionEffect;
+import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Artist;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Builder;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Collector;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Shaman;
@@ -117,6 +118,20 @@ public class TribeTest {
         assertFalse(tribe.hasShamanDouble());
         assertFalse(tribe.hasShamanGainOnTie());
         assertFalse(tribe.canPickExtraCard());
+
+    }
+
+    // Test to increase branch coverage
+    @Test
+    public void testBranchCoverage() {
+
+        Tribe tribe = new Tribe();
+        tribe.addCharacter(
+                new Player(1, "", TotemColor.RED),
+                new Artist("f", "b", Era.ERA_1, 2));
+
+        assertEquals(1, tribe.countByType(Artist.class));
+        assertEquals(0, tribe.getTotalShamanIcons());
 
     }
 
