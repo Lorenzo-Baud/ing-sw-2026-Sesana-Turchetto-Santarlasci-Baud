@@ -55,6 +55,12 @@ class RitualEventCardTest {
         // Result: 10 (initial) + 10 (bonus) - 5 (malus) = 15
         assertEquals(15, p1.getPrestigePoints());
         assertEquals(15, p2.getPrestigePoints());
+
+        RitualEventCard card2 = new RitualEventCard("f", "b", Era.ERA_1, false, EventType.ritual, 10, 5);
+        card2.resolveEvent(null);
+        card2.resolveEvent(List.of());
+
+
     }
 
     @Test

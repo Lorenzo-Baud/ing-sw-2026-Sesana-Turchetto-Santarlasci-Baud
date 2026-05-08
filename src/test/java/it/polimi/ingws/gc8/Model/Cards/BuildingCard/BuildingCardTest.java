@@ -1,8 +1,13 @@
 package it.polimi.ingws.gc8.Model.Cards.BuildingCard;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.*;
+import it.polimi.ingws.gc8.Model.Cards.EventCards.EventCard;
+import it.polimi.ingws.gc8.Model.Cards.EventCards.SustenanceEventCard;
 import it.polimi.ingws.gc8.Model.Enum.CardType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
+import it.polimi.ingws.gc8.Model.Enum.EventType;
 import it.polimi.ingws.gc8.Model.Enum.TotemColor;
 import it.polimi.ingws.gc8.Model.Player;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
@@ -119,4 +124,84 @@ class BuildingCardTest {
         assertEquals(3, player.getFood(), "6 characters of different type should grant 3 food points");
 
     }
+
+    @Test
+    public void testBuildingGetters() {
+
+        Player player = new Player(1, "TestPlayer", TotemColor.RED);
+        SetCompletionEffect setCompletionEffect = new SetCompletionEffect(3);
+
+        assertEquals(0, setCompletionEffect.getSustenanceFoodReduction(player));
+        assertEquals(0, setCompletionEffect.getExtraFoodOnTurnOrder());
+        assertEquals(0, setCompletionEffect.getExtraFoodOnTurnOrder());
+    }
+
+    @Test
+    public void testBuildingEffectCreationException() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            BuildingEffect be = BuildingEffect.createFrom(
+                    "SET", null
+            );
+        });
+
+    }
+
+    @Test
+    public void testBuildingEffects() {
+
+        Player player = new Player(1, "TestPlayer", TotemColor.RED);
+        EventCard eventCard = new SustenanceEventCard(
+                "", "", Era.ERA_1, false, EventType.sustenance, 0
+        );
+
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode params = mapper.createObjectNode();
+
+        params.put("sustenanceType", "SHAMAN");
+        params.put("sustenanceReductionPerUnit", 1);
+        params.put("shield", true);
+        params.put("endGameStrategy", "OTHER");
+
+        ConfigurableEffect effect = ConfigurableEffect.fromJson(params);
+
+        effect.onEvent(player, eventCard);
+        assertEquals(0, effect.onGameEnd(player));
+
+        assertEquals(0, effect.getShamanIconBonus());
+        assertTrue(effect.preventsShamanPenalty());
+        assertFalse(effect.doublesShamanBonus());
+        assertFalse(effect.gainsOnShamanTie());
+        assertEquals(0, effect.getSustenanceFoodReduction(player));
+        assertFalse(effect.canPickExtraCard());
+        assertEquals(0, effect.getExtraFoodOnTurnOrder());
+    }
+
+    @Test
+    public void testOnGameEnd() {
+
+        Player player = new Player(1, "TestPlayer", TotemColor.RED);
+        EventCard eventCard = new SustenanceEventCard(
+                "", "", Era.ERA_1, false, EventType.sustenance, 0
+        );
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode params = mapper.createObjectNode();
+        ConfigurableEffect effect = ConfigurableEffect.fromJson(params);
+
+        assertEquals(0, effect.onGameEnd(player));
+
+        params.put("endGameStrategy", "TYPE");
+        effect = ConfigurableEffect.fromJson(params);
+        assertEquals(0, effect.onGameEnd(player));
+
+        params.put("endGameStrategy", "SET");
+        effect = ConfigurableEffect.fromJson(params);
+        assertEquals(0, effect.onGameEnd(player));
+
+        params.put("endGameStrategy", "DOUBLE_BUILDER");
+        effect = ConfigurableEffect.fromJson(params);
+        assertEquals(0, effect.onGameEnd(player));
+
+
+    }
+
 }
