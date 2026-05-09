@@ -1,9 +1,7 @@
 package it.polimi.ingws.gc8.Controller.states;
 
 import it.polimi.ingws.gc8.Controller.GameController;
-import it.polimi.ingws.gc8.Controller.actions.PlaceTotemAction;
-import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
-import it.polimi.ingws.gc8.Controller.actions.TakeFoodAction;
+import it.polimi.ingws.gc8.Controller.actions.*;
 import it.polimi.ingws.gc8.Controller.events.GameEventListener;
 import it.polimi.ingws.gc8.Model.Board.Board;
 import it.polimi.ingws.gc8.Model.Board.OfferTile;
@@ -11,6 +9,7 @@ import it.polimi.ingws.gc8.Model.Board.OfferTrack;
 import it.polimi.ingws.gc8.Model.Board.OffertileId;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Shaman;
+import it.polimi.ingws.gc8.Model.Enum.CardRow;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.TotemColor;
 import it.polimi.ingws.gc8.Model.MesosGame;
@@ -24,7 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ViewUpdaterForTesting extends ViewUpdater {
     private String lastError;
@@ -75,8 +75,10 @@ public class ActionResolutionStateTest {
         p2.addFood(10);
 
         Board board = game.getBoard();
-        board.setUpperRow(new ArrayList<>(List.of(new Shaman("shaman_front.png", "shaman_back.png", Era.ERA_1, 2, 1))));
-        board.setLowerRow(new ArrayList<>(List.of(new BuildingCard("Building1", 3, 2, Era.ERA_1, "building_front.png", "building_back.png", null))));
+        board.setUpperRow(new ArrayList<>(List.of(new Shaman("shaman_front.png", "shaman_back.png", Era.ERA_1, 2, 2),
+                new Shaman("shaman_front.png", "shaman_back.png", Era.ERA_1, 2, 2), new Shaman("shaman_front.png", "shaman_back.png", Era.ERA_1, 2, 2))));
+        board.setLowerRow(new ArrayList<>(List.of(new BuildingCard("Building1", 3, 2, Era.ERA_1, "building_front.png", "building_back.png", null),
+                new BuildingCard("Building1", 3, 2, Era.ERA_1, "building_front.png", "building_back.png", null))));
         List<OfferTile> availableTiles = game.getAvailableOfferTiles();
         OfferTile Player1Tile = availableTiles.get(0);
         OfferTile Player2Tile = availableTiles.get(1);
@@ -90,6 +92,9 @@ public class ActionResolutionStateTest {
         game.placeTotem(p2, Player2Tile);
 
         state.onEnter(controller);
+
+        controller.setOfferOrder(players);
+        controller.setOfferOrderIndex(1);
     }
 
     @Test
@@ -106,7 +111,39 @@ public class ActionResolutionStateTest {
         assertEquals("NOT_YOUR_TURN", viewUpdater.getLastError());
     }
 
+    @Test
+    void invalidActionTesting() {
+        PlayerAction action = new PlaceTotemAction(2, "A");
+        state.handleAction(controller, action);
 
+        assertEquals("INVALID_ACTION", viewUpdater.getLastError());
+    }
 
+    @Test
+    void takeInvalidCardTesting() {
 
+        TakeCardAction action = new TakeCardAction(2, 8, CardRow.UPPER);
+        state.handleAction(controller, action);
+
+        assertEquals("INVALID_CARD", viewUpdater.getLastError());
+    }
+
+    @Test
+    void takeBuildingTesting() {
+        p1.addFood(5);
+        int initialFood =  p1.getFood();
+        TakeCardAction action = new TakeCardAction(1,  0, CardRow.LOWER);
+        state.handleAction(controller, action);
+        assertTrue( p1.getFood() <= initialFood );
+    }
+
+    @Test
+    void takeFoodTesting() {
+        int initialFood = p2.getFood();
+        TakeFoodAction action = new TakeFoodAction(2);
+
+        state.handleAction(controller, action);
+        assertTrue(p2.getFood() > initialFood, "Player's food should have increased.");
+    }
 }
+
