@@ -7,7 +7,7 @@ import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
  * State pattern interface: each game phase validates and handles
  * actions differently. GameController delegates to the current state.
  */
-public interface GameState {
+public interface   GameState {
 
     /**
      * Processes a player action in the context of this state.
