@@ -17,7 +17,8 @@ public final class Bootstrap {
             new BufferedReader(new InputStreamReader(System.in));
 
     private static final String DEFAULT_HOST = "127.0.0.1";
-    private static final int DEFAULT_PORT = 1099;
+    private static final int DEFAULT_RMI_PORT = 1099;
+    private static final int DEFAULT_SOCKET_PORT = 8080;
 
     private Bootstrap() { /* utility */ }
 
@@ -33,11 +34,31 @@ public final class Bootstrap {
         Printer.printInfo("=====================================");
 
         UiFlavor flavor = askUiFlavor();
+        String transport = askConnectionType();
         String host = askHost();
-        int port = askPort();
+        int port = askPort(transport);
         String nickname = askNickname();
 
-        return new BootstrapConfig(flavor, host, port, nickname);
+        return new BootstrapConfig(flavor, host, port, nickname, transport);
+    }
+
+
+    /**
+     * Asks the client the type of connection
+     * @return "rmi" or "socket" based on the decision
+     *
+     */
+
+
+    private static String askConnectionType() throws IOException {
+        while (true) {
+            Printer.printInfo("Which network connection do you want to use?");
+            System.out.println("  1) RMI");
+            System.out.println("  2) Socket");
+            int c = chooseInRange("Choice", 1, 2);
+            if (c == 1) return "rmi";
+            if (c == 2) return "socket";
+        }
     }
 
     /**
@@ -73,11 +94,17 @@ public final class Bootstrap {
         return (line == null || line.isBlank()) ? DEFAULT_HOST : line.trim();
     }
 
-    private static int askPort() throws IOException {
+    private static int askPort(String connType) throws IOException {
         while (true) {
-            Printer.printPrompt("Port [" + DEFAULT_PORT + "]: ");
+            int defPort;
+            if(connType.equals("rmi")) {
+                defPort = DEFAULT_RMI_PORT;
+            }else {
+                defPort = DEFAULT_SOCKET_PORT;
+            }
+            Printer.printPrompt("Port [" + defPort + "]: ");
             String line = readLine();
-            if (line == null || line.isBlank()) return DEFAULT_PORT;
+            if (line == null || line.isBlank()) return defPort;
             try {
                 int p = Integer.parseInt(line.trim());
                 if (p > 0 && p < 65536) return p;

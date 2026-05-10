@@ -3,6 +3,7 @@ package it.polimi.ingws.gc8.Client;
 import it.polimi.ingws.gc8.Controller.MainController;
 import it.polimi.ingws.gc8.Network.Connection.RMI.RMIServerConnection;
 import it.polimi.ingws.gc8.Network.Connection.ServerConnection;
+import it.polimi.ingws.gc8.Network.Connection.Socket.SocketServerConnection;
 import it.polimi.ingws.gc8.Network.DTO.LoginResult;
 import it.polimi.ingws.gc8.View.TUI.Printer;
 import it.polimi.ingws.gc8.View.TUI.TuiView;
@@ -36,7 +37,8 @@ public class ClientMain {
             return;
         }
 
-        ServerConnection connection = createConnection(/* transport */ "rmi");
+
+        ServerConnection connection = createConnection(cfg.transport() );
         View view = createView(cfg.uiFlavor());
         ClientController controller = new ClientController(connection, view);
 
@@ -97,7 +99,7 @@ public class ClientMain {
     private static ServerConnection createConnection(String transport) {
         return switch (transport) {
             case "rmi" -> new RMIServerConnection();
-            // case "socket" -> new SocketServerConnection();   // future
+            case "socket" -> new SocketServerConnection();   // future
             default -> throw new IllegalArgumentException("Unknown transport: " + transport);
         };
     }

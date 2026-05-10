@@ -61,6 +61,14 @@ public class ClientHandler implements Runnable, GameEventListener {
                     }
 
                     mainController.dispatchAction(action);
+                }else if (message instanceof String str) {
+                        if (str.startsWith("SET_EXPECTED_PLAYERS:")) {
+                            int n = Integer.parseInt(str.split(":")[1]);
+                            mainController.setExpectedPlayers(this.playerId, n);
+                        } else if (str.equals("REQUEST_START_GAME")) {
+                            mainController.requestStartGame();
+                        }
+
                 }
             }
         } catch (Exception e) {
