@@ -5,6 +5,7 @@ import it.polimi.ingws.gc8.Network.Connection.RMI.RMIServerConnection;
 import it.polimi.ingws.gc8.Network.Connection.ServerConnection;
 import it.polimi.ingws.gc8.Network.Connection.Socket.SocketServerConnection;
 import it.polimi.ingws.gc8.Network.DTO.LoginResult;
+import it.polimi.ingws.gc8.View.GUI.GuiView;
 import it.polimi.ingws.gc8.View.TUI.Printer;
 import it.polimi.ingws.gc8.View.TUI.TuiView;
 import it.polimi.ingws.gc8.View.View;
@@ -91,8 +92,7 @@ public class ClientMain {
     private static View createView(UiFlavor flavor) {
         return switch (flavor) {
             case TUI -> new TuiView();
-            case GUI -> throw new IllegalStateException(
-                    "GUI not implemented (Bootstrap should have rejected this).");
+            case GUI -> new GuiView();
         };
     }
 

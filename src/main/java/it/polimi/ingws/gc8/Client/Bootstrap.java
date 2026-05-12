@@ -81,10 +81,11 @@ public final class Bootstrap {
         while (true) {
             Printer.printInfo("Which interface do you want to use?");
             System.out.println("  1) TUI (terminal)");
-            System.out.println("  2) GUI (not yet available)");
+            System.out.println("  2) GUI (graphical)");
             int c = chooseInRange("Choice", 1, 2);
             if (c == 1) return UiFlavor.TUI;
-            Printer.printError("GUI is not yet available. Choose TUI.");
+            else if (c == 2) return UiFlavor.GUI;
+            Printer.printError("Not a valid interface");
         }
     }
 

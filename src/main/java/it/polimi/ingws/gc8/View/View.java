@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * Base class for every View (TUI / future GUI).
+ * Base class for every View (TUI /e GUI).
  *
  * <h2>Responsibilities</h2>
  * <ul>
