@@ -50,9 +50,13 @@ public final class Printer {
         System.out.println(GREEN + msg + RESET);
     }
 
-    /** Error (red). */
+    /**
+     * Error (red). Routed to {@code System.err} so it is not interleaved
+     * with the user-facing render on {@code stdout} and can be redirected
+     * separately for diagnostics.
+     */
     public static void printError(String msg) {
-        System.out.println(RED + "[ERR] " + msg + RESET);
+        System.err.println(RED + "[ERR] " + msg + RESET);
     }
 
     /** Prompt in bold + no trailing newline (so the user types on the same line). */

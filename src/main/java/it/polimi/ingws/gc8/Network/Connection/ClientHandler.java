@@ -3,6 +3,8 @@ package it.polimi.ingws.gc8.Network.Connection;
 import it.polimi.ingws.gc8.Controller.MainController;
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Controller.events.GameEventListener;
+import it.polimi.ingws.gc8.Network.Connection.Socket.commands.RequestStartGameCommand;
+import it.polimi.ingws.gc8.Network.Connection.Socket.commands.SetExpectedPlayersCommand;
 import it.polimi.ingws.gc8.Network.Messages.ErrorMessage;
 import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
 
@@ -37,13 +39,15 @@ public class ClientHandler implements Runnable, GameEventListener {
     //Input loop (Runnable)
 
     /**
-     * Reads in-game {@link PlayerAction}s from the client and forwards them
-     * to the {@link MainController}.
+     * Reads messages from the client and dispatches them to the
+     * {@link MainController}.
      *
-     * <p>Lobby commands (login, setExpectedPlayers, requestStartGame) do NOT
-     * travel on this channel: they are invoked through dedicated
-     * {@code RemoteServer} RMI methods and processed by the server before a
-     * {@code ClientHandler} thread is even started.</p>
+     * <p>On RMI, lobby commands (login, setExpectedPlayers, requestStartGame)
+     * are invoked through dedicated {@code RemoteServer} methods, so this loop
+     * only ever sees {@link PlayerAction}s. On TCP, lobby commands after
+     * login travel in-band as serialized record commands
+     * ({@link SetExpectedPlayersCommand}, {@link RequestStartGameCommand}):
+     * this loop dispatches them too.</p>
      */
     @Override
     public void run() {
@@ -51,24 +55,22 @@ public class ClientHandler implements Runnable, GameEventListener {
             while (connection.isConnected()) {
                 Object message = connection.receiveMessage();
 
-                if (message instanceof PlayerAction) {
-                    PlayerAction action = (PlayerAction) message;
-
+                if (message instanceof PlayerAction action) {
                     // Security: a client can only send actions for their own playerId
                     if (action.getPlayerId() != this.playerId) {
                         sendError("Cannot submit actions for another player.");
                         continue;
                     }
-
                     mainController.dispatchAction(action);
-                }else if (message instanceof String str) {
-                        if (str.startsWith("SET_EXPECTED_PLAYERS:")) {
-                            int n = Integer.parseInt(str.split(":")[1]);
-                            mainController.setExpectedPlayers(this.playerId, n);
-                        } else if (str.equals("REQUEST_START_GAME")) {
-                            mainController.requestStartGame();
-                        }
 
+                } else if (message instanceof SetExpectedPlayersCommand cmd) {
+                    mainController.setExpectedPlayers(this.playerId, cmd.n());
+
+                } else if (message instanceof RequestStartGameCommand) {
+                    mainController.requestStartGame();
+
+                } else if (message != null) {
+                    sendError("Unsupported message: " + message.getClass().getSimpleName());
                 }
             }
         } catch (Exception e) {

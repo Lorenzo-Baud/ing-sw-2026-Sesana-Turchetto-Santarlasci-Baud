@@ -21,11 +21,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RMIServer extends UnicastRemoteObject implements RemoteServer {
 
+    public static final int EXPORT_PORT = 1099;
+
     private final MainController mainController;
     private final Map<Integer, RMIClientConnection> connections;
 
     public RMIServer(MainController mainController) throws RemoteException {
-        super();
+        super(EXPORT_PORT);
         this.mainController = mainController;
         this.connections = new ConcurrentHashMap<>();
     }

@@ -1,6 +1,9 @@
 package it.polimi.ingws.gc8.Network.Connection.Socket;
 
 import it.polimi.ingws.gc8.Network.Connection.ServerConnection;
+import it.polimi.ingws.gc8.Network.Connection.Socket.commands.LoginRequest;
+import it.polimi.ingws.gc8.Network.Connection.Socket.commands.RequestStartGameCommand;
+import it.polimi.ingws.gc8.Network.Connection.Socket.commands.SetExpectedPlayersCommand;
 import it.polimi.ingws.gc8.Network.DTO.LoginResult;
 
 import java.io.IOException;
@@ -14,6 +17,11 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Client-side implementation of {@link ServerConnection} using Java Sockets.
  * Handles network communication with the server, including initial connection,
  * authentication, and asynchronous message dispatching.
+ *
+ * <p>All write operations on the underlying {@link ObjectOutputStream} are
+ * serialized via a dedicated {@code writeLock}, so callbacks from the network
+ * pump (e.g. {@code sendAction}) cannot interleave with lobby commands
+ * invoked from the main thread.</p>
  */
 public class SocketServerConnection implements ServerConnection {
 
@@ -21,8 +29,13 @@ public class SocketServerConnection implements ServerConnection {
     private ObjectOutputStream out;
     private ObjectInputStream in;
 
+    /** Serializes every write on {@link #out} regardless of the calling thread. */
+    private final Object writeLock = new Object();
+
     /** Queue used to synchronize the blocking login request with the asynchronous reception loop. */
     private final BlockingQueue<LoginResult> loginQueue = new LinkedBlockingQueue<>();
+
+    private volatile boolean connected;
 
     /**
      * Initializes an unconfigured server connection instance.
@@ -31,6 +44,8 @@ public class SocketServerConnection implements ServerConnection {
 
     /**
      * Establishes a TCP connection with the server and initializes object streams.
+     * Output stream is created and flushed before the input stream to avoid the
+     * classic {@code ObjectStream} handshake deadlock.
      *
      * @param host the server's hostname or IP address.
      * @param port the server's listening port.
@@ -42,10 +57,12 @@ public class SocketServerConnection implements ServerConnection {
         this.out = new ObjectOutputStream(socket.getOutputStream());
         this.out.flush();
         this.in = new ObjectInputStream(socket.getInputStream());
+        this.connected = true;
     }
 
     /**
-     * Sends a login request to the server and blocks until a {@link LoginResult} is received.
+     * Sends a {@link LoginRequest} to the server and blocks until a
+     * {@link LoginResult} is received via the asynchronous reception loop.
      *
      * @param nickname the chosen player alias.
      * @return the result of the login attempt containing player ID and lobby status.
@@ -53,9 +70,8 @@ public class SocketServerConnection implements ServerConnection {
      */
     @Override
     public LoginResult login(String nickname) throws Exception {
-        out.writeObject("LOGIN:" + nickname);
-        out.reset();
-        out.flush();
+        ensureConnected();
+        writeOnLock(new LoginRequest(nickname));
         return loginQueue.take();
     }
 
@@ -67,9 +83,8 @@ public class SocketServerConnection implements ServerConnection {
      */
     @Override
     public void setExpectedPlayers(int n) throws Exception {
-        out.writeObject("SET_EXPECTED_PLAYERS:" + n);
-        out.reset();
-        out.flush();
+        ensureConnected();
+        writeOnLock(new SetExpectedPlayersCommand(n));
     }
 
     /**
@@ -79,26 +94,20 @@ public class SocketServerConnection implements ServerConnection {
      */
     @Override
     public void requestStartGame() throws Exception {
-        out.writeObject("REQUEST_START_GAME");
-        out.reset();
-        out.flush();
+        ensureConnected();
+        writeOnLock(new RequestStartGameCommand());
     }
 
     /**
-     * Transmits a game action to the server.
-     * This method is thread-safe and ensures object stream integrity via synchronization.
+     * Transmits an in-game action to the server. Thread-safe.
      *
-     * @param action the game action or command to be sent.
+     * @param action the game action to be sent.
      */
     @Override
     public void sendAction(Object action) {
-        if (!isConnected()) return;
+        if (!connected) return;
         try {
-            synchronized (out) {
-                out.writeObject(action);
-                out.reset();
-                out.flush();
-            }
+            writeOnLock(action);
         } catch (IOException e) {
             disconnect();
         }
@@ -107,20 +116,21 @@ public class SocketServerConnection implements ServerConnection {
     /**
      * Listens for objects from the input stream.
      * Intercepts {@link LoginResult} instances to populate the local sync queue;
-     * otherwise, returns the received object to the caller.
+     * everything else is returned to the caller (the network pump).
      *
-     * @return the received object.
+     * @return the next non-{@link LoginResult} object received.
      * @throws Exception if a read error or deserialization failure occurs.
      */
     @Override
     public Object receive() throws Exception {
-        Object obj = in.readObject();
-
-        if (obj instanceof LoginResult) {
-            loginQueue.offer((LoginResult) obj);
-            return receive();
+        while (true) {
+            Object obj = in.readObject();
+            if (obj instanceof LoginResult lr) {
+                loginQueue.offer(lr);
+                continue;
+            }
+            return obj;
         }
-        return obj;
     }
 
     /**
@@ -128,9 +138,8 @@ public class SocketServerConnection implements ServerConnection {
      */
     @Override
     public void disconnect() {
+        connected = false;
         try {
-            if (in != null) in.close();
-            if (out != null) out.close();
             if (socket != null && !socket.isClosed()) socket.close();
         } catch (IOException ignored) {}
     }
@@ -142,6 +151,24 @@ public class SocketServerConnection implements ServerConnection {
      */
     @Override
     public boolean isConnected() {
-        return socket != null && socket.isConnected() && !socket.isClosed();
+        return connected && socket != null && socket.isConnected() && !socket.isClosed();
+    }
+
+    // Helpers
+
+    /**
+     * Writes an object on the shared output stream under {@link #writeLock},
+     * then flushes and resets to avoid stale-snapshot caching.
+     */
+    private void writeOnLock(Object obj) throws IOException {
+        synchronized (writeLock) {
+            out.writeObject(obj);
+            out.flush();
+            out.reset();
+        }
+    }
+
+    private void ensureConnected() {
+        if (!connected) throw new IllegalStateException("Not connected to server");
     }
 }

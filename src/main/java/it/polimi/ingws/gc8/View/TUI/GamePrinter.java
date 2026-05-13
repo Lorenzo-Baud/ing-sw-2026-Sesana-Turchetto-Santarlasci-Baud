@@ -73,7 +73,37 @@ public final class GamePrinter {
         printOfferTrack(g.offerTrack(), g.players());
         printCardRow("LOWER", filterTribe(g.lowerRowCards()));
         printBuildings(collectBuildings(g.upperRowCards(), g.lowerRowCards()));
+        printTurnOrderTrack(g.turnOrderTrack());
         printLeaderboard(g.players(), g.currentPlayer(), myNickname);
+    }
+
+    /**
+     * Prints the Turn Order track: the sequence of players (1st = leftmost,
+     * acts first next round). Drawing this is essential — without it the
+     * player cannot reason about who will move next or whether they will
+     * pay the food cost on the last slot of tile A.
+     */
+    public static void printTurnOrderTrack(List<PlayerDTO> order) {
+        System.out.print(Printer.BOLD + pad("ORDER", 6) + Printer.RESET + " | ");
+        if (order == null || order.isEmpty()) {
+            System.out.println(Printer.DIM + "(empty)" + Printer.RESET);
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < order.size(); i++) {
+            PlayerDTO p = order.get(i);
+            if (p == null) {
+                sb.append('[').append(i + 1).append(":-] ");
+                continue;
+            }
+            sb.append('[')
+                    .append(i + 1).append(':')
+                    .append(ansiFor(p.totemColor()))
+                    .append(pad(p.nickname(), 6))
+                    .append(Printer.RESET)
+                    .append("] ");
+        }
+        System.out.println(sb.toString());
     }
 
     /** Header with era, round, phase, current turn. */
@@ -173,6 +203,18 @@ public final class GamePrinter {
 
     /** Prints the tribe (hand of cards) of the player with the given nickname. */
     public static void printTribe(GameDTO g, String nickname) {
+        printTribe(g, nickname, false);
+    }
+
+    /**
+     * Prints a player's tribe, with optional masking of the Inventor icon.
+     *
+     * <p>CLAUDE.md §11.2 / §11.4 mandate that the Inventor icon must remain
+     * hidden from other players until the final scoring (i.e. GAME_OVER).
+     * Pass {@code hideInventorIcon = true} when displaying an opponent's
+     * tribe before the end of the game.</p>
+     */
+    public static void printTribe(GameDTO g, String nickname, boolean hideInventorIcon) {
         PlayerDTO p = findByNickname(g, nickname);
         if (p == null) {
             Printer.printError("Player not found: " + nickname);
@@ -187,7 +229,8 @@ public final class GamePrinter {
             return;
         }
         for (int i = 0; i < tribe.size(); i++) {
-            System.out.println("  [" + (i + 1) + "] " + formatCardAttributes(tribe.get(i)));
+            System.out.println("  [" + (i + 1) + "] "
+                    + formatCardAttributes(tribe.get(i), hideInventorIcon));
         }
     }
 
@@ -239,9 +282,17 @@ public final class GamePrinter {
 
     /** Complete description of a card based on its DTO attributes. */
     public static String formatCardAttributes(CardDTO c) {
+        return formatCardAttributes(c, false);
+    }
+
+    /**
+     * Same as {@link #formatCardAttributes(CardDTO)} but with the option to
+     * mask hidden information (currently: the Inventor icon).
+     */
+    public static String formatCardAttributes(CardDTO c, boolean hideInventorIcon) {
         if (c.type() == null) return "?";
         return switch (c.type()) {
-            case CHARACTER -> formatCharacter(c);
+            case CHARACTER -> formatCharacter(c, hideInventorIcon);
             case BUILDING  -> formatBuilding(c);
             case EVENT     -> formatEvent(c);
         };
@@ -257,14 +308,16 @@ public final class GamePrinter {
         };
     }
 
-    private static String formatCharacter(CardDTO c) {
+    private static String formatCharacter(CardDTO c, boolean hideInventorIcon) {
         String base = pad(c.characterType() != null ? c.characterType().name() : "?", 10)
                 + "  min:" + c.numberOfPlayers() + "p";
         if (c.shamanIcons()           != null) return base + "  icons:" + c.shamanIcons();
         if (c.hunterBonus()           != null) return base + "  bonus:" + (c.hunterBonus() ? "yes" : "no");
         if (c.builderFoodBonus()      != null) return base + "  +F:" + c.builderFoodBonus() + "  PP:" + c.builderPrestigePoints();
         if (c.collectorFoodDiscount() != null) return base + "  -F:" + c.collectorFoodDiscount();
-        if (c.inventorIcon()          != null) return base + "  icon#" + c.inventorIcon();
+        if (c.inventorIcon()          != null) {
+            return base + (hideInventorIcon ? "  icon#?" : "  icon#" + c.inventorIcon());
+        }
         return base;
     }
 
@@ -338,9 +391,16 @@ public final class GamePrinter {
         };
     }
 
+    /**
+     * Right-pads {@code s} with spaces up to {@code n} characters.
+     * Strings longer than {@code n} are returned unchanged — never
+     * truncated — so a long nickname spills into the next column rather
+     * than appearing mutilated. Length policing belongs at the input
+     * boundary (see {@code Bootstrap#askNickname} / {@code TuiView#askNickname}).
+     */
     private static String pad(String s, int n) {
         if (s == null) s = "";
-        if (s.length() >= n) return s.substring(0, n);
+        if (s.length() >= n) return s;
         StringBuilder sb = new StringBuilder(s);
         while (sb.length() < n) sb.append(' ');
         return sb.toString();

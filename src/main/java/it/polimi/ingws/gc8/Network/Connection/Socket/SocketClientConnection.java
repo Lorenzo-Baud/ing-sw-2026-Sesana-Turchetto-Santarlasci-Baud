@@ -8,8 +8,23 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 /**
- * Implementation of {@link ClientConnection} using Java Sockets for network communication.
- * Manages serialized object exchange through dedicated input and output streams.
+ * Server-side adapter for a single connected TCP client.
+ *
+ * <p>One instance per accepted socket; lives inside the server JVM and
+ * represents the connection of <em>that</em> client as seen from the
+ * server. Symmetric to {@code RMIClientConnection}: both implement
+ * {@link ClientConnection} so {@code ClientHandler} and {@code ViewUpdater}
+ * stay transport-agnostic.</p>
+ *
+ * <p>Despite the name, this class is <strong>not</strong> the client-side
+ * counterpart — that role belongs to {@code SocketServerConnection} (which
+ * implements {@code ServerConnection}). The naming follows the convention
+ * already established by {@code RMIClientConnection} /
+ * {@code RMIServerConnection}.</p>
+ *
+ * <p>Manages serialized object exchange through dedicated input/output
+ * streams. Writes are serialized on {@code this} so broadcasts coming from
+ * different ViewUpdater notifications cannot interleave on the wire.</p>
  */
 public class SocketClientConnection implements ClientConnection {
 

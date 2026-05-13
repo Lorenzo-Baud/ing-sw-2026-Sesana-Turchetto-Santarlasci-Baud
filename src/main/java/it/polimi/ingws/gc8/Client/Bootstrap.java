@@ -18,7 +18,7 @@ public final class Bootstrap {
 
     private static final String DEFAULT_HOST = "127.0.0.1";
     private static final int DEFAULT_RMI_PORT = 1099;
-    private static final int DEFAULT_SOCKET_PORT = 8080;
+    private static final int DEFAULT_SOCKET_PORT = 1100;
 
     private Bootstrap() { /* utility */ }
 
@@ -90,9 +90,17 @@ public final class Bootstrap {
     }
 
     private static String askHost() throws IOException {
-        Printer.printPrompt("Server host [" + DEFAULT_HOST + "]: ");
-        String line = readLine();
-        return (line == null || line.isBlank()) ? DEFAULT_HOST : line.trim();
+        while (true) {
+            Printer.printPrompt("Server host [" + DEFAULT_HOST + "]: ");
+            String line = readLine();
+            if (line == null || line.isBlank()) return DEFAULT_HOST;
+            String trimmed = line.trim();
+            if (trimmed.contains(" ")) {
+                Printer.printError("L'host non può contenere spazi.");
+                continue;
+            }
+            return trimmed;
+        }
     }
 
     private static int askPort(String connType) throws IOException {
@@ -116,12 +124,31 @@ public final class Bootstrap {
         }
     }
 
+    /**
+     * Maximum nickname length accepted at bootstrap. Must stay aligned
+     * with the rendering cell used by the TUI (see TuiView constant);
+     * longer strings would be silently truncated on the board.
+     */
+    private static final int MAX_NICKNAME_LEN = 12;
+
     private static String askNickname() throws IOException {
         while (true) {
-            Printer.printPrompt("Nickname: ");
+            Printer.printPrompt("Nickname (max " + MAX_NICKNAME_LEN + " chars): ");
             String line = readLine();
-            if (line != null && !line.isBlank()) return line.trim();
-            Printer.printError("Invalid nickname.");
+            if (line == null) {
+                throw new IOException("stdin closed during bootstrap");
+            }
+            String trimmed = line.trim();
+            if (trimmed.isBlank()) {
+                Printer.printError("Invalid nickname.");
+                continue;
+            }
+            if (trimmed.length() > MAX_NICKNAME_LEN) {
+                Printer.printError("Nickname too long (max "
+                        + MAX_NICKNAME_LEN + " chars).");
+                continue;
+            }
+            return trimmed;
         }
     }
 

@@ -10,6 +10,10 @@ import it.polimi.ingws.gc8.View.TUI.Printer;
 import it.polimi.ingws.gc8.View.TUI.TuiView;
 import it.polimi.ingws.gc8.View.View;
 
+import java.net.ConnectException;
+import java.net.UnknownHostException;
+import java.rmi.NotBoundException;
+
 /**
  * Client-side entry point.
  *
@@ -50,7 +54,12 @@ public class ClientMain {
         }, "client-shutdown"));
 
         try {
-            connection.connect(cfg.host(), cfg.port());
+            try {
+                connection.connect(cfg.host(), cfg.port());
+            } catch (Exception ce) {
+                Printer.printError(friendlyConnectError(ce, cfg.host(), cfg.port()));
+                return;
+            }
             Printer.printSuccess("[Client] Connected to "
                     + cfg.host() + ":" + cfg.port());
 
@@ -102,5 +111,33 @@ public class ClientMain {
             case "socket" -> new SocketServerConnection();   // future
             default -> throw new IllegalArgumentException("Unknown transport: " + transport);
         };
+    }
+
+    /**
+     * Translates the raw RMI/network exception thrown by
+     * {@link ServerConnection#connect(String, int)} into a user-friendly
+     * sentence shown via {@link Printer#printError(String)} — never a
+     * stack trace.
+     */
+    private static String friendlyConnectError(Throwable e, String host, int port) {
+        Throwable cur = e;
+        while (cur != null) {
+            if (cur instanceof UnknownHostException) {
+                return "Hostname '" + host + "' non risolvibile. "
+                        + "Inserire un IP o un nome DNS valido.";
+            }
+            if (cur instanceof ConnectException) {
+                return "Il server non è raggiungibile su " + host + ":" + port + ". "
+                        + "Verificare che sia avviato e che firewall/porte siano aperti.";
+            }
+            if (cur instanceof NotBoundException) {
+                return "Il server è raggiungibile su " + host + ":" + port
+                        + " ma non ha registrato il servizio MESOS. "
+                        + "Versione del server disallineata?";
+            }
+            cur = cur.getCause();
+        }
+        return "Connessione fallita verso " + host + ":" + port + ": "
+                + (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
     }
 }

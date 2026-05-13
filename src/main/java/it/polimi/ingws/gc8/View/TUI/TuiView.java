@@ -7,11 +7,13 @@ import it.polimi.ingws.gc8.Controller.actions.TakeCardAction;
 import it.polimi.ingws.gc8.Controller.actions.TakeFoodAction;
 import it.polimi.ingws.gc8.Model.Board.OffertileId;
 import it.polimi.ingws.gc8.Model.Enum.CardRow;
+import it.polimi.ingws.gc8.Model.Enum.CardType;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 import it.polimi.ingws.gc8.Network.DTO.GameDTO;
 import it.polimi.ingws.gc8.Network.DTO.OfferTileDTO;
 import it.polimi.ingws.gc8.Network.DTO.PlayerDTO;
+import it.polimi.ingws.gc8.Network.Messages.ConnectionUpdateMessage;
 import it.polimi.ingws.gc8.Network.Messages.ErrorMessage;
 import it.polimi.ingws.gc8.Network.Messages.GameOverMessage;
 import it.polimi.ingws.gc8.Network.Messages.LobbyUpdateMessage;
@@ -24,6 +26,7 @@ import it.polimi.ingws.gc8.View.View;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Procedural TUI (no external libraries: just {@code Scanner} + ANSI).
@@ -64,6 +67,33 @@ public class TuiView extends View {
     /** Timestamp of the last ErrorMessage received (epoch ms). */
     private volatile long lastErrorMessageAt;
 
+    /**
+     * Queue of UI notifications produced by the dispatcher thread that the
+     * main UI thread must print. The dispatcher MUST NOT write to stdout
+     * directly (CLAUDE.md §11.2 — single print source). Each entry is a
+     * tuple of (severity, text); the main thread drains it whenever it is
+     * about to render a screen or read input.
+     */
+    private final ConcurrentLinkedQueue<UiNotice> pendingNotices = new ConcurrentLinkedQueue<>();
+
+    private enum NoticeLevel { INFO, ERROR }
+    private record UiNotice(NoticeLevel level, String text) {}
+
+    private void enqueueNotice(NoticeLevel level, String text) {
+        pendingNotices.offer(new UiNotice(level, text));
+    }
+
+    /** Called by the UI thread before any render / prompt. */
+    private void drainPendingNotices() {
+        UiNotice n;
+        while ((n = pendingNotices.poll()) != null) {
+            switch (n.level()) {
+                case INFO  -> Printer.printInfo(n.text());
+                case ERROR -> Printer.printError(n.text());
+            }
+        }
+    }
+
     // ------------------------------------------------------------------
     // Entry point
     // ------------------------------------------------------------------
@@ -81,6 +111,7 @@ public class TuiView extends View {
 
         // Main loop: each iteration is a turn for the player.
         while (running) {
+            drainPendingNotices();
             GameDTO g = gameView;
             if (g == null) { sleep(100); continue; }
 
@@ -109,26 +140,78 @@ public class TuiView extends View {
     // Preludio: nickname + lobby
     // ------------------------------------------------------------------
 
+    /**
+     * Defensive fallback: in normal flows {@code Bootstrap} has already
+     * collected the nickname and {@code ClientMain} has injected it via
+     * {@link #setNickname(String)} <em>before</em> calling {@link #run()},
+     * so this loop exits immediately. It runs only if the nickname was
+     * not initialised, e.g. when the View is invoked outside the main
+     * client bootstrap flow (tests, debug, alternative entry points).
+     *
+     * <p>The nickname is sent to the server by
+     * {@code connection.login(nickname)} during the client bootstrap —
+     * not from here — so no {@code PlayerAction} is dispatched.</p>
+     */
     private void askNickname() {
         while (nickname == null || nickname.isBlank()) {
-            Printer.printPrompt("Choose your nickname: ");
+            Printer.printPrompt("Choose your nickname (max " + MAX_NICKNAME_LEN + " chars): ");
             String n = readLine();
-            if (n != null && !n.isBlank()) {
-                setNickname(n.trim());
-                Printer.printSuccess("Hi, " + getNickname() + "!");
-            } else {
-                Printer.printError("Invalid nickname.");
+            if (n == null) {
+                running = false;
+                return;
             }
+            n = n.trim();
+            if (n.isBlank()) {
+                Printer.printError("Invalid nickname.");
+                continue;
+            }
+            if (n.length() > MAX_NICKNAME_LEN) {
+                Printer.printError("Nickname too long (max " + MAX_NICKNAME_LEN + " chars).");
+                continue;
+            }
+            setNickname(n);
+            Printer.printSuccess("Hi, " + getNickname() + "!");
         }
-        // When SetNicknameAction exists: notifyAllListeners(new SetNicknameAction(nickname));
     }
+
+    /**
+     * Maximum nickname length tolerated by the TUI render. Mirrors the
+     * width of the {@code pad(..)} cell used for nicknames in the offer
+     * track / leaderboard / order track, so names always fit without
+     * being silently truncated.
+     */
+    private static final int MAX_NICKNAME_LEN = 12;
 
     /** Waits for the first game snapshot, printing lobby updates. */
     private void waitForLobbyStart() {
-        Printer.printInfo("Waiting for other players…");
+        Printer.printInfo("Waiting for other players… (type Q + ENTER to quit)");
         while (running && gameView == null) {
+            drainPendingNotices();
+            if (checkQuitRequested()) {
+                running = false;
+                return;
+            }
             sleep(200);
         }
+        drainPendingNotices();
+    }
+
+    /**
+     * Non-blocking check: returns {@code true} if the user typed Q/q on stdin.
+     * Used by waiting loops (lobby / between turns) so the user is never
+     * stuck without a way to exit.
+     */
+    private boolean checkQuitRequested() {
+        try {
+            if (System.in.available() > 0) {
+                String line = readLine();
+                if (line != null && line.trim().equalsIgnoreCase("Q")) {
+                    Printer.printInfo("Quit requested by user.");
+                    return true;
+                }
+            }
+        } catch (java.io.IOException ignored) {}
+        return false;
     }
 
     // ------------------------------------------------------------------
@@ -144,8 +227,11 @@ public class TuiView extends View {
 
         List<OfferTileDTO> free = freeTiles(g);
         if (free.isEmpty()) {
-            Printer.printError("No offer tile available.");
-            waitForMyTurn();
+            // Defensive: if it's our turn in POSITIONING the server guarantees
+            // at least one free tile. Reaching this branch means desynced
+            // state — surface the error and return to the main loop.
+            Printer.printError("Inconsistent state: no offer tile available "
+                    + "during your POSITIONING turn. Returning to main menu.");
             return;
         }
 
@@ -161,10 +247,26 @@ public class TuiView extends View {
         int choice = chooseInRange(0, free.size());
         if (choice == 0) return;
 
+        if (!ensureMyPlayerId()) return;
         OfferTileDTO chosen = free.get(choice - 1);
         PlayerAction action = new PlaceTotemAction(myPlayerId(), chosen.id().name());
         Printer.printSuccess("Placing totem on tile " + chosen.id() + "…");
-        sendAndAwaitUpdate(action);
+        SendResult res = sendAndAwaitUpdate(action);
+        if (res == SendResult.ERROR) {
+            Printer.printError("Totem placement was rejected by the server.");
+        }
+    }
+
+    /**
+     * Guard: verify the local player id is known before sending any
+     * action. Without it the server would reject the action with id=-1
+     * and the user would see a generic error.
+     */
+    private boolean ensureMyPlayerId() {
+        if (myPlayerId() >= 0) return true;
+        Printer.printError("Player id not yet assigned by the server. "
+                + "Wait a moment and retry.");
+        return false;
     }
 
     // ------------------------------------------------------------------
@@ -172,29 +274,44 @@ public class TuiView extends View {
     // ------------------------------------------------------------------
 
     private void runResolutionPhase() {
-        GameDTO g = gameView;
-        if (g == null) return;
-
-        OfferTileDTO myTile = findMyTile(g);
-        String tileLabel = myTile == null ? "?" : myTile.id() + " " + GamePrinter.iconFor(myTile.id());
-        // Decision: maximum number of cards to take from UPPER and LOWER
-        int maxUpper = myTile == null ? 1 : maxUpperPicks(myTile.id());
-        int maxLower = myTile == null ? 1 : maxLowerPicks(myTile.id());
-        boolean canFood = myTile != null && allowsFood(myTile.id());
-
         int upperTaken = 0;
         int lowerTaken = 0;
         boolean foodTaken = false;
 
         while (running && isMyTurn()) {
-            g = gameView;
+            // Single snapshot per frame: every quantity displayed in this
+            // iteration must come from the same `g`, otherwise the prompt
+            // and the board can refer to different game states.
+            GameDTO g = gameView;
             if (g == null || g.phase() != GamePhase.ACTION_RESOLUTION) return;
+
+            OfferTileDTO myTile = findMyTile(g);
+            String tileLabel = myTile == null
+                    ? "?"
+                    : myTile.id() + " " + GamePrinter.iconFor(myTile.id());
+            int maxUpper = myTile == null ? 0 : maxUpperPicks(myTile.id());
+            int maxLower = myTile == null ? 0 : maxLowerPicks(myTile.id());
+            boolean canFood = myTile != null && allowsFood(myTile.id());
+
+            // MESOS rule (pag.4): if there are still Character cards in a
+            // row from which you should still be picking, you MUST take
+            // them. The TUI hides "Return totem" until those mandatory
+            // picks are exhausted (or no Character cards remain there).
+            boolean mustPickUpper = upperTaken < maxUpper
+                    && hasCharacter(g.upperRowCards());
+            boolean mustPickLower = lowerTaken < maxLower
+                    && hasCharacter(g.lowerRowCards());
+            boolean mustPick = mustPickUpper || mustPickLower;
 
             Printer.printHeader("YOUR TURN — ACTION RESOLUTION");
             GamePrinter.printBoard(g, getNickname());
 
             System.out.println();
             Printer.printInfo("You are on tile " + tileLabel + ". What do you want to do?");
+            if (mustPick) {
+                Printer.printInfo("(You must take the remaining mandatory Character cards "
+                        + "before returning the totem.)");
+            }
 
             // Create action choices
             List<String> tags = new ArrayList<>();
@@ -211,25 +328,36 @@ public class TuiView extends View {
                 System.out.println("  " + n++ + ") Take food");
                 tags.add("FOOD");
             }
-            System.out.println("  " + n + ") Return totem (end turn)"); tags.add("RETURN");
+            if (!mustPick) {
+                String costHint = isLastReturnSlot(g)
+                        ? "  [last slot: pays 1 food, or -2 PP if no food]"
+                        : "";
+                System.out.println("  " + n + ") Return totem (end turn)" + costHint);
+                tags.add("RETURN");
+            }
             System.out.println("  0) Back");
 
             int choice = chooseInRange(0, tags.size());
             if (choice == 0) return;
+            if (!ensureMyPlayerId()) return;
 
-            // Perform action based on choice
+            // Perform action based on choice — only update local counters
+            // when the server actually confirmed the action (SendResult.OK).
             switch (tags.get(choice - 1)) {
                 case "UPPER" -> { if (takeCardFromRow(g.upperRowCards(), CardRow.UPPER, "UPPER")) upperTaken++; }
                 case "LOWER" -> { if (takeCardFromRow(g.lowerRowCards(), CardRow.LOWER, "LOWER")) lowerTaken++; }
                 case "FOOD"  -> {
                     Printer.printSuccess("Taking food…");
-                    sendAndAwaitUpdate(new TakeFoodAction(myPlayerId()));
-                    foodTaken = true;
+                    if (sendAndAwaitUpdate(new TakeFoodAction(myPlayerId())) == SendResult.OK) {
+                        foodTaken = true;
+                    }
                 }
                 case "RETURN" -> {
                     Printer.printSuccess("Returning totem…");
-                    sendAndAwaitUpdate(new ReturnTotemAction(myPlayerId()));
-                    return;
+                    if (sendAndAwaitUpdate(new ReturnTotemAction(myPlayerId())) == SendResult.OK) {
+                        return;
+                    }
+                    // On ERROR/TIMEOUT we stay in the loop so the user can retry.
                 }
             }
         }
@@ -283,16 +411,18 @@ public class TuiView extends View {
         };
     }
 
-    /** True if offer track contains tile A (5-player game). */
-    private static boolean hasTileA(GameDTO g) {
-        if (g == null || g.offerTrack() == null) return false;
-        for (OfferTileDTO t : g.offerTrack()) {
-            if (t.id() == OffertileId.A) return true;
-        }
-        return false;
-    }
-
-    /** Sub-menu: choose a card from one of two rows. Returns true if the card was taken. */
+    /**
+     * Sub-menu: choose a card from one of two rows. Returns {@code true}
+     * only if the server confirmed the pick with a fresh snapshot — so
+     * the caller can safely increment its taken-cards counter.
+     *
+     * <p>EVENT cards are <b>shown</b> in the row (the player must see
+     * which events are out there, both for placement strategy and for
+     * end-of-Era resolution) but cannot be selected — MESOS rule pag.4:
+     * "Non potete mai prendere carte Evento da nessuna fila". The TUI
+     * marks them with {@code [EVENT — not pickable]} and rejects the
+     * choice client-side, before any action is sent.</p>
+     */
     private boolean takeCardFromRow(List<CardDTO> cards, CardRow row, String label) {
         if (cards == null || cards.isEmpty()) {
             Printer.printError("Row " + label + " is empty.");
@@ -301,8 +431,10 @@ public class TuiView extends View {
         System.out.println();
         Printer.printInfo("Available cards in row " + label + ":");
         for (int i = 0; i < cards.size(); i++) {
+            CardDTO c = cards.get(i);
+            String marker = isEvent(c) ? "  [EVENT — not pickable]" : "";
             System.out.println("  " + (i + 1) + ") "
-                    + GamePrinter.formatCardAttributes(cards.get(i)));
+                    + GamePrinter.formatCardAttributes(c) + marker);
         }
         System.out.println("  0) Back");
 
@@ -311,9 +443,43 @@ public class TuiView extends View {
 
         int cardIndex = choice - 1;
         CardDTO chosen = cards.get(cardIndex);
+        if (isEvent(chosen)) {
+            Printer.printError("Event cards cannot be taken. Pick a Character or Building card.");
+            return false;
+        }
+        if (!ensureMyPlayerId()) return false;
         Printer.printSuccess("Taking: " + GamePrinter.formatCardAttributes(chosen));
-        sendAndAwaitUpdate(new TakeCardAction(myPlayerId(), cardIndex, row));
-        return true;
+        return sendAndAwaitUpdate(new TakeCardAction(myPlayerId(), cardIndex, row))
+                == SendResult.OK;
+    }
+
+    private static boolean isEvent(CardDTO c) {
+        return c != null && c.type() == CardType.EVENT;
+    }
+
+    /** True if the row contains at least one CHARACTER card. */
+    private static boolean hasCharacter(List<CardDTO> row) {
+        if (row == null) return false;
+        for (CardDTO c : row) {
+            if (c != null && c.type() == CardType.CHARACTER) return true;
+        }
+        return false;
+    }
+
+    /**
+     * MESOS rule (pag.4): the player who places their totem on the LAST
+     * slot of the Turn Order track pays 1 food (or -2 PP if they have
+     * none). Heuristic: the last slot is occupied if the track is
+     * already filled to {@code numberOfPlayers - 1} entries — placing
+     * one more (this player's totem) lands on the last slot.
+     */
+    private static boolean isLastReturnSlot(GameDTO g) {
+        if (g == null || g.turnOrderTrack() == null) return false;
+        int filled = 0;
+        for (PlayerDTO p : g.turnOrderTrack()) {
+            if (p != null) filled++;
+        }
+        return filled == g.numberOfPlayers() - 1;
     }
 
     // ------------------------------------------------------------------
@@ -329,6 +495,7 @@ public class TuiView extends View {
      * if {@code gameView} has changed (automatic update) or if there is input.
      */
     private void runSpectatorMenu() {
+        drainPendingNotices();
         GameDTO g = gameView;
         if (g == null) { sleep(100); return; }
 
@@ -361,19 +528,48 @@ public class TuiView extends View {
                 continue;
             }
 
-            // Non-blocking input: reads only if there's already something in the buffer
+            // Non-blocking input: only consume if the user has actually
+            // typed something. Empty ENTER → reprint board; Q → quit;
+            // unknown → explicit feedback (no silent default).
             try {
                 if (System.in.available() > 0) {
-                    int choice = readInt(-1);
+                    String raw = readLine();
+                    if (raw == null) {
+                        running = false;
+                        return;
+                    }
+                    String line = raw.trim();
+                    if (line.equalsIgnoreCase("Q") || line.equals("0")) {
+                        Printer.printInfo("Quit requested by user.");
+                        running = false;
+                        return;
+                    }
+                    if (line.isEmpty() || line.equals("1")) {
+                        // Refresh: just return so the main loop redraws.
+                        return;
+                    }
                     GameDTO current = gameView;
                     if (current == null) current = snapshot;
+                    int choice;
+                    try {
+                        choice = Integer.parseInt(line);
+                    } catch (NumberFormatException nfe) {
+                        Printer.printError("Unrecognised input: '" + line
+                                + "'. Use one of the listed options.");
+                        printSpectatorOptions();
+                        continue;
+                    }
                     switch (choice) {
                         case 2 -> { GamePrinter.printRowDetails("UPPER", current.upperRowCards()); pressEnter(); }
                         case 3 -> { GamePrinter.printRowDetails("LOWER", current.lowerRowCards()); pressEnter(); }
                         case 4 -> { GamePrinter.printBuildingsDetails(current); pressEnter(); }
-                        case 5 -> { GamePrinter.printTribe(gameView, getNickname()); pressEnter(); }
+                        case 5 -> { GamePrinter.printTribe(current, getNickname()); pressEnter(); }
                         case 6 -> showOtherPlayerTribe();
-                        default -> {} // 1, 0 or invalid: return below reprints the board
+                        default -> {
+                            Printer.printError("Unknown option: " + choice + ".");
+                            printSpectatorOptions();
+                            continue;
+                        }
                     }
                     return; // main loop calls runSpectatorMenu again (reprint board)
                 }
@@ -386,12 +582,14 @@ public class TuiView extends View {
     /** Prints the spectator menu options. */
     private void printSpectatorOptions() {
         System.out.println();
-        Printer.printInfo("The board updates automatically. Press ENTER to reprint it.");
+        Printer.printInfo("The board updates automatically. Press ENTER (or 1) to reprint it.");
+        System.out.println("  1) Refresh board");
         System.out.println("  2) See UPPER row cards");
         System.out.println("  3) See LOWER row cards");
         System.out.println("  4) See buildings");
         System.out.println("  5) See your tribe");
         System.out.println("  6) See another player's tribe");
+        System.out.println("  0) Quit (or Q)");
         Printer.printPrompt("> ");
     }
 
@@ -414,7 +612,11 @@ public class TuiView extends View {
         System.out.println("  0) Back");
         int c = chooseInRange(0, others.size());
         if (c == 0) return;
-        GamePrinter.printTribe(gameView, others.get(c - 1).nickname());
+        // Mask Inventor icons until GAME_OVER (CLAUDE.md §11.2 / §11.4):
+        // opponents must not learn other tribes' Inventor icons mid-game.
+        GameDTO snap = gameView;
+        boolean hideInventor = snap == null || snap.phase() != GamePhase.GAME_OVER;
+        GamePrinter.printTribe(snap, others.get(c - 1).nickname(), hideInventor);
         pressEnter();
     }
 
@@ -442,7 +644,18 @@ public class TuiView extends View {
     private void dispatchLoop() {
         while (running) {
             NetworkMessage msg = waitForMessage();
-            if (msg == null) return;
+            if (msg == null) {
+                // waitForMessage returns null only on interrupt (shutdown)
+                // or when the underlying message bus is closed. In the
+                // former case `running` will already be false; in the
+                // latter we surface a hint to the user instead of dying
+                // silently.
+                if (running) {
+                    enqueueNotice(NoticeLevel.ERROR,
+                            "Lost connection to server (message bus closed).");
+                }
+                return;
+            }
             applyMessage(msg);
         }
     }
@@ -458,22 +671,63 @@ public class TuiView extends View {
      */
     private void applyMessage(NetworkMessage msg) {
         if (msg instanceof ModelUpdateMessage m) {
-            setGameView(m.getGameModelDTO());
+            GameDTO previous = gameView;
+            GameDTO next = m.getGameModelDTO();
+            setGameView(next);
+            announceEraOrRoundTransitions(previous, next);
 
         } else if (msg instanceof GameOverMessage m) {
             setGameView(m.getFinalState());
             // run() detects GAME_OVER and terminates
 
         } else if (msg instanceof LobbyUpdateMessage m) {
-            Printer.printInfo("Lobby: " + m.getCurrentPlayers()
+            enqueueNotice(NoticeLevel.INFO, "Lobby: " + m.getCurrentPlayers()
                     + "/" + m.getExpectedPlayers() + " players");
 
         } else if (msg instanceof ErrorMessage m) {
             lastErrorMessageAt = System.currentTimeMillis();
-            Printer.printError("[" + m.getError() + "] " + m.getErrorDetail());
+            enqueueNotice(NoticeLevel.ERROR,
+                    "[" + m.getError() + "] " + m.getErrorDetail());
+
+        } else if (msg instanceof ConnectionUpdateMessage m) {
+            String who = m.getNickname() == null ? "?" : m.getNickname();
+            String text = m.isConnected()
+                    ? who + " reconnected."
+                    : who + " disconnected.";
+            enqueueNotice(m.isConnected() ? NoticeLevel.INFO : NoticeLevel.ERROR, text);
 
         } else if (msg instanceof PhaseUpdateMessage || msg instanceof TurnUpdateMessage) {
             // Informational: next ModelUpdateMessage will bring the state.
+        }
+    }
+
+    /**
+     * Detects era and round transitions by comparing two consecutive
+     * snapshots, and enqueues an info notice for the UI thread to print.
+     *
+     * <ul>
+     *   <li>Era change (e.g. ERA_II → ERA_III): explains that Buildings in
+     *       the lower row are discarded / shifted up at the start of the
+     *       new era (CLAUDE.md §11.4).</li>
+     *   <li>10th round: announces the final round and the upcoming
+     *       end-of-game scoring (visible Events, final pick, leaderboard).</li>
+     * </ul>
+     */
+    private void announceEraOrRoundTransitions(GameDTO previous, GameDTO next) {
+        if (next == null) return;
+        if (previous != null && previous.currentEra() != next.currentEra()
+                && next.currentEra() != null) {
+            enqueueNotice(NoticeLevel.INFO,
+                    ">>> New era started: " + next.currentEra().name().replace("ERA_", "ERA ")
+                            + ". Buildings on the board are reorganised; "
+                            + "check the BUILD section for the new layout.");
+        }
+        if ((previous == null || previous.currentRound() != 10)
+                && next.currentRound() == 10) {
+            enqueueNotice(NoticeLevel.INFO,
+                    ">>> Final round (10/10). At the end of this round the remaining "
+                            + "visible Events resolve and the game proceeds to final "
+                            + "scoring.");
         }
     }
 
@@ -487,10 +741,15 @@ public class TuiView extends View {
         return getNickname().equals(g.currentPlayer().nickname());
     }
 
-    /** Light polling until my next turn or game ends. */
+    /** Light polling until my next turn or game ends. Q + ENTER to quit. */
     private void waitForMyTurn() {
-        Printer.printInfo("Waiting for my next turn…");
+        Printer.printInfo("Waiting for my next turn… (type Q + ENTER to quit)");
         while (running) {
+            drainPendingNotices();
+            if (checkQuitRequested()) {
+                running = false;
+                return;
+            }
             GameDTO g = gameView;
             if (g == null) { sleep(150); continue; }
             if (g.phase() == GamePhase.GAME_OVER) return;
@@ -499,6 +758,19 @@ public class TuiView extends View {
             sleep(150);
         }
     }
+
+    /** Outcome of {@link #sendAndAwaitUpdate(Object)}. */
+    enum SendResult {
+        /** Server replied with a fresh {@code gameView} snapshot. */
+        OK,
+        /** Server replied with an {@code ErrorMessage}. */
+        ERROR,
+        /** No reply within the timeout window. */
+        TIMEOUT
+    }
+
+    /** Hard cap on how long we wait for the server to acknowledge an action. */
+    private static final long SEND_TIMEOUT_MS = 3000;
 
     /**
      * Sends an action to the server and waits for a new gameView snapshot
@@ -515,32 +787,30 @@ public class TuiView extends View {
      * {@code ModelUpdateMessage}, so {@code gameView != before} signals
      * that the server has responded.</p>
      *
-     * <p>3-second timeout to avoid hanging if the server doesn't respond
-     * (silent error, connection lost, etc.): after timeout, control returns
-     * to the main loop, which will recalibrate on the current state.</p>
+     * <p>The {@code before}/{@code errorBefore} snapshots are taken
+     * <em>after</em> {@code notifyAllListeners} returns: this minimises the
+     * window in which a stale (previous-action) error message could be
+     * mis-attributed to the current send.</p>
+     *
+     * @return {@link SendResult#OK} on snapshot update,
+     *         {@link SendResult#ERROR} on server-side error,
+     *         {@link SendResult#TIMEOUT} if the server does not reply in time.
      */
-    private void sendAndAwaitUpdate(Object action) {
+    private SendResult sendAndAwaitUpdate(Object action) {
+        notifyAllListeners(action);
+        // Snapshots taken AFTER notify so that errors from earlier actions
+        // (already enqueued before this call) do not look "fresh" to us.
         GameDTO before = gameView;
         long errorBefore = lastErrorMessageAt;
-        System.out.println("[DEBUG TuiView] sendAndAwaitUpdate ENTRY action=" + action.getClass().getSimpleName()
-                + " currentPlayerBefore=" + (before == null || before.currentPlayer() == null ? "null" : before.currentPlayer().nickname())
-                + " myPlayerId=" + myPlayerId());
-        notifyAllListeners(action);
-        long deadline = System.currentTimeMillis() + 3000;
+        long deadline = System.currentTimeMillis() + SEND_TIMEOUT_MS;
         while (running && System.currentTimeMillis() < deadline) {
-            if (gameView != before) {
-                GameDTO after = gameView;
-                System.out.println("[DEBUG TuiView] sendAndAwaitUpdate EXIT (snapshot changed)"
-                        + " currentPlayerAfter=" + (after == null || after.currentPlayer() == null ? "null" : after.currentPlayer().nickname()));
-                return;
-            }
-            if (lastErrorMessageAt != errorBefore) {
-                System.out.println("[DEBUG TuiView] sendAndAwaitUpdate EXIT (received ErrorMessage)");
-                return;
-            }
+            if (gameView != before) return SendResult.OK;
+            if (lastErrorMessageAt != errorBefore) return SendResult.ERROR;
             sleep(50);
         }
-        System.out.println("[DEBUG TuiView] sendAndAwaitUpdate EXIT (TIMEOUT 3s — server did not respond)");
+        Printer.printError("Server did not respond within "
+                + (SEND_TIMEOUT_MS / 1000) + "s. Action may not have been applied.");
+        return SendResult.TIMEOUT;
     }
 
     /** Retrieves my playerId from the current snapshot. -1 if unknown. */
@@ -561,10 +831,28 @@ public class TuiView extends View {
     private static List<OfferTileDTO> freeTiles(GameDTO g) {
         List<OfferTileDTO> out = new ArrayList<>();
         if (g == null || g.offerTrack() == null) return out;
+        int n = g.numberOfPlayers();
         for (OfferTileDTO t : g.offerTrack()) {
-            if (t.playerIndexOccupant() < 0) out.add(t);
+            if (t.playerIndexOccupant() < 0 && validForPlayerCount(t.id(), n)) {
+                out.add(t);
+            }
         }
         return out;
+    }
+
+    /**
+     * MESOS rule (pag.2-3): some offer tiles are valid only at specific
+     * player counts. The server should already remove invalid tiles at
+     * setup; this filter is a UX safeguard so the TUI never proposes a
+     * tile that the player cannot lawfully use.
+     */
+    private static boolean validForPlayerCount(OffertileId id, int playerCount) {
+        return switch (id) {
+            case A -> playerCount >= 5;
+            case D -> playerCount >= 3;
+            case G -> playerCount >= 4;
+            default -> true;
+        };
     }
 
     // ------------------------------------------------------------------
@@ -579,14 +867,45 @@ public class TuiView extends View {
         readLine();
     }
 
-    /** Reads an integer in {@code [min, max]} inclusive, repeating on error. */
+    /**
+     * Reads an integer in {@code [min, max]} inclusive, repeating on error.
+     *
+     * <p>Special inputs:
+     * <ul>
+     *   <li><b>EOF</b> ({@code readLine() == null}): sets {@code running}
+     *       to false and returns {@code min} as a sentinel — prevents an
+     *       infinite error-print loop when stdin is closed.</li>
+     *   <li><b>Q / q</b>: triggers a graceful quit (same as Ctrl-D),
+     *       returning {@code min}. Always available, even when the menu
+     *       does not list it explicitly.</li>
+     * </ul>
+     */
     private int chooseInRange(int min, int max) {
-        while (true) {
+        while (running) {
             Printer.printPrompt("> ");
-            int v = readInt(Integer.MIN_VALUE);
-            if (v >= min && v <= max) return v;
-            Printer.printError("Please enter a number between " + min + " and " + max + ".");
+            String raw = readLine();
+            if (raw == null) {
+                // EOF: stdin is closed. Don't busy-loop printing errors.
+                Printer.printInfo("Input stream closed. Exiting.");
+                running = false;
+                return min;
+            }
+            String line = raw.trim();
+            if (line.equalsIgnoreCase("Q")) {
+                Printer.printInfo("Quit requested by user.");
+                running = false;
+                return min;
+            }
+            try {
+                int v = Integer.parseInt(line);
+                if (v >= min && v <= max) return v;
+            } catch (NumberFormatException ignored) {
+                // fall through to error message below
+            }
+            Printer.printError("Please enter a number between " + min
+                    + " and " + max + " (or Q to quit).");
         }
+        return min;
     }
 
     private int readInt(int fallback) {
