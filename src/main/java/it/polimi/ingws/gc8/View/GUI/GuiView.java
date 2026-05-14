@@ -5,29 +5,36 @@ import it.polimi.ingws.gc8.View.View;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.stage.Stage;
 
 public class GuiView extends View {
 
-     @Override
+    @Override
     public void run() {
-         try {
+        System.out.println("gui view");
 
-             // Load the FXML file from the resources folder
-             FXMLLoader loader = new FXMLLoader(getClass().getResource("reseources/javafx_gui/main_scene.fxml"));
-             Parent root = loader.load();
+        // Initialize the JavaFX Toolkit manually
+        javafx.application.Platform.startup(() -> {
+            try {
+                // Now that the toolkit is initialized, we can create UI elements
+                Stage primaryStage = new Stage();
 
-             // Create the scene with the loaded hierarchy
-             Scene scene = new Scene(root);
+                // Load the FXML file from the resources folder
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/javafx_gui/start_screen.fxml"));
+                Parent root = loader.load();
 
-             // Configure and display the primary stage
-//             primaryStage.setTitle("Mesos Game - Login");
-//             primaryStage.setScene(scene);
-//             primaryStage.show();
+                // Create the scene with the loaded hierarchy
+                Scene scene = new Scene(root);
 
-         } catch (Exception e) {
-             e.printStackTrace();
-             System.err.println("Failed to load the FXML file. Check the path and Controller configuration.");
-         }
-     }
+                // Configure and display the primary stage
+                primaryStage.setTitle("Mesos Game - Login");
+                primaryStage.setScene(scene);
+                primaryStage.show();
 
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println("Failed to load the FXML file. Check the path and Controller configuration.");
+            }
+        });
+    }
 }

@@ -3,9 +3,17 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" stylesheets="@css/start_screen.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <Button layoutX="261.0" layoutY="300.0" mnemonicParsing="false" text="Avvia gioco" />
+      <VBox alignment="CENTER" layoutX="163.0" layoutY="100.0" prefHeight="200.0" prefWidth="274.0">
+         <children>
+            <Label text="Indirizzo del server" />
+            <TextField />
+            <Label text="Porta del server" />
+            <TextField />
+            <ChoiceBox prefHeight="23.0" prefWidth="152.0" />
+            <Button mnemonicParsing="false" text="Avvia gioco" />
+         </children>
+      </VBox>
    </children>
 </Pane>
