@@ -43,6 +43,13 @@ public class ClientMain {
         }
 
 
+        // Start the gui
+        if(cfg.uiFlavor() == UiFlavor.GUI) {
+            View view = createView(UiFlavor.GUI);
+            view.run();
+            return;
+        }
+
         ServerConnection connection = createConnection(cfg.transport() );
         View view = createView(cfg.uiFlavor());
         ClientController controller = new ClientController(connection, view);

@@ -1,19 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" stylesheets="@css/start_screen.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
+<StackPane xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <VBox alignment="CENTER" layoutX="163.0" layoutY="100.0" prefHeight="200.0" prefWidth="274.0">
+      <VBox alignment="CENTER" prefHeight="300.0" prefWidth="500.0" stylesheets="@css/start_screen.css">
          <children>
-            <Label text="Indirizzo del server" />
-            <TextField />
-            <Label text="Porta del server" />
-            <TextField />
-            <ChoiceBox prefHeight="23.0" prefWidth="152.0" />
-            <Button mnemonicParsing="false" text="Avvia gioco" />
+            <Label layoutX="202.0" layoutY="58.0" text="Username" />
+            <TextField fx:id="usernameField" layoutX="160.0" layoutY="86.0" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="26.0" prefWidth="200.0" promptText="Username" />
+            <Label text="Indirizzo del server">
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin></Label>
+            <TextField fx:id="serverAddressField" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="26.0" prefWidth="200.0" text="127.0.0.1">
+               <VBox.margin>
+                  <Insets top="1.0" />
+               </VBox.margin>
+            </TextField>
+            <Label text="Porta del server">
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+            </Label>
+            <TextField fx:id="serverPortField" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="26.0" prefWidth="200.0" text="1100">
+               <VBox.margin>
+                  <Insets left="20.0" right="20.0" top="1.0" />
+               </VBox.margin>
+            </TextField>
+            <ChoiceBox fx:id="connectionTypeChoice" prefHeight="23.0" prefWidth="152.0">
+               <VBox.margin>
+                  <Insets top="10.0" />
+               </VBox.margin>
+            </ChoiceBox>
+            <Button mnemonicParsing="false" onAction="#handleStartGame" text="Avvia gioco">
+               <VBox.margin>
+                  <Insets top="10.0" />
+               </VBox.margin>
+            </Button>
          </children>
       </VBox>
    </children>
-</Pane>
+</StackPane>

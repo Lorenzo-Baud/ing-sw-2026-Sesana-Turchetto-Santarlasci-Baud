@@ -25,7 +25,8 @@ public final class Bootstrap {
     /**
      * Runs the full bootstrap dialog.
      *
-     * @return the validated user choices
+     * @return the validated user choices or null if the choices
+     * have to be done via GUI
      * @throws IOException if stdin closes unexpectedly
      */
     public static BootstrapConfig run() throws IOException {
@@ -34,6 +35,10 @@ public final class Bootstrap {
         Printer.printInfo("=====================================");
 
         UiFlavor flavor = askUiFlavor();
+
+        if(flavor == UiFlavor.GUI) {
+            return new BootstrapConfig(flavor, null, 0, null, null);
+        }
         String transport = askConnectionType();
         String host = askHost();
         int port = askPort(transport);
