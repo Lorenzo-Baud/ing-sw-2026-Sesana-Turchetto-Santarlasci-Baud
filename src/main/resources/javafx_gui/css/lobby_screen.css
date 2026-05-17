@@ -1,0 +1,18 @@
+.root, .stack-pane, StackPane {
+    -fx-background-color: #f4f7f6;
+}
+
+.label {
+    -fx-text-fill: #2d3436;
+    -fx-font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+}
+
+.progress-indicator {
+    -fx-progress-color: #3498db;
+}
+
+.progress-indicator .percentage {
+    -fx-fill: transparent;
+}

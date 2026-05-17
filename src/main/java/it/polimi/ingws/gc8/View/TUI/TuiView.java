@@ -70,9 +70,8 @@ public class TuiView extends View {
     /**
      * Queue of UI notifications produced by the dispatcher thread that the
      * main UI thread must print. The dispatcher MUST NOT write to stdout
-     * directly (CLAUDE.md §11.2 — single print source). Each entry is a
-     * tuple of (severity, text); the main thread drains it whenever it is
-     * about to render a screen or read input.
+     * directly. Each entry is a tuple of (severity, text); the main thread drains
+     * it whenever it is about to render a screen or read input.
      */
     private final ConcurrentLinkedQueue<UiNotice> pendingNotices = new ConcurrentLinkedQueue<>();
 
@@ -612,7 +611,7 @@ public class TuiView extends View {
         System.out.println("  0) Back");
         int c = chooseInRange(0, others.size());
         if (c == 0) return;
-        // Mask Inventor icons until GAME_OVER (CLAUDE.md §11.2 / §11.4):
+        // Mask Inventor icons until GAME_OVER:
         // opponents must not learn other tribes' Inventor icons mid-game.
         GameDTO snap = gameView;
         boolean hideInventor = snap == null || snap.phase() != GamePhase.GAME_OVER;
@@ -708,7 +707,7 @@ public class TuiView extends View {
      * <ul>
      *   <li>Era change (e.g. ERA_II → ERA_III): explains that Buildings in
      *       the lower row are discarded / shifted up at the start of the
-     *       new era (CLAUDE.md §11.4).</li>
+     *       new era.</li>
      *   <li>10th round: announces the final round and the upcoming
      *       end-of-game scoring (visible Events, final pick, leaderboard).</li>
      * </ul>
