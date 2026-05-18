@@ -124,9 +124,6 @@ public class StartScreenController {
 
         } catch (Exception e) {
             guiView.showError("Errore di connessione", e.getMessage());
-        } finally {
-            guiView.controller.stop();
-            guiView.connection.disconnect();
         }
 
     }

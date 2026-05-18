@@ -1,6 +1,8 @@
 package it.polimi.ingws.gc8.View.GUI;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
 import it.polimi.ingws.gc8.View.View;
 import it.polimi.ingws.gc8.Client.ClientController;
 import it.polimi.ingws.gc8.Network.Connection.ServerConnection;
@@ -121,6 +123,33 @@ public class GuiView extends View {
         });
     }
 
+    // Shows main screen
+    public void showGame() {
+        Platform.runLater(() -> {
+            try {
+
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/javafx_gui/game_screen.fxml"));
+
+                // Create the controller instance
+                GameScreenController controller = new GameScreenController();
+                // Inject a reference of this GuiView into the controller
+                controller.setGuiView(this);
+                // Set the controller to the loader
+                loader.setController(controller);
+
+                // Load the FXML view
+                Parent root = loader.load();
+                Scene scene = new Scene(root);
+
+                primaryStage.setScene(scene);
+
+            } catch (IOException e) {
+                System.out.println("Error: " + e.getMessage());
+            }
+
+        });
+    }
+
     /**
      * Show an alert dialog on the GUI
      * @param title title of the dialog
@@ -134,15 +163,16 @@ public class GuiView extends View {
         alert.showAndWait();
     }
 
-    /** Called by the UI thread before any render / prompt. */
-    public void drainPendingNotices() {
-        UiNotice n;
-        while ((n = pendingNotices.poll()) != null) {
-            System.out.println("nuovo messaggio!");
-            switch (n.level()) {
-                case INFO  -> Printer.printInfo(n.text());
-                case ERROR -> Printer.printError(n.text());
-            }
+    /**
+     * Waits (blocking) for the next message from the server.
+     * Interruptible: returns {@code null} if the thread is interrupted.
+     */
+    protected NetworkMessage waitForMessage() {
+        try {
+            return messages.take();
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            return null;
         }
     }
 
