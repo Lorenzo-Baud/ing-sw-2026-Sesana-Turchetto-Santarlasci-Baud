@@ -91,6 +91,13 @@ public interface GameModel {
     List<OfferTile> getAvailableOfferTiles();
 
     /**
+     * @param player the player to look up
+     * @return the Offer tile currently occupied by the player, or {@code null}
+     *         if the player has not placed their Totem on any tile.
+     */
+    OfferTile getOfferTile(Player player);
+
+    /**
      * Places the player's Totem on the chosen Offer tile.
      * @param player the player placing the Totem
      * @param offerTile the chosen Offer tile (must be free)

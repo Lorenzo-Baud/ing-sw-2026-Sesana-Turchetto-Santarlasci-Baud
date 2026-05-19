@@ -75,6 +75,16 @@ public class TuiView extends View {
      */
     private final ConcurrentLinkedQueue<UiNotice> pendingNotices = new ConcurrentLinkedQueue<>();
 
+    // Pick counters for the in-flight ACTION_RESOLUTION turn. They live at
+    // class scope (not inside runResolutionPhase) so that choosing "Back" —
+    // which returns from runResolutionPhase and immediately re-enters it on
+    // the next main-loop iteration — does NOT silently reset them. They are
+    // reset whenever the current player changes (new turn).
+    private int turnUpperTaken = 0;
+    private int turnLowerTaken = 0;
+    private boolean turnFoodTaken = false;
+    private int lastResolutionPlayerId = -1;
+
     private enum NoticeLevel { INFO, ERROR }
     private record UiNotice(NoticeLevel level, String text) {}
 
@@ -241,10 +251,9 @@ public class TuiView extends View {
             System.out.println("  " + (i + 1) + ") "
                     + t.id() + "  " + GamePrinter.iconFor(t.id()));
         }
-        System.out.println("  0) Back / skip turn");
+        // MESOS rules: placing the totem is mandatory, no skip allowed.
 
-        int choice = chooseInRange(0, free.size());
-        if (choice == 0) return;
+        int choice = chooseInRange(1, free.size());
 
         if (!ensureMyPlayerId()) return;
         OfferTileDTO chosen = free.get(choice - 1);
@@ -273,16 +282,26 @@ public class TuiView extends View {
     // ------------------------------------------------------------------
 
     private void runResolutionPhase() {
-        int upperTaken = 0;
-        int lowerTaken = 0;
-        boolean foodTaken = false;
-
         while (running && isMyTurn()) {
             // Single snapshot per frame: every quantity displayed in this
             // iteration must come from the same `g`, otherwise the prompt
             // and the board can refer to different game states.
             GameDTO g = gameView;
             if (g == null || g.phase() != GamePhase.ACTION_RESOLUTION) return;
+
+            // Detect turn boundaries by tracking the currentPlayer id. When
+            // it changes (or it's the first time we enter ACTION_RESOLUTION)
+            // the pick counters must restart from zero. Keeping them at
+            // class scope is what prevents the "Back" exploit: returning
+            // from this method and re-entering it on the next loop
+            // iteration NO LONGER zeroes the counters.
+            int currentId = g.currentPlayer() == null ? -1 : g.currentPlayer().playerId();
+            if (currentId != lastResolutionPlayerId) {
+                turnUpperTaken = 0;
+                turnLowerTaken = 0;
+                turnFoodTaken = false;
+                lastResolutionPlayerId = currentId;
+            }
 
             OfferTileDTO myTile = findMyTile(g);
             String tileLabel = myTile == null
@@ -296,9 +315,9 @@ public class TuiView extends View {
             // row from which you should still be picking, you MUST take
             // them. The TUI hides "Return totem" until those mandatory
             // picks are exhausted (or no Character cards remain there).
-            boolean mustPickUpper = upperTaken < maxUpper
+            boolean mustPickUpper = turnUpperTaken < maxUpper
                     && hasCharacter(g.upperRowCards());
-            boolean mustPickLower = lowerTaken < maxLower
+            boolean mustPickLower = turnLowerTaken < maxLower
                     && hasCharacter(g.lowerRowCards());
             boolean mustPick = mustPickUpper || mustPickLower;
 
@@ -315,15 +334,15 @@ public class TuiView extends View {
             // Create action choices
             List<String> tags = new ArrayList<>();
             int n = 1;
-            if (upperTaken < maxUpper) {
-                System.out.println("  " + n++ + ") Take card from UPPER row (" + upperTaken + "/" + maxUpper + ")");
+            if (turnUpperTaken < maxUpper) {
+                System.out.println("  " + n++ + ") Take card from UPPER row (" + turnUpperTaken + "/" + maxUpper + ")");
                 tags.add("UPPER");
             }
-            if (lowerTaken < maxLower) {
-                System.out.println("  " + n++ + ") Take card from LOWER row (" + lowerTaken + "/" + maxLower + ")");
+            if (turnLowerTaken < maxLower) {
+                System.out.println("  " + n++ + ") Take card from LOWER row (" + turnLowerTaken + "/" + maxLower + ")");
                 tags.add("LOWER");
             }
-            if (canFood && !foodTaken) {
+            if (canFood && !turnFoodTaken) {
                 System.out.println("  " + n++ + ") Take food");
                 tags.add("FOOD");
             }
@@ -334,30 +353,62 @@ public class TuiView extends View {
                 System.out.println("  " + n + ") Return totem (end turn)" + costHint);
                 tags.add("RETURN");
             }
-            System.out.println("  0) Back");
+            // No "Back / skip turn" here: MESOS rules forbid skipping a turn.
+            // The only way to end the turn is "Return totem", which is only
+            // offered when no mandatory Character pick is still owed.
 
-            int choice = chooseInRange(0, tags.size());
-            if (choice == 0) return;
+            int choice = chooseInRange(1, tags.size());
             if (!ensureMyPlayerId()) return;
 
             // Perform action based on choice — only update local counters
             // when the server actually confirmed the action (SendResult.OK).
+            boolean didAct = false;
             switch (tags.get(choice - 1)) {
-                case "UPPER" -> { if (takeCardFromRow(g.upperRowCards(), CardRow.UPPER, "UPPER")) upperTaken++; }
-                case "LOWER" -> { if (takeCardFromRow(g.lowerRowCards(), CardRow.LOWER, "LOWER")) lowerTaken++; }
+                case "UPPER" -> {
+                    if (takeCardFromRow(g.upperRowCards(), CardRow.UPPER, "UPPER")) {
+                        turnUpperTaken++;
+                        didAct = true;
+                    }
+                }
+                case "LOWER" -> {
+                    if (takeCardFromRow(g.lowerRowCards(), CardRow.LOWER, "LOWER")) {
+                        turnLowerTaken++;
+                        didAct = true;
+                    }
+                }
                 case "FOOD"  -> {
                     Printer.printSuccess("Taking food…");
                     if (sendAndAwaitUpdate(new TakeFoodAction(myPlayerId())) == SendResult.OK) {
-                        foodTaken = true;
+                        turnFoodTaken = true;
+                        didAct = true;
                     }
                 }
                 case "RETURN" -> {
                     Printer.printSuccess("Returning totem…");
                     if (sendAndAwaitUpdate(new ReturnTotemAction(myPlayerId())) == SendResult.OK) {
+                        lastResolutionPlayerId = -1; // force reset on next turn
                         return;
                     }
                     // On ERROR/TIMEOUT we stay in the loop so the user can retry.
                 }
+            }
+
+            // Auto-return the totem when no further pick is possible at all:
+            // all of UPPER/LOWER/FOOD quotas are exhausted, so there is
+            // nothing left to do but end the turn. Saves the player a click
+            // and removes a class of "I forgot to press Return" mistakes.
+            if (didAct
+                    && turnUpperTaken == maxUpper
+                    && turnLowerTaken == maxLower
+                    && (!canFood || turnFoodTaken)) {
+                Printer.printSuccess("All picks done — returning totem automatically.");
+                if (sendAndAwaitUpdate(new ReturnTotemAction(myPlayerId())) == SendResult.OK) {
+                    lastResolutionPlayerId = -1;
+                    return;
+                }
+                // If the server rejects the auto-return (shouldn't happen in
+                // normal flow), fall through to the next loop iteration so
+                // the player sees the menu and can retry.
             }
         }
     }

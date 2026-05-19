@@ -62,35 +62,42 @@ public class ActionResolutionStateTest {
     * into action resolution state places totems and triggers the onEnter method of the controller */
     @BeforeEach
     void setUp() {
-        game = new MesosGame();
         p1 = new Player(1, "Player1", TotemColor.RED);
         p2 = new Player(2, "Player2", TotemColor.BLUE);
         List<Player> players = new ArrayList<>();
         players.add(p1);
         players.add(p2);
-        game.setupGame(2, players);
-
 
         p1.addFood(10);
         p2.addFood(10);
 
-        Board board = game.getBoard();
-        board.setUpperRow(new ArrayList<>(List.of(new Shaman("shaman_front.png", "shaman_back.png", Era.ERA_1, 2, 2),
-                new Shaman("shaman_front.png", "shaman_back.png", Era.ERA_1, 2, 2), new Shaman("shaman_front.png", "shaman_back.png", Era.ERA_1, 2, 2))));
-        board.setLowerRow(new ArrayList<>(List.of(new BuildingCard("Building1", 3, 2, Era.ERA_1, "building_front.png", "building_back.png", null),
-                new BuildingCard("Building1", 3, 2, Era.ERA_1, "building_front.png", "building_back.png", null))));
-        List<OfferTile> availableTiles = game.getAvailableOfferTiles();
-        OfferTile Player1Tile = availableTiles.get(0);
-        OfferTile Player2Tile = availableTiles.get(1);
-
         viewUpdater = new ViewUpdaterForTesting();
         controller = new GameController(viewUpdater);
         controller.startGame(players);
+        // Replace the controller's freshly-built rows with a deterministic set
+        // so tests can pick known cards. The model owned by the controller is
+        // the authoritative one (the local `game` field below is only kept
+        // for backward compatibility with assertions; the state under test
+        // reads exclusively from controller.getModel()).
+        game = (MesosGame) controller.getModel();
+        Board board = game.getBoard();
+        board.setUpperRow(new ArrayList<>(List.of(
+                new Shaman("shaman_front.png", "shaman_back.png", Era.ERA_1, 2, 2),
+                new Shaman("shaman_front.png", "shaman_back.png", Era.ERA_1, 2, 2),
+                new Shaman("shaman_front.png", "shaman_back.png", Era.ERA_1, 2, 2))));
+        board.setLowerRow(new ArrayList<>(List.of(
+                new BuildingCard("Building1", 3, 2, Era.ERA_1, "building_front.png", "building_back.png", null),
+                new BuildingCard("Building1", 3, 2, Era.ERA_1, "building_front.png", "building_back.png", null))));
+
+        // Place totems on the controller's model so that the state under
+        // test can resolve each player to their offer tile.
+        List<OfferTile> availableTiles = game.getAvailableOfferTiles();
+        game.placeTotem(p1, availableTiles.get(0));
+        // Re-read available tiles: the first call exposes all unoccupied
+        // ones, after p1's placement the list is smaller by one.
+        game.placeTotem(p2, game.getAvailableOfferTiles().get(0));
+
         state = new ActionResolutionState();
-
-        game.placeTotem(p1, Player1Tile);
-        game.placeTotem(p2, Player2Tile);
-
         state.onEnter(controller);
 
         controller.setOfferOrder(players);
@@ -138,12 +145,17 @@ public class ActionResolutionStateTest {
     }
 
     @Test
-    void takeFoodTesting() {
+    void takeFoodRejectedOnNonFoodTileTesting() {
+        // In a 2-player game tile A (the only foodReward>0 tile) is excluded
+        // by its minPlayers constraint, so p2's tile cannot grant food. The
+        // server must reject the action authoritatively.
         int initialFood = p2.getFood();
         TakeFoodAction action = new TakeFoodAction(2);
 
         state.handleAction(controller, action);
-        assertTrue(p2.getFood() > initialFood, "Player's food should have increased.");
+
+        assertEquals("FOOD_NOT_ALLOWED", viewUpdater.getLastError());
+        assertEquals(initialFood, p2.getFood());
     }
 }
 
