@@ -4,6 +4,7 @@ import it.polimi.ingws.gc8.Network.DTO.GameDTO;
 import it.polimi.ingws.gc8.Network.Messages.*;
 import it.polimi.ingws.gc8.View.TUI.Printer;
 import it.polimi.ingws.gc8.View.TUI.TuiView;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
@@ -61,8 +62,12 @@ public class LobbyScreenController {
                     guiView.showGame();
                     return;
                 }
-                case LobbyUpdateMessage m ->
-                    connectedPlayersLabel.setText("Giocatori correnti: " + m.getCurrentPlayers() + "/" + m.getExpectedPlayers());
+                case LobbyUpdateMessage m -> {
+                    // Run on the JavaFX Application Thread to safely update the UI component
+                    Platform.runLater(() -> {
+                        connectedPlayersLabel.setText("Giocatori correnti: " + m.getCurrentPlayers() + "/" + m.getExpectedPlayers());
+                    });
+                }
                 case ErrorMessage m -> {
                     guiView.showError("Errore", m.getError());
                     return;

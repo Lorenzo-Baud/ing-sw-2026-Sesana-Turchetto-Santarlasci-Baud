@@ -1,6 +1,227 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.text.*?>
 
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="490.0" prefWidth="847.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <VBox minWidth="386.0" prefHeight="179.0" prefWidth="386.0">
+         <children>
+            <ToolBar prefHeight="40.0" prefWidth="600.0">
+               <items>
+                  <Label text="MESOS" />
+                  <Separator orientation="VERTICAL" prefHeight="30.0" prefWidth="0.0" />
+                  <Label layoutX="10.0" layoutY="16.0" text="ERA 1" />
+                  <Label layoutX="64.0" layoutY="16.0" text="Round 1/10">
+                     <padding>
+                        <Insets left="5.0" />
+                     </padding>
+                  </Label>
+                  <Pane prefHeight="30.0" prefWidth="71.0">
+                     <children>
+                        <Separator orientation="VERTICAL" prefHeight="30.0" prefWidth="0.0">
+                           <opaqueInsets>
+                              <Insets />
+                           </opaqueInsets>
+                        </Separator>
+                        <Circle fill="DODGERBLUE" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
+                        <Label layoutX="25.0" layoutY="7.0" text="P1: 0PP" />
+                     </children>
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets>
+                     <padding>
+                        <Insets left="9.0" />
+                     </padding>
+                  </Pane>
+                  <Pane layoutX="170.0" layoutY="10.0" prefHeight="30.0" prefWidth="71.0">
+                     <children>
+                        <Separator orientation="VERTICAL" prefHeight="30.0" prefWidth="0.0">
+                           <opaqueInsets>
+                              <Insets />
+                           </opaqueInsets>
+                        </Separator>
+                        <Circle fill="#50ff1f" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
+                        <Label layoutX="25.0" layoutY="7.0" text="P2: 0PP" />
+                     </children>
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets>
+                     <padding>
+                        <Insets left="9.0" />
+                     </padding>
+                  </Pane>
+                  <Pane layoutX="170.0" layoutY="10.0" prefHeight="30.0" prefWidth="71.0">
+                     <children>
+                        <Separator orientation="VERTICAL" prefHeight="30.0" prefWidth="0.0">
+                           <opaqueInsets>
+                              <Insets />
+                           </opaqueInsets>
+                        </Separator>
+                        <Circle fill="#ff1fad" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
+                        <Label layoutX="25.0" layoutY="7.0" text="P3: 0PP" />
+                     </children>
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets>
+                     <padding>
+                        <Insets left="9.0" />
+                     </padding>
+                  </Pane>
+                  <Pane layoutX="320.0" layoutY="10.0" prefHeight="30.0" prefWidth="71.0">
+                     <children>
+                        <Separator orientation="VERTICAL" prefHeight="30.0" prefWidth="0.0">
+                           <opaqueInsets>
+                              <Insets />
+                           </opaqueInsets>
+                        </Separator>
+                        <Circle fill="#ff1f1f" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
+                        <Label layoutX="25.0" layoutY="7.0" text="P4: 0PP" />
+                     </children>
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets>
+                     <padding>
+                        <Insets left="9.0" />
+                     </padding>
+                  </Pane>
+                  <Pane layoutX="396.0" layoutY="10.0" prefHeight="30.0" prefWidth="71.0">
+                     <children>
+                        <Separator orientation="VERTICAL" prefHeight="30.0" prefWidth="0.0">
+                           <opaqueInsets>
+                              <Insets />
+                           </opaqueInsets>
+                        </Separator>
+                        <Circle fill="#ffcb1f" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
+                        <Label layoutX="25.0" layoutY="7.0" text="P5: 0PP" />
+                     </children>
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets>
+                     <padding>
+                        <Insets left="9.0" />
+                     </padding>
+                  </Pane>
+               </items>
+            </ToolBar>
+            <HBox prefHeight="501.0" prefWidth="800.0">
+               <children>
+                   <VBox alignment="TOP_CENTER" prefHeight="500.0" prefWidth="140.0" spacing="10.0" style="-fx-background-color: #f7f7f4;">
+                       <padding>
+                           <Insets bottom="15.0" left="12.0" right="12.0" top="15.0" />
+                       </padding>
+                       <children>
+                           <Label text="ORDINE DI TURNO" textFill="#5c5c54">
+                               <font>
+                                   <Font name="System Bold" size="12.0" />
+                               </font>
+                               <VBox.margin>
+                                   <Insets bottom="5.0" />
+                               </VBox.margin>
+                           </Label>
 
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" />
+                           <AnchorPane maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
+                               <children>
+                                   <Label text="1" textFill="#9e9e96" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="8.0">
+                                       <font>
+                                           <Font name="System Bold" size="11.0" />
+                                       </font>
+                                   </Label>
+
+                                   <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                       <children>
+                                           <Circle fill="#e74c3c" radius="14.0" stroke="TRANSPARENT" />
+                                       </children>
+                                   </StackPane>
+
+                                   <HBox alignment="CENTER" spacing="3.0" AnchorPane.bottomAnchor="6.0" AnchorPane.rightAnchor="12.0">
+                                       <children>
+                                           <Label text="+1" textFill="#d35400">
+                                               <font>
+                                                   <Font name="System Bold" size="10.0" />
+                                               </font>
+                                           </Label>
+                                           <Circle fill="#d35400" radius="5.0" stroke="TRANSPARENT" />
+                                       </children>
+                                   </HBox>
+                               </children>
+                           </AnchorPane>
+
+                           <AnchorPane maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
+                               <children>
+                                   <Label text="2" textFill="#9e9e96" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="8.0">
+                                       <font>
+                                           <Font name="System Bold" size="11.0" />
+                                       </font>
+                                   </Label>
+
+                                   <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                       <children>
+                                           <Circle fill="#d700d3" radius="14.0" stroke="TRANSPARENT" />
+                                       </children>
+                                   </StackPane>
+                               </children>
+                           </AnchorPane>
+
+                           <AnchorPane maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
+                               <children>
+                                   <Label text="3" textFill="#9e9e96" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="8.0">
+                                       <font>
+                                           <Font name="System Bold" size="11.0" />
+                                       </font>
+                                   </Label>
+                                   <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                       <children>
+                                           <Circle fill="#3c5ee5" radius="14.0" stroke="TRANSPARENT" />
+                                       </children>
+                                   </StackPane>
+                               </children>
+                           </AnchorPane>
+                        <AnchorPane layoutX="22.0" layoutY="210.0" maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
+                           <children>
+                              <Label text="4" textFill="#9e9e96" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="8.0">
+                                 <font>
+                                    <Font name="System Bold" size="11.0" />
+                                 </font>
+                              </Label>
+                               <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                   <children>
+                                       <Circle fill="#3ce53f" radius="14.0" stroke="TRANSPARENT" />
+                                   </children>
+                               </StackPane>
+                           </children>
+                        </AnchorPane>
+                        <AnchorPane layoutX="22.0" layoutY="58.0" maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
+                           <children>
+                              <Label text="5" textFill="#9e9e96" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="8.0">
+                                 <font>
+                                    <Font name="System Bold" size="11.0" />
+                                 </font>
+                              </Label>
+                              <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <children>
+                                    <Circle fill="#ff8f17" radius="14.0" stroke="TRANSPARENT" />
+                                 </children>
+                              </StackPane>
+                              <HBox alignment="CENTER" spacing="3.0" AnchorPane.bottomAnchor="6.0" AnchorPane.rightAnchor="12.0">
+                                 <children>
+                                    <Label text="-1" textFill="#d35400">
+                                       <font>
+                                          <Font name="System Bold" size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Circle fill="#d35400" radius="5.0" stroke="TRANSPARENT" />
+                                 </children>
+                              </HBox>
+                           </children>
+                        </AnchorPane>
+                       </children>
+                   </VBox>
+               </children></HBox>
+         </children>
+      </VBox>
+   </children>
+</StackPane>
