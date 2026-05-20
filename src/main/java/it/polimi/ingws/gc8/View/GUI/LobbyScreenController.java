@@ -41,7 +41,7 @@ public class LobbyScreenController {
     /** Waits for the first game snapshot. */
     private void waitForLobbyStart() {
 
-        Thread updateDispatcher = new Thread(this::dispatchLoop, "tui-dispatcher");
+        Thread updateDispatcher = new Thread(this::dispatchLoop, "gui-dispatcher");
         updateDispatcher.setDaemon(true);
         updateDispatcher.start();
 
