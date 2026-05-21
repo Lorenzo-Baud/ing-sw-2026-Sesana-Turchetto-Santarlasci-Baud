@@ -10,7 +10,11 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Pane;
+import javafx.scene.shape.Circle;
+
 import java.io.InputStream;
+import java.util.List;
 
 /**
  * JavaFX controller for the main game screen.
@@ -44,6 +48,50 @@ public class GameScreenController {
     @FXML
     private Label connectedPlayersLabel;
 
+    /** Panes used on top bar to display players stats*/
+    @FXML
+    Pane topBarP3Box;
+    @FXML
+    Pane topBarP4Box;
+    @FXML
+    Pane topBarP5Box;
+
+    /** Player markers on top bar */
+    @FXML
+    Circle topBarP1Marker;
+    @FXML
+    Circle topBarP2Marker;
+    @FXML
+    Circle topBarP3Marker;
+    @FXML
+    Circle topBarP4Marker;
+    @FXML
+    Circle topBarP5Marker;
+    List<Circle> topBarPlayerMarkers;
+
+    /** Other labels on top bar */
+    @FXML
+    Label topBarP1PrestigeLabel;
+    @FXML
+    Label topBarP2PrestigeLabel;
+    @FXML
+    Label topBarP3PrestigeLabel;
+    @FXML
+    Label topBarP4PrestigeLabel;
+    @FXML
+    Label topBarP5PrestigeLabel;
+    List<Label> topBarPlayerPrestigeLabels;
+
+    @FXML
+    Label topBarEraLabel;
+    @FXML
+    Label topBarRoundLabel;
+
+    @FXML
+    Label sideBarFoodLabel;
+    @FXML
+    Label sideBarPrestigeLabel;
+
     /**
      * Injects the owning {@link GuiView} instance.
      *
@@ -68,6 +116,9 @@ public class GameScreenController {
 
         guiView.getPrimaryStage().setTitle("Mesos Game - Gioco");
 
+        // Initializes top bar
+        initializeTopBar();
+
         String imagePath = "/test.png";
         InputStream imageStream = getClass().getResourceAsStream(imagePath);
 
@@ -91,11 +142,85 @@ public class GameScreenController {
     }
 
     /**
+     * Method to correctly initialize the top bar. Performs following actions:
+     *  - Hides top bar panes that don't correspond to any player in the current game
+     *    (e.g. hides P3-P5 panes in a 2-player game)
+     *  - Changes top bar icon colors for players
+     */
+    private void initializeTopBar() {
+
+        // Initializes array that
+        topBarPlayerMarkers = List.of(topBarP1Marker, topBarP2Marker, topBarP3Marker, topBarP4Marker, topBarP5Marker);
+        topBarPlayerPrestigeLabels = List.of(topBarP1PrestigeLabel, topBarP2PrestigeLabel, topBarP3PrestigeLabel, topBarP4PrestigeLabel, topBarP5PrestigeLabel);
+
+        // Hides useless top bar panes
+        if(guiView.getGameView().numberOfPlayers() == 2) {
+            topBarP3Box.setVisible(false);
+            topBarP4Box.setVisible(false);
+            topBarP5Box.setVisible(false);
+        } else if(guiView.getGameView().numberOfPlayers() == 3) {
+            topBarP4Box.setVisible(false);
+            topBarP5Box.setVisible(false);
+        } else if(guiView.getGameView().numberOfPlayers() == 4) {
+            topBarP3Box.setVisible(false);
+        }
+
+        // Sets top bar marker colors based on player totem color
+        for(int i = 0; i < guiView.getGameView().numberOfPlayers(); i++) {
+            switch (guiView.getGameView().players().get(i).totemColor()) {
+                case RED -> topBarPlayerMarkers.get(i).setStyle("-fx-fill: red;");
+                case BLUE -> topBarPlayerMarkers.get(i).setStyle("-fx-fill: blue;");
+                case WHITE -> topBarPlayerMarkers.get(i).setStyle("-fx-fill: white;");
+                case YELLOW -> topBarPlayerMarkers.get(i).setStyle("-fx-fill: yellow;");
+                case BLACK -> topBarPlayerMarkers.get(i).setStyle("-fx-fill: black;");
+            }
+        }
+
+        // Sets top bar prestige points label to 0
+        for(int i = 0; i < guiView.getGameView().numberOfPlayers(); i++) {
+            topBarPlayerPrestigeLabels.get(i).setText("P" + (i+1) + ": 0PP");
+        }
+
+        // Sidebar update
+        sideBarPrestigeLabel.setText(String.valueOf(guiView.getGameView().currentPlayer().prestigePoints()));
+        sideBarFoodLabel.setText(String.valueOf(guiView.getGameView().currentPlayer().foodPoints()));
+
+    }
+
+    /**
+     * Method to update the entire interface when a new model object is received
+     */
+    private void updateInterface() {
+
+        /* ----------- TOP BAR UPDATE ----------- */
+        // Sets food and prestige points on top bar
+        for(int i = 0; i < guiView.getGameView().numberOfPlayers(); i++) {
+            topBarPlayerPrestigeLabels.get(i).setText("P" + (i+1) + ": " + guiView.getGameView().players().get(i).prestigePoints() + "PP");
+        }
+
+        // Updates era on top bar
+        topBarEraLabel.setText("Era " + guiView.getGameView().currentEra());
+
+        // Updates round on top bar
+        topBarRoundLabel.setText("Round " + guiView.getGameView().currentRound() + "/10");
+
+
+        /* ----------- CARDS ROW UPDATE ----------- */
+
+        /* ----------- SIDE BAR UPDATE ----------- */
+        sideBarPrestigeLabel.setText(String.valueOf(guiView.getGameView().currentPlayer().prestigePoints()));
+        sideBarFoodLabel.setText(String.valueOf(guiView.getGameView().currentPlayer().foodPoints()));
+
+
+
+    }
+
+    /**
      * Helper method to remove all card nodes from every row on the board.
      *
      * <p>The clear is executed on the JavaFX Application Thread via {@link Platform#runLater}.
      */
-    public void clearAllRows() {
+    private void clearAllRows() {
         Platform.runLater(() -> {
             topCardsRow.getChildren().clear();
             middleCardsRow.getChildren().clear();
@@ -125,8 +250,7 @@ public class GameScreenController {
                 case ModelUpdateMessage m -> {
                     GameDTO previous = guiView.getGameView();
                     GameDTO next = m.getGameModelDTO();
-
-                    // TODO: update view
+                    updateInterface();
                 }
                 case GameOverMessage m -> {
                     // TODO: show game over screen

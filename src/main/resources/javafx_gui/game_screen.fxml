@@ -12,13 +12,24 @@
          <children>
             <ToolBar prefHeight="40.0" prefWidth="600.0">
                <items>
-                  <Label text="MESOS" />
+                  <Label text="MESOS" textFill="#5c5c54">
+                      <font>
+                          <Font name="System Bold" size="12.0" />
+                      </font>
+                  </Label>
                   <Separator orientation="VERTICAL" prefHeight="30.0" prefWidth="0.0" />
-                  <Label layoutX="10.0" layoutY="16.0" text="ERA 1" />
-                  <Label layoutX="64.0" layoutY="16.0" text="Round 1/10">
+                  <Label fx:id="topBarEraLabel" layoutX="10.0" layoutY="16.0" text="ERA 1" textFill="#5c5c54">
+                      <font>
+                          <Font name="System Bold" size="12.0" />
+                      </font>
+                  </Label>
+                  <Label fx:id="topBarRoundLabel" layoutX="64.0" layoutY="16.0" text="Round 1/10" textFill="#5c5c54">
                      <padding>
                         <Insets left="5.0" />
                      </padding>
+                      <font>
+                          <Font name="System Bold" size="12.0" />
+                      </font>
                   </Label>
                   <Pane prefHeight="30.0" prefWidth="71.0">
                      <children>
@@ -27,9 +38,11 @@
                               <Insets />
                            </opaqueInsets>
                         </Separator>
-                        <Circle fill="DODGERBLUE" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
-                        <Label layoutX="25.0" layoutY="7.0" text="P1: 0PP" />
-                     </children>
+                        <Circle fx:id="topBarP1Marker" fill="DODGERBLUE" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
+                         <Label fx:id="topBarP1PrestigeLabel" layoutX="25.0" layoutY="7.0" text="P1: 0PP" textFill="#5c5c54">
+                             <font>
+                                 <Font name="System Bold" size="12.0" />
+                             </font></Label>                     </children>
                      <opaqueInsets>
                         <Insets />
                      </opaqueInsets>
@@ -44,8 +57,11 @@
                               <Insets />
                            </opaqueInsets>
                         </Separator>
-                        <Circle fill="#50ff1f" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
-                        <Label layoutX="25.0" layoutY="7.0" text="P2: 0PP" />
+                        <Circle fx:id="topBarP2Marker" fill="#50ff1f" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
+                        <Label fx:id="topBarP2PrestigeLabel" layoutX="25.0" layoutY="7.0" text="P2: 0PP" textFill="#5c5c54">
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font></Label>
                      </children>
                      <opaqueInsets>
                         <Insets />
@@ -54,15 +70,18 @@
                         <Insets left="9.0" />
                      </padding>
                   </Pane>
-                  <Pane layoutX="170.0" layoutY="10.0" prefHeight="30.0" prefWidth="71.0">
+                  <Pane fx:id="topBarP3Box" layoutX="170.0" layoutY="10.0" prefHeight="30.0" prefWidth="71.0">
                      <children>
                         <Separator orientation="VERTICAL" prefHeight="30.0" prefWidth="0.0">
                            <opaqueInsets>
                               <Insets />
                            </opaqueInsets>
                         </Separator>
-                        <Circle fill="#ff1fad" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
-                        <Label layoutX="25.0" layoutY="7.0" text="P3: 0PP" />
+                        <Circle fx:id="topBarP3Marker" fill="#ff1fad" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
+                        <Label fx:id="topBarP3PrestigeLabel" layoutX="25.0" layoutY="7.0" text="P3: 0PP" textFill="#5c5c54">
+                         <font>
+                             <Font name="System Bold" size="12.0" />
+                         </font></Label>
                      </children>
                      <opaqueInsets>
                         <Insets />
@@ -71,15 +90,18 @@
                         <Insets left="9.0" />
                      </padding>
                   </Pane>
-                  <Pane layoutX="320.0" layoutY="10.0" prefHeight="30.0" prefWidth="71.0">
+                  <Pane fx:id="topBarP4Box" layoutX="320.0" layoutY="10.0" prefHeight="30.0" prefWidth="71.0">
                      <children>
                         <Separator orientation="VERTICAL" prefHeight="30.0" prefWidth="0.0">
                            <opaqueInsets>
                               <Insets />
                            </opaqueInsets>
                         </Separator>
-                        <Circle fill="#ff1f1f" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
-                        <Label layoutX="25.0" layoutY="7.0" text="P4: 0PP" />
+                        <Circle fx:id="topBarP4Marker" fill="#ff1f1f" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
+                         <Label fx:id="topBarP4PrestigeLabel" layoutX="25.0" layoutY="7.0" text="P4: 0PP" textFill="#5c5c54">
+                             <font>
+                                 <Font name="System Bold" size="12.0" />
+                             </font></Label>
                      </children>
                      <opaqueInsets>
                         <Insets />
@@ -88,15 +110,18 @@
                         <Insets left="9.0" />
                      </padding>
                   </Pane>
-                  <Pane layoutX="396.0" layoutY="10.0" prefHeight="30.0" prefWidth="71.0">
+                  <Pane fx:id="topBarP5Box" layoutX="396.0" layoutY="10.0" prefHeight="30.0" prefWidth="71.0">
                      <children>
                         <Separator orientation="VERTICAL" prefHeight="30.0" prefWidth="0.0">
                            <opaqueInsets>
                               <Insets />
                            </opaqueInsets>
                         </Separator>
-                        <Circle fill="#ffcb1f" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
-                        <Label layoutX="25.0" layoutY="7.0" text="P5: 0PP" />
+                        <Circle fx:id="topBarP5Marker" fill="#ffcb1f" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
+                         <Label fx:id="topBarP5PrestigeLabel" layoutX="25.0" layoutY="7.0" text="P5: 0PP" textFill="#5c5c54">
+                             <font>
+                                 <Font name="System Bold" size="12.0" />
+                             </font></Label>
                      </children>
                      <opaqueInsets>
                         <Insets />
@@ -222,27 +247,27 @@
                    </VBox>
                   <Pane prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: #f7f7f4;" HBox.hgrow="ALWAYS">
                   <children>
-                      <VBox alignment="CENTER" spacing="20.0" prefWidth="600.0" style="-fx-background-color: #f7f7f4;">
+                      <VBox alignment="CENTER" prefWidth="600.0" spacing="20.0" style="-fx-background-color: #f7f7f4;">
                           <padding>
                               <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                           </padding>
                           <children>
 
-                              <ScrollPane hbarPolicy="AS_NEEDED" vbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;">
+                              <ScrollPane hbarPolicy="AS_NEEDED" style="-fx-background: transparent; -fx-background-color: transparent;" vbarPolicy="NEVER">
                                   <content>
-                                      <HBox fx:id="topCardsRow" spacing="10.0" alignment="CENTER_LEFT" prefHeight="130.0" />
+                                      <HBox fx:id="topCardsRow" alignment="CENTER_LEFT" prefHeight="130.0" spacing="10.0" />
                                   </content>
                               </ScrollPane>
 
-                              <ScrollPane hbarPolicy="AS_NEEDED" vbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;">
+                              <ScrollPane hbarPolicy="AS_NEEDED" style="-fx-background: transparent; -fx-background-color: transparent;" vbarPolicy="NEVER">
                                   <content>
-                                      <HBox fx:id="middleCardsRow" spacing="10.0" alignment="CENTER_LEFT" prefHeight="130.0" />
+                                      <HBox fx:id="middleCardsRow" alignment="CENTER_LEFT" prefHeight="130.0" spacing="10.0" />
                                   </content>
                               </ScrollPane>
 
-                              <ScrollPane hbarPolicy="AS_NEEDED" vbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;">
+                              <ScrollPane hbarPolicy="AS_NEEDED" style="-fx-background: transparent; -fx-background-color: transparent;" vbarPolicy="NEVER">
                                   <content>
-                                      <HBox fx:id="bottomCardsRow" spacing="10.0" alignment="CENTER_LEFT" prefHeight="130.0" />
+                                      <HBox fx:id="bottomCardsRow" alignment="CENTER_LEFT" prefHeight="130.0" spacing="10.0" />
                                   </content>
                               </ScrollPane>
 
@@ -275,7 +300,7 @@
                                                    <Label style="-fx-font-size: 9px; -fx-font-weight: bold;" text="CIBO" textFill="#9e9e96" />
                                                </children>
                                            </HBox>
-                                           <Label layoutX="29.0" layoutY="14.0" text="3" textFill="#7e51a1" AnchorPane.bottomAnchor="0.3999999999999986" AnchorPane.leftAnchor="29.0">
+                                           <Label fx:id="sideBarFoodLabel" layoutX="29.0" layoutY="14.0" text="3" textFill="#7e51a1" AnchorPane.bottomAnchor="0.3999999999999986" AnchorPane.leftAnchor="29.0">
                                                <font>
                                                    <Font name="System Bold" size="18.0" />
                                                </font>
@@ -291,7 +316,7 @@
                                                    <Label style="-fx-font-size: 9px; -fx-font-weight: bold;" text="PP" textFill="#9e9e96" />
                                                </children>
                                            </HBox>
-                                           <Label layoutX="19.0" layoutY="14.0" text="12" textFill="#27ae60" AnchorPane.bottomAnchor="0.3999999999999986" AnchorPane.leftAnchor="19.0">
+                                           <Label fx:id="sideBarPrestigeLabel" layoutX="19.0" layoutY="14.0" text="12" textFill="#27ae60" AnchorPane.bottomAnchor="0.3999999999999986" AnchorPane.leftAnchor="19.0">
                                                <font>
                                                    <Font name="System Bold" size="18.0" />
                                                </font>
