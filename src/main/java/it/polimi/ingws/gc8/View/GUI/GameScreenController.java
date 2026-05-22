@@ -1,5 +1,6 @@
 package it.polimi.ingws.gc8.View.GUI;
 
+import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 import it.polimi.ingws.gc8.Network.DTO.GameDTO;
 import it.polimi.ingws.gc8.Network.Messages.*;
 import it.polimi.ingws.gc8.View.TUI.TuiView;
@@ -119,26 +120,8 @@ public class GameScreenController {
         // Initializes top bar
         initializeTopBar();
 
-        String imagePath = "/test.png";
-        InputStream imageStream = getClass().getResourceAsStream(imagePath);
+        updateInterface();
 
-        if (imageStream != null) {
-
-            Image cardImage = new Image(imageStream);
-
-            ImageView cardView = new ImageView(cardImage);
-            cardView.setFitHeight(120.0);
-            cardView.setPreserveRatio(true);
-
-            // Attach the mouse click event listener directly to the ImageView node
-            cardView.setOnMouseClicked(event -> {
-                // This block executes whenever the specific image is clicked
-                System.out.println("Card clicked! Row: " + 0 + ", Position: " + 0);
-            });
-
-            middleCardsRow.getChildren().add(cardView);
-
-        }
     }
 
     /**
@@ -206,12 +189,22 @@ public class GameScreenController {
 
 
         /* ----------- CARDS ROW UPDATE ----------- */
+        // Clears all rows
+        //clearAllRows();
+
+        // Upper row update
+        for(int i = 0; i < guiView.getGameView().upperRowCards().size(); i++) {
+            addCardToRow(0, guiView.getGameView().upperRowCards().get(i), i);
+        }
+
+        // Lower row update
+        for(int i = 0; i < guiView.getGameView().lowerRowCards().size(); i++) {
+            addCardToRow(2, guiView.getGameView().lowerRowCards().get(i), i);
+        }
 
         /* ----------- SIDE BAR UPDATE ----------- */
         sideBarPrestigeLabel.setText(String.valueOf(guiView.getGameView().currentPlayer().prestigePoints()));
         sideBarFoodLabel.setText(String.valueOf(guiView.getGameView().currentPlayer().foodPoints()));
-
-
 
     }
 
@@ -264,6 +257,42 @@ public class GameScreenController {
             }
 
         }
+    }
+
+    /**
+     * Helper method to add a certain card to a row
+     *  0. Top row
+     *  1. Middle row
+     *  2. Lower row
+     */
+    private void addCardToRow(int row, CardDTO card, int index) {
+
+        InputStream imageStream = getClass().getResourceAsStream(card.front());
+        Image cardImage = new Image(imageStream);
+
+        try{
+
+            ImageView cardView = new ImageView(cardImage);
+            cardView.setFitHeight(120.0);
+            cardView.setPreserveRatio(true);
+
+            // Attach the mouse click event listener directly to the ImageView node
+            cardView.setOnMouseClicked(event -> {
+                // This block executes whenever the specific image is clicked
+                System.out.println("Card clicked! Row: " + row + ", Position: " + index);
+            });
+
+            // Adds card to corresponding row
+            switch (row) {
+                case 0 -> topCardsRow.getChildren().add(cardView);
+                case 1 -> middleCardsRow.getChildren().add(cardView);
+                case 2 -> bottomCardsRow.getChildren().add(cardView);
+            }
+
+        } catch (Exception e) {
+            guiView.showError("Errore", e.getMessage());
+        }
+
     }
 
 }

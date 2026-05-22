@@ -253,19 +253,19 @@
                           </padding>
                           <children>
 
-                              <ScrollPane hbarPolicy="AS_NEEDED" style="-fx-background: transparent; -fx-background-color: transparent;" vbarPolicy="NEVER">
+                              <ScrollPane hbarPolicy="ALWAYS" vbarPolicy="NEVER" VBox.vgrow="ALWAYS" maxWidth="1.7976931348623157E308" fitToHeight="true" style="-fx-background: transparent; -fx-background-color: transparent;">
                                   <content>
                                       <HBox fx:id="topCardsRow" alignment="CENTER_LEFT" prefHeight="130.0" spacing="10.0" />
                                   </content>
                               </ScrollPane>
 
-                              <ScrollPane hbarPolicy="AS_NEEDED" style="-fx-background: transparent; -fx-background-color: transparent;" vbarPolicy="NEVER">
+                              <ScrollPane hbarPolicy="AS_NEEDED" vbarPolicy="NEVER" VBox.vgrow="ALWAYS" maxWidth="1.7976931348623157E308" fitToHeight="true" style="-fx-background: transparent; -fx-background-color: transparent;">
                                   <content>
                                       <HBox fx:id="middleCardsRow" alignment="CENTER_LEFT" prefHeight="130.0" spacing="10.0" />
                                   </content>
                               </ScrollPane>
 
-                              <ScrollPane hbarPolicy="AS_NEEDED" style="-fx-background: transparent; -fx-background-color: transparent;" vbarPolicy="NEVER">
+                              <ScrollPane hbarPolicy="AS_NEEDED" vbarPolicy="NEVER" VBox.vgrow="ALWAYS" maxWidth="1.7976931348623157E308" fitToHeight="true" style="-fx-background: transparent; -fx-background-color: transparent;">
                                   <content>
                                       <HBox fx:id="bottomCardsRow" alignment="CENTER_LEFT" prefHeight="130.0" spacing="10.0" />
                                   </content>
