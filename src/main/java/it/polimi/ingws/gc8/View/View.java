@@ -107,4 +107,19 @@ public abstract class View {
 
     /** Lifecycle of the UI: blocking, called from the client main. */
     public abstract void run();
+
+
+    // ------------------------------------------------------------------
+    // Helper methods
+    // ------------------------------------------------------------------
+    /**
+     * Checks if it's the user's turn, based on the last {@code gameView} snapshot.
+     * @return true if it's the user's turn, false otherwise
+     */
+    public boolean isMyTurn() {
+        GameDTO g = gameView;
+        if (g == null || g.currentPlayer() == null || getNickname() == null) return false;
+        return getNickname().equals(g.currentPlayer().nickname());
+    }
+
 }

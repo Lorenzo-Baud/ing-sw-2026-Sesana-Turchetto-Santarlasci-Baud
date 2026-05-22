@@ -785,11 +785,6 @@ public class TuiView extends View {
     // Helper: turn, state
     // ------------------------------------------------------------------
 
-    private boolean isMyTurn() {
-        GameDTO g = gameView;
-        if (g == null || g.currentPlayer() == null || getNickname() == null) return false;
-        return getNickname().equals(g.currentPlayer().nickname());
-    }
 
     /** Light polling until my next turn or game ends. Q + ENTER to quit. */
     private void waitForMyTurn() {

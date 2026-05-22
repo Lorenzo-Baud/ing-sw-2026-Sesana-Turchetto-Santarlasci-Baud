@@ -3,7 +3,6 @@ package it.polimi.ingws.gc8.View.GUI;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 import it.polimi.ingws.gc8.Network.DTO.GameDTO;
 import it.polimi.ingws.gc8.Network.Messages.*;
-import it.polimi.ingws.gc8.View.TUI.TuiView;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.image.Image;
@@ -70,6 +69,19 @@ public class GameScreenController {
     Circle topBarP5Marker;
     List<Circle> topBarPlayerMarkers;
 
+    /** Player markers on side bar */
+    @FXML
+    Circle leftBarTurnOrderCircle1;
+    @FXML
+    Circle leftBarTurnOrderCircle2;
+    @FXML
+    Circle leftBarTurnOrderCircle3;
+    @FXML
+    Circle leftBarTurnOrderCircle4;
+    @FXML
+    Circle leftBarTurnOrderCircle5;
+    List<Circle> leftBarTurnOrderCircles;
+
     /** Other labels on top bar */
     @FXML
     Label topBarP1PrestigeLabel;
@@ -118,23 +130,26 @@ public class GameScreenController {
         guiView.getPrimaryStage().setTitle("Mesos Game - Gioco");
 
         // Initializes top bar
-        initializeTopBar();
+        initializeInterface();
 
         updateInterface();
 
     }
 
     /**
-     * Method to correctly initialize the top bar. Performs following actions:
+     * Method to correctly initialize the interface. Performs following actions:
      *  - Hides top bar panes that don't correspond to any player in the current game
      *    (e.g. hides P3-P5 panes in a 2-player game)
      *  - Changes top bar icon colors for players
+     *  - Updates prestige points of all players
+     *  - Updates sidebars
      */
-    private void initializeTopBar() {
+    private void initializeInterface() {
 
-        // Initializes array that
+        // Initializes array
         topBarPlayerMarkers = List.of(topBarP1Marker, topBarP2Marker, topBarP3Marker, topBarP4Marker, topBarP5Marker);
         topBarPlayerPrestigeLabels = List.of(topBarP1PrestigeLabel, topBarP2PrestigeLabel, topBarP3PrestigeLabel, topBarP4PrestigeLabel, topBarP5PrestigeLabel);
+        leftBarTurnOrderCircles = List.of(leftBarTurnOrderCircle1, leftBarTurnOrderCircle2, leftBarTurnOrderCircle3, leftBarTurnOrderCircle4, leftBarTurnOrderCircle5);
 
         // Hides useless top bar panes
         if(guiView.getGameView().numberOfPlayers() == 2) {
@@ -159,6 +174,17 @@ public class GameScreenController {
             }
         }
 
+        // Sets left bar marker colors based on player totem color
+        for(int i = 0; i < guiView.getGameView().numberOfPlayers(); i++) {
+            switch (guiView.getGameView().turnOrderTrack().get(i).totemColor()) {
+                case RED -> topBarPlayerMarkers.get(i).setStyle("-fx-fill: red;");
+                case BLUE -> topBarPlayerMarkers.get(i).setStyle("-fx-fill: blue;");
+                case WHITE -> topBarPlayerMarkers.get(i).setStyle("-fx-fill: white;");
+                case YELLOW -> topBarPlayerMarkers.get(i).setStyle("-fx-fill: yellow;");
+                case BLACK -> topBarPlayerMarkers.get(i).setStyle("-fx-fill: black;");
+            }
+        }
+
         // Sets top bar prestige points label to 0
         for(int i = 0; i < guiView.getGameView().numberOfPlayers(); i++) {
             topBarPlayerPrestigeLabels.get(i).setText("P" + (i+1) + ": 0PP");
@@ -175,6 +201,10 @@ public class GameScreenController {
      */
     private void updateInterface() {
 
+        if(guiView.isMyTurn()) {
+            guiView.showError("Il tuo turno!", "È il tuo turno, effettua la tua mossa.");
+        }
+
         /* ----------- TOP BAR UPDATE ----------- */
         // Sets food and prestige points on top bar
         for(int i = 0; i < guiView.getGameView().numberOfPlayers(); i++) {
@@ -187,6 +217,17 @@ public class GameScreenController {
         // Updates round on top bar
         topBarRoundLabel.setText("Round " + guiView.getGameView().currentRound() + "/10");
 
+        /* ----------- LEFT BAR UPDATE ----------- */
+        // Sets top bar marker colors based on player totem color
+        for(int i = 0; i < guiView.getGameView().numberOfPlayers(); i++) {
+            switch (guiView.getGameView().players().get(i).totemColor()) {
+                case RED -> topBarPlayerMarkers.get(i).setStyle("-fx-fill: red;");
+                case BLUE -> topBarPlayerMarkers.get(i).setStyle("-fx-fill: blue;");
+                case WHITE -> topBarPlayerMarkers.get(i).setStyle("-fx-fill: white;");
+                case YELLOW -> topBarPlayerMarkers.get(i).setStyle("-fx-fill: yellow;");
+                case BLACK -> topBarPlayerMarkers.get(i).setStyle("-fx-fill: black;");
+            }
+        }
 
         /* ----------- CARDS ROW UPDATE ----------- */
         // Clears all rows
