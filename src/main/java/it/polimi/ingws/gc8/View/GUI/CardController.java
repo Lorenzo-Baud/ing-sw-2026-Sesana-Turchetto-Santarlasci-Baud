@@ -1,9 +1,14 @@
 package it.polimi.ingws.gc8.View.GUI;
+
 import javafx.fxml.FXML;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 
+import java.util.logging.Logger;
+
 public class CardController {
+
+    private static final Logger LOGGER = Logger.getLogger(CardController.class.getName());
 
     @FXML
     private AnchorPane cardRoot;
@@ -30,7 +35,7 @@ public class CardController {
      */
     @FXML
     private void handleCardClick(MouseEvent event) {
-        // Print the custom coordinates inside the terminal console
-        System.out.println("Card clicked! Row: " + row + ", Position: " + positionIndex);
+        LOGGER.fine(() -> "Card clicked! Row: " + row + ", Position: " + positionIndex);
+        // TODO: forward click to the owning controller / build a PlayerAction
     }
 }

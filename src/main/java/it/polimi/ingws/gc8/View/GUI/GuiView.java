@@ -1,13 +1,8 @@
 package it.polimi.ingws.gc8.View.GUI;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
-
-import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
-import it.polimi.ingws.gc8.View.View;
 import it.polimi.ingws.gc8.Client.ClientController;
 import it.polimi.ingws.gc8.Network.Connection.ServerConnection;
-import it.polimi.ingws.gc8.View.TUI.Printer;
-import it.polimi.ingws.gc8.View.TUI.TuiView;
+import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
 import it.polimi.ingws.gc8.View.View;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -17,145 +12,138 @@ import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+/**
+ * Owner of the JavaFX primary stage and of the per-session network objects
+ * ({@code ServerConnection} + {@code ClientController}). Acts as the single
+ * entry point that screen controllers use to access network/state.
+ *
+ * <p>Threading: every scene switch is wrapped in {@link Platform#runLater};
+ * the same applies to {@link #showError(String, String)} which is safe to
+ * call from any thread.
+ */
 public class GuiView extends View {
 
-    /*
-        Attributes declared public since both read and write
-        access is needed in multiple controllers
-     */
-    public ServerConnection connection;
-    public ClientController controller;
+    private static final Logger LOGGER = Logger.getLogger(GuiView.class.getName());
 
-    // Reference to the main window of the application
+    /** Network connection to the server (RMI or Socket). Set by StartScreenController. */
+    private ServerConnection connection;
+
+    /** Client-side controller that pumps network messages into View.messages. */
+    private ClientController controller;
+
+    /** Reference to the main window of the application. */
     private Stage primaryStage;
 
-    /**
-     * Queue of UI notifications produced by the dispatcher thread that the
-     * main UI thread must print. The dispatcher MUST NOT write to stdout
-     * directly. Each entry is a tuple of (severity, text); the main thread drains
-     * it whenever it is about to render a screen or read input.
-     */
-    private final ConcurrentLinkedQueue<UiNotice> pendingNotices = new ConcurrentLinkedQueue<>();
+    // ------------------------------------------------------------------
+    // Accessors for session-scoped objects
+    // ------------------------------------------------------------------
 
-    private enum NoticeLevel { INFO, ERROR }
-    private record UiNotice(NoticeLevel level, String text) {}
-
-    // Getters/setters
     public Stage getPrimaryStage() {
         return primaryStage;
     }
 
+    public ServerConnection getConnection() {
+        return connection;
+    }
+
+    public void setConnection(ServerConnection connection) {
+        this.connection = connection;
+    }
+
+    public ClientController getController() {
+        return controller;
+    }
+
+    public void setController(ClientController controller) {
+        this.controller = controller;
+    }
+
+    // ------------------------------------------------------------------
+    // Lifecycle
+    // ------------------------------------------------------------------
 
     @Override
     public void run() {
-
-        // Initialize the JavaFX Toolkit manually
+        // Initialize the JavaFX Toolkit manually (we are not using Application.launch).
         Platform.startup(() -> {
             try {
-
-                // Create the main application window
                 primaryStage = new Stage();
                 primaryStage.setTitle("Mesos Game");
-
-                // Show start screen
                 showStartScreen();
-
             } catch (Exception e) {
-                System.out.println("Error: " + e.getMessage());
+                LOGGER.log(Level.SEVERE, "Failed to start GUI", e);
             }
         });
     }
 
-    // Method to display the start screen, called during initialization
+    // ------------------------------------------------------------------
+    // Scene transitions — all wrapped in Platform.runLater to be safe
+    // from any caller thread.
+    // ------------------------------------------------------------------
+
     public void showStartScreen() {
-        // Run on the JavaFX Application Thread to avoid concurrency issues
         Platform.runLater(() -> {
             try {
-
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/javafx_gui/start_screen.fxml"));
-
-                // Create the controller instance
-                StartScreenController controller = new StartScreenController();
-                // Inject a reference of this GuiView into the controller
-                controller.setGuiView(this);
-                // Set the controller to the loader
-                loader.setController(controller);
-
-                // Load the FXML view
-                Parent root = loader.load();
-                Scene scene = new Scene(root);
-
-                primaryStage.setScene(scene);
+                StartScreenController ctrl = new StartScreenController();
+                ctrl.setGuiView(this);
+                loader.setController(ctrl);
+                primaryStage.setScene(new Scene(loader.load()));
                 primaryStage.show();
-
-            } catch (Exception e) {
-                System.out.println("Error: " + e.getMessage());
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "Failed to load start_screen.fxml", e);
             }
         });
     }
 
-    // Shows lobby method
     public void showLobby() {
         Platform.runLater(() -> {
             try {
-
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/javafx_gui/lobby_screen.fxml"));
-
-                // Create the controller instance
-                LobbyScreenController controller = new LobbyScreenController();
-                // Inject a reference of this GuiView into the controller
-                controller.setGuiView(this);
-                // Set the controller to the loader
-                loader.setController(controller);
-
-                // Load the FXML view
-                Parent root = loader.load();
-                Scene scene = new Scene(root);
-
-                primaryStage.setScene(scene);
-
+                LobbyScreenController ctrl = new LobbyScreenController();
+                ctrl.setGuiView(this);
+                loader.setController(ctrl);
+                primaryStage.setScene(new Scene(loader.load()));
             } catch (IOException e) {
-                System.out.println("Error: " + e.getMessage());
+                LOGGER.log(Level.SEVERE, "Failed to load lobby_screen.fxml", e);
             }
-
         });
     }
 
-    // Shows main screen
     public void showGame() {
         Platform.runLater(() -> {
             try {
-
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/javafx_gui/game_screen.fxml"));
-
-                // Create the controller instance
-                GameScreenController controller = new GameScreenController();
-                // Inject a reference of this GuiView into the controller
-                controller.setGuiView(this);
-                // Set the controller to the loader
-                loader.setController(controller);
-
-                // Load the FXML view
-                Parent root = loader.load();
-                Scene scene = new Scene(root);
-
-                primaryStage.setScene(scene);
-
+                GameScreenController ctrl = new GameScreenController();
+                ctrl.setGuiView(this);
+                loader.setController(ctrl);
+                primaryStage.setScene(new Scene(loader.load()));
             } catch (IOException e) {
-                System.out.println("Error: " + e.getMessage());
+                LOGGER.log(Level.SEVERE, "Failed to load game_screen.fxml", e);
             }
-
         });
     }
 
+    // ------------------------------------------------------------------
+    // Dialogs
+    // ------------------------------------------------------------------
+
     /**
-     * Show an alert dialog on the GUI
-     * @param title title of the dialog
-     * @param content content of the dialog
+     * Shows an error alert. Safe to call from any thread: if not on the FX
+     * application thread, the dialog is scheduled via {@link Platform#runLater}.
      */
     public void showError(String title, String content) {
+        if (Platform.isFxApplicationThread()) {
+            showErrorOnFxThread(title, content);
+        } else {
+            Platform.runLater(() -> showErrorOnFxThread(title, content));
+        }
+    }
+
+    private void showErrorOnFxThread(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
         alert.setHeaderText(null);
@@ -163,17 +151,17 @@ public class GuiView extends View {
         alert.showAndWait();
     }
 
+    // ------------------------------------------------------------------
+    // Queue access — re-exposed protected so that screen controllers in
+    // this same package can consume View.messages.
+    // ------------------------------------------------------------------
+
     /**
      * Waits (blocking) for the next message from the server.
      * Interruptible: returns {@code null} if the thread is interrupted.
      */
+    @Override
     protected NetworkMessage waitForMessage() {
-        try {
-            return messages.take();
-        } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
-            return null;
-        }
+        return super.waitForMessage();
     }
-
 }

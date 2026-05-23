@@ -5,7 +5,6 @@ import it.polimi.ingws.gc8.Network.Connection.RMI.RMIServerConnection;
 import it.polimi.ingws.gc8.Network.Connection.ServerConnection;
 import it.polimi.ingws.gc8.Network.Connection.Socket.SocketServerConnection;
 import it.polimi.ingws.gc8.Network.DTO.LoginResult;
-import it.polimi.ingws.gc8.View.TUI.Printer;
 import javafx.fxml.FXML;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ChoiceDialog;
@@ -79,19 +78,20 @@ public class StartScreenController {
         }
 
         // Initializes connection object
-        switch (selectedType) {
-            case "RMI" -> guiView.connection = new RMIServerConnection();
-            case "Socket" -> guiView.connection = new SocketServerConnection();
+        ServerConnection connection = switch (selectedType) {
+            case "RMI" -> new RMIServerConnection();
+            case "Socket" -> new SocketServerConnection();
             default -> throw new IllegalArgumentException("Unknown transport: " + selectedType);
-        }
+        };
+        guiView.setConnection(connection);
 
         // Initializes controller
-        guiView.controller = new ClientController(guiView.connection, guiView);
+        guiView.setController(new ClientController(connection, guiView));
 
         // Connection to the server
         try {
             try {
-                guiView.connection.connect(address, Integer.parseInt(port));
+                connection.connect(address, Integer.parseInt(port));
             } catch (Exception ce) {
                 guiView.showError(
                         "Errore di connessione",
@@ -100,15 +100,12 @@ public class StartScreenController {
                 return;
             }
 
-            Printer.printSuccess("[Client] Connected to "
-                    + address + ":" + port);
-
             // Start the network pump BEFORE login: it must be active when
             // the server starts pushing lobby callbacks to us.
-            guiView.controller.start();
+            guiView.getController().start();
 
             guiView.setNickname(username);
-            LoginResult login = guiView.connection.login(username);
+            LoginResult login = connection.login(username);
             guiView.setPlayerId(login.playerId());
 
             // If the player is the host asks for number of players
@@ -117,7 +114,7 @@ public class StartScreenController {
                 while (n == -1) {
                     n = askNumberOfPlayers();
                 }
-                guiView.connection.setExpectedPlayers(n);
+                connection.setExpectedPlayers(n);
             }
 
             guiView.showLobby();
