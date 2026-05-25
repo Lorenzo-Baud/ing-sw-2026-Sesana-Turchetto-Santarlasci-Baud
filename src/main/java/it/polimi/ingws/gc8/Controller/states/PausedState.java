@@ -35,11 +35,4 @@ public class PausedState implements GameState {
     public void onExit(GameController context) {
         // No cleanup needed
     }
-
-    /**
-     * @return the phase the game was in before being paused
-     */
-    public GamePhase getPreviousPhase() {
-        return previousPhase;
-    }
 }
