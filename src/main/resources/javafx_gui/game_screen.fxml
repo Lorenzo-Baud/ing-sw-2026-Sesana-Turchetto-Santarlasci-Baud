@@ -148,7 +148,7 @@
                                </VBox.margin>
                            </Label>
 
-                           <AnchorPane maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
+                           <AnchorPane fx:id="leftBarTurnOrderTile1" maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
                                <children>
                                    <Label text="1" textFill="#9e9e96" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="8.0">
                                        <font>
@@ -175,7 +175,7 @@
                                </children>
                            </AnchorPane>
 
-                           <AnchorPane maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
+                           <AnchorPane fx:id="leftBarTurnOrderTile2" maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
                                <children>
                                    <Label text="2" textFill="#9e9e96" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="8.0">
                                        <font>
@@ -191,7 +191,7 @@
                                </children>
                            </AnchorPane>
 
-                           <AnchorPane maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
+                           <AnchorPane fx:id="leftBarTurnOrderTile3" maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
                                <children>
                                    <Label text="3" textFill="#9e9e96" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="8.0">
                                        <font>
@@ -205,7 +205,7 @@
                                    </StackPane>
                                </children>
                            </AnchorPane>
-                        <AnchorPane layoutX="22.0" layoutY="210.0" maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
+                        <AnchorPane fx:id="leftBarTurnOrderTile4" layoutX="22.0" layoutY="210.0" maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
                            <children>
                               <Label text="4" textFill="#9e9e96" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="8.0">
                                  <font>
@@ -219,7 +219,7 @@
                                </StackPane>
                            </children>
                         </AnchorPane>
-                        <AnchorPane layoutX="22.0" layoutY="58.0" maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
+                        <AnchorPane fx:id="leftBarTurnOrderTile5" layoutX="22.0" layoutY="58.0" maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
                            <children>
                               <Label text="5" textFill="#9e9e96" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="8.0">
                                  <font>

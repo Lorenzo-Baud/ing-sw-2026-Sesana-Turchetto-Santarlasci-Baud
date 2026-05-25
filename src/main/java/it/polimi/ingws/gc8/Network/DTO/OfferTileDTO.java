@@ -13,5 +13,6 @@ import java.io.Serializable;
  */
 public record OfferTileDTO(
     OffertileId id,
-    int playerIndexOccupant
+    int playerIndexOccupant,
+    String image
 ) implements Serializable {}

@@ -35,6 +35,11 @@ public class OfferTile {
     private int upperRowPicks;
 
     /**
+     * Image displayed in the front of the card
+     */
+    private String image;
+
+    /**
      * Player currently occupying tile
      */
     private Player occupant;
@@ -45,7 +50,8 @@ public class OfferTile {
             @JsonProperty("minPlayers")    Integer minPlayers,
             @JsonProperty("foodReward")    int foodReward,
             @JsonProperty("lowerRowPicks") int lowerRowPicks,
-            @JsonProperty("upperRowPicks") int upperRowPicks
+            @JsonProperty("upperRowPicks") int upperRowPicks,
+            @JsonProperty("image")         String image
     ) {
         this.id = id;
         this.minPlayers = minPlayers;
@@ -53,6 +59,7 @@ public class OfferTile {
         this.lowerRowPicks = lowerRowPicks;
         this.upperRowPicks = upperRowPicks;
         this.occupant = null;  // Initially empty
+        this.image = image;
     }
 
 
@@ -94,6 +101,14 @@ public class OfferTile {
      */
     public int getUpperRowPicks() {
         return upperRowPicks;
+    }
+
+    /**
+     * Returns image path
+     * @return image path
+     */
+    public String getImage() {
+        return image;
     }
 
     /**

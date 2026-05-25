@@ -1,22 +1,32 @@
 package it.polimi.ingws.gc8.View.GUI;
 
+import it.polimi.ingws.gc8.Controller.actions.PlaceTotemAction;
+import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
+import it.polimi.ingws.gc8.Model.Enum.CardRow;
+import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 import it.polimi.ingws.gc8.Model.Enum.TotemColor;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 import it.polimi.ingws.gc8.Network.DTO.GameDTO;
+import it.polimi.ingws.gc8.Network.DTO.OfferTileDTO;
 import it.polimi.ingws.gc8.Network.Messages.ConnectionUpdateMessage;
 import it.polimi.ingws.gc8.Network.Messages.ErrorMessage;
 import it.polimi.ingws.gc8.Network.Messages.GameOverMessage;
 import it.polimi.ingws.gc8.Network.Messages.ModelUpdateMessage;
 import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
+import it.polimi.ingws.gc8.View.TUI.Printer;
+import it.polimi.ingws.gc8.View.TUI.TuiView;
+import it.polimi.ingws.gc8.View.View;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Circle;
 
+import java.awt.event.MouseEvent;
 import java.io.InputStream;
 import java.util.List;
 import java.util.logging.Logger;
@@ -73,6 +83,13 @@ public class GameScreenController {
     @FXML Circle leftBarTurnOrderCircle5;
     private List<Circle> leftBarTurnOrderCircles;
 
+    @FXML AnchorPane leftBarTurnOrderTile1;
+    @FXML AnchorPane leftBarTurnOrderTile2;
+    @FXML AnchorPane leftBarTurnOrderTile3;
+    @FXML AnchorPane leftBarTurnOrderTile4;
+    @FXML AnchorPane leftBarTurnOrderTile5;
+    private List<AnchorPane> leftBarTurnOrderTiles;
+
     /** Other labels on top bar. */
     @FXML Label topBarP1PrestigeLabel;
     @FXML Label topBarP2PrestigeLabel;
@@ -105,6 +122,7 @@ public class GameScreenController {
         topBarPlayerMarkers = List.of(topBarP1Marker, topBarP2Marker, topBarP3Marker, topBarP4Marker, topBarP5Marker);
         topBarPlayerPrestigeLabels = List.of(topBarP1PrestigeLabel, topBarP2PrestigeLabel, topBarP3PrestigeLabel, topBarP4PrestigeLabel, topBarP5PrestigeLabel);
         leftBarTurnOrderCircles = List.of(leftBarTurnOrderCircle1, leftBarTurnOrderCircle2, leftBarTurnOrderCircle3, leftBarTurnOrderCircle4, leftBarTurnOrderCircle5);
+        leftBarTurnOrderTiles = List.of(leftBarTurnOrderTile1, leftBarTurnOrderTile2, leftBarTurnOrderTile3,  leftBarTurnOrderTile4,  leftBarTurnOrderTile5);
 
         // First render from the existing snapshot (we're already on the FX thread).
         GameDTO snap = guiView.getGameView();
@@ -147,6 +165,13 @@ public class GameScreenController {
         for (int i = 0; i < n; i++) {
             topBarPlayerPrestigeLabels.get(i).setText("P" + (i + 1) + ": 0PP");
         }
+
+        // Turn order track initialization
+        for (int i = guiView.getGameView().numberOfPlayers(); i < 5; i++) {
+            leftBarTurnOrderCircles.get(i).setVisible(false);
+            leftBarTurnOrderTiles.get(i).setVisible(false);
+        }
+
     }
 
     /**
@@ -163,9 +188,12 @@ public class GameScreenController {
         if (myTurn && !previousMyTurn) {
             // Only fire when we transition from "not my turn" to "my turn",
             // not every update.
-            guiView.showError("Il tuo turno!", "È il tuo turno, effettua la tua mossa.");
+            if(guiView.getGameView().phase() == GamePhase.POSITIONING) {
+                guiView.showError("Il tuo turno!", "È il tuo turno, posiziona il tuo segnalino.");
+            }
         }
         previousMyTurn = myTurn;
+
 
         // ---------- TOP BAR ----------
         for (int i = 0; i < n; i++) {
@@ -188,16 +216,22 @@ public class GameScreenController {
         bottomCardsRow.getChildren().clear();
 
         for (int i = 0; i < snap.upperRowCards().size(); i++) {
-            addCardToRow(0, snap.upperRowCards().get(i), i);
+            addCardToRow(CardRow.UPPER, snap.upperRowCards().get(i), i);
+        }
+        for(int i = 0; i < snap.offerTrack().size(); i++) {
+            addCardToOfferTrack(snap.offerTrack().get(i));
         }
         for (int i = 0; i < snap.lowerRowCards().size(); i++) {
-            addCardToRow(2, snap.lowerRowCards().get(i), i);
+            addCardToRow(CardRow.LOWER, snap.lowerRowCards().get(i), i);
         }
 
         // ---------- SIDE BAR ----------
         sideBarPrestigeLabel.setText(String.valueOf(snap.currentPlayer().prestigePoints()));
         sideBarFoodLabel.setText(String.valueOf(snap.currentPlayer().foodPoints()));
     }
+
+    /** Hard cap on how long we wait for the server to acknowledge an action. */
+    private static final long SEND_TIMEOUT_MS = 3000;
 
     /** Convenience overload that reads the current snapshot. */
     private void updateInterface() {
@@ -209,7 +243,7 @@ public class GameScreenController {
         switch (color) {
             case RED -> circle.setStyle("-fx-fill: red;");
             case BLUE -> circle.setStyle("-fx-fill: blue;");
-            case WHITE -> circle.setStyle("-fx-fill: white;");
+            case WHITE -> circle.setStyle("-fx-fill: grey;");
             case YELLOW -> circle.setStyle("-fx-fill: yellow;");
             case BLACK -> circle.setStyle("-fx-fill: black;");
         }
@@ -247,11 +281,12 @@ public class GameScreenController {
     }
 
     /**
-     * Adds a card image to the given row.
-     *  0 = top row, 1 = middle row, 2 = bottom row.
-     * Must be called on the FX thread.
+     * Adds card on specific row
+     * @param row row where to add the card
+     * @param card card to add
+     * @param index index where to add the card
      */
-    private void addCardToRow(int row, CardDTO card, int index) {
+    private void addCardToRow(CardRow row, CardDTO card, int index) {
         try {
             InputStream imageStream = getClass().getResourceAsStream(card.front());
             if (imageStream == null) {
@@ -268,12 +303,60 @@ public class GameScreenController {
             // TODO: build and send a PlayerAction here instead of logging.
 
             switch (row) {
-                case 0 -> topCardsRow.getChildren().add(cardView);
-                case 1 -> middleCardsRow.getChildren().add(cardView);
-                case 2 -> bottomCardsRow.getChildren().add(cardView);
+                case CardRow.UPPER -> topCardsRow.getChildren().add(cardView);
+                case CardRow.LOWER -> bottomCardsRow.getChildren().add(cardView);
             }
+
         } catch (Exception e) {
             guiView.showError("Errore", e.getMessage());
         }
     }
+
+    /**
+     * Adds card to offer track
+     * @param tile card to add
+     */
+    private void addCardToOfferTrack(OfferTileDTO tile) {
+        try {
+            InputStream imageStream = getClass().getResourceAsStream(tile.image());
+            if (imageStream == null) {
+                LOGGER.warning(() -> "Card image not found: " + tile.image());
+                return;
+            }
+            Image cardImage = new Image(imageStream);
+            ImageView cardView = new ImageView(cardImage);
+            cardView.setFitHeight(120.0);
+            cardView.setPreserveRatio(true);
+
+            cardView.setOnMouseClicked(event ->
+                    handleOfferTrackPlacement(tile));
+            // TODO: build and send a PlayerAction here instead of logging.
+
+            middleCardsRow.getChildren().add(cardView);
+
+        } catch (Exception e) {
+            guiView.showError("Errore", e.getMessage());
+        }
+    }
+
+    /**
+     * Handles player totem placement on turn order track
+     */
+    private void handleOfferTrackPlacement(OfferTileDTO tile) {
+        if(guiView.isMyTurn()) {
+            System.out.println("Offer tile clicked! Position: " + tile.id().name());
+
+            // Create the concrete network action payload
+            PlayerAction action = new PlaceTotemAction(guiView.getPlayerId(), tile.id().name());
+
+            // Dispatch the action over the network and await the server response snapshot
+            View.SendResult result = guiView.sendAndAwaitUpdate(action);
+
+            if (result == View.SendResult.ERROR) {
+                System.out.println("Placement rejected by the server rulebook.");
+            }
+
+        }
+    }
+
 }

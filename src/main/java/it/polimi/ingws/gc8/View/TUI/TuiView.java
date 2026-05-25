@@ -804,44 +804,13 @@ public class TuiView extends View {
         }
     }
 
-    /** Outcome of {@link #sendAndAwaitUpdate(Object)}. */
-    enum SendResult {
-        /** Server replied with a fresh {@code gameView} snapshot. */
-        OK,
-        /** Server replied with an {@code ErrorMessage}. */
-        ERROR,
-        /** No reply within the timeout window. */
-        TIMEOUT
-    }
-
     /** Hard cap on how long we wait for the server to acknowledge an action. */
     private static final long SEND_TIMEOUT_MS = 3000;
 
     /**
-     * Sends an action to the server and waits for a new gameView snapshot
-     * (i.e., confirmation that the server has processed it).
-     *
-     * <p>Without this wait, after {@code notifyAllListeners} the main loop
-     * would see the old {@code gameView} (with the turn still belonging to the
-     * local player) and redraw the prompt immediately before the server's response
-     * arrives — typical race condition when sending and then reading shared state
-     * without a barrier.</p>
-     *
-     * <p>Reference identity comparison: the dispatcher replaces
-     * {@code gameView} with a new {@code GameDTO} on each
-     * {@code ModelUpdateMessage}, so {@code gameView != before} signals
-     * that the server has responded.</p>
-     *
-     * <p>The {@code before}/{@code errorBefore} snapshots are taken
-     * <em>after</em> {@code notifyAllListeners} returns: this minimises the
-     * window in which a stale (previous-action) error message could be
-     * mis-attributed to the current send.</p>
-     *
-     * @return {@link SendResult#OK} on snapshot update,
-     *         {@link SendResult#ERROR} on server-side error,
-     *         {@link SendResult#TIMEOUT} if the server does not reply in time.
+     * Implementation of method sendAndAwaitUpdate described in the class-level comment.
      */
-    private SendResult sendAndAwaitUpdate(Object action) {
+    public SendResult sendAndAwaitUpdate(Object action) {
         notifyAllListeners(action);
         // Snapshots taken AFTER notify so that errors from earlier actions
         // (already enqueued before this call) do not look "fresh" to us.

@@ -1,9 +1,9 @@
 [
-  { "id": "A", "minPlayers": 5,    "foodReward": 3, "lowerRowPicks": 0, "upperRowPicks": 0 },
-  { "id": "B", "minPlayers": null, "foodReward": 0, "lowerRowPicks": 1, "upperRowPicks": 0 },
-  { "id": "C", "minPlayers": null, "foodReward": 0, "lowerRowPicks": 0, "upperRowPicks": 1 },
-  { "id": "D", "minPlayers": 3,    "foodReward": 0, "lowerRowPicks": 2, "upperRowPicks": 0 },
-  { "id": "E", "minPlayers": null, "foodReward": 0, "lowerRowPicks": 1, "upperRowPicks": 1 },
-  { "id": "F", "minPlayers": null, "foodReward": 0, "lowerRowPicks": 0, "upperRowPicks": 2 },
-  { "id": "G", "minPlayers": 4,    "foodReward": 0, "lowerRowPicks": 1, "upperRowPicks": 2 }
+  { "id": "A", "minPlayers": 5,    "foodReward": 3, "lowerRowPicks": 0, "upperRowPicks": 0, "image": "/cards/offer_tiles/tile_1.png"},
+  { "id": "B", "minPlayers": null, "foodReward": 0, "lowerRowPicks": 1, "upperRowPicks": 0, "image": "/cards/offer_tiles/tile_2.png"},
+  { "id": "C", "minPlayers": null, "foodReward": 0, "lowerRowPicks": 0, "upperRowPicks": 1, "image": "/cards/offer_tiles/tile_3.png" },
+  { "id": "D", "minPlayers": 3,    "foodReward": 0, "lowerRowPicks": 2, "upperRowPicks": 0, "image": "/cards/offer_tiles/tile_4.png" },
+  { "id": "E", "minPlayers": null, "foodReward": 0, "lowerRowPicks": 1, "upperRowPicks": 1, "image": "/cards/offer_tiles/tile_5.png" },
+  { "id": "F", "minPlayers": null, "foodReward": 0, "lowerRowPicks": 0, "upperRowPicks": 2, "image": "/cards/offer_tiles/tile_6.png" },
+  { "id": "G", "minPlayers": 4,    "foodReward": 0, "lowerRowPicks": 1, "upperRowPicks": 2, "image": "/cards/offer_tiles/tile_7.png" }
 ]

@@ -123,6 +123,6 @@ public final class DtoMapper {
 
     public static OfferTileDTO toDTO(OfferTile tile) {
         int occupantId = tile.getOccupant() != null ? tile.getOccupant().getPlayerId() : -1;
-        return new OfferTileDTO(tile.getId(), occupantId);
+        return new OfferTileDTO(tile.getId(), occupantId, tile.getImage());
     }
 }

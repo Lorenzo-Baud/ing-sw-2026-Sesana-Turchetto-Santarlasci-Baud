@@ -2,7 +2,9 @@ package it.polimi.ingws.gc8.View.GUI;
 
 import it.polimi.ingws.gc8.Client.ClientController;
 import it.polimi.ingws.gc8.Network.Connection.ServerConnection;
+import it.polimi.ingws.gc8.Network.DTO.GameDTO;
 import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
+import it.polimi.ingws.gc8.View.TUI.Printer;
 import it.polimi.ingws.gc8.View.View;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -14,6 +16,8 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static java.lang.Thread.sleep;
 
 /**
  * Owner of the JavaFX primary stage and of the per-session network objects
@@ -164,4 +168,32 @@ public class GuiView extends View {
     protected NetworkMessage waitForMessage() {
         return super.waitForMessage();
     }
+
+
+    /** Hard cap on how long we wait for the server to acknowledge an action. */
+    private static final long SEND_TIMEOUT_MS = 3000;
+
+    /**
+     * Implementation of method sendAndAwaitUpdate described in the class-level comment.
+     */
+    public SendResult sendAndAwaitUpdate(Object action) {
+        notifyAllListeners(action);
+        // Snapshots taken AFTER notify so that errors from earlier actions
+        // (already enqueued before this call) do not look "fresh" to us.
+        GameDTO before = gameView;
+        long deadline = System.currentTimeMillis() + SEND_TIMEOUT_MS;
+        while (System.currentTimeMillis() < deadline) {
+            if (gameView != before) return SendResult.OK;
+            try {
+                sleep(50);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                return SendResult.ERROR;
+            }
+        }
+        showError("Timeout", "The server did not respond within " + (SEND_TIMEOUT_MS / 1000) + " seconds. ");
+        return SendResult.TIMEOUT;
+    }
+
+
 }
