@@ -6,10 +6,7 @@ target/
 
 ### IntelliJ IDEA ###
 .idea/
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
+.idea_backup/
 *.iws
 *.iml
 *.ipr
@@ -42,3 +39,4 @@ AGENT.md
 .DS_Store
 .claude/
 tcp_networking.md
+AGENTS.md
