@@ -18,12 +18,15 @@ import it.polimi.ingws.gc8.View.TUI.TuiView;
 import it.polimi.ingws.gc8.View.View;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Circle;
 
 import java.awt.event.MouseEvent;
@@ -51,6 +54,9 @@ public class GameScreenController {
     /** Tracks whether the previous render saw "my turn", to fire the
      * notification popup only on transition (false → true). */
     private boolean previousMyTurn = false;
+
+    /** Label displaying if it's player's turn */
+    @FXML private Label yourTurnLabel;
 
     /** HBox container for the top row of card image nodes. */
     @FXML private HBox topCardsRow;
@@ -144,6 +150,8 @@ public class GameScreenController {
         if (snap == null) return;
         final int n = snap.numberOfPlayers();
 
+        yourTurnLabel.setVisible(guiView.isMyTurn());
+
         // Hide top bar panes for non-existing players.
         if (n == 2) {
             topBarP3Box.setVisible(false);
@@ -185,13 +193,9 @@ public class GameScreenController {
 
         // ---------- Turn-change notification ----------
         boolean myTurn = guiView.isMyTurn();
-        if (myTurn && !previousMyTurn) {
-            // Only fire when we transition from "not my turn" to "my turn",
-            // not every update.
-            if(guiView.getGameView().phase() == GamePhase.POSITIONING) {
-                guiView.showError("Il tuo turno!", "È il tuo turno, posiziona il tuo segnalino.");
-            }
-        }
+        // Only fire when we transition from "not my turn" to "my turn",
+        // not every update.
+        yourTurnLabel.setVisible(guiView.isMyTurn());
         previousMyTurn = myTurn;
 
 
@@ -205,8 +209,14 @@ public class GameScreenController {
 
         // ---------- LEFT BAR (turn order track) ----------
         for (int i = 0; i < n; i++) {
-            applyTotemFill(leftBarTurnOrderCircles.get(i),
-                    snap.turnOrderTrack().get(i).totemColor());
+            if(snap.turnOrderTrack().get(i) != null) {
+                applyTotemFill(leftBarTurnOrderCircles.get(i),
+                        snap.turnOrderTrack().get(i).totemColor());
+            } else {
+                // Sets the filling color to transparent so the circle becomes completely invisible
+                leftBarTurnOrderCircles.get(i).setStyle("-fx-fill: transparent;");
+            }
+
         }
 
         // ---------- CARDS ROWS ----------
@@ -219,7 +229,19 @@ public class GameScreenController {
             addCardToRow(CardRow.UPPER, snap.upperRowCards().get(i), i);
         }
         for(int i = 0; i < snap.offerTrack().size(); i++) {
-            addCardToOfferTrack(snap.offerTrack().get(i));
+            System.out.println("Tile: " + i + " occupant: "+ snap.offerTrack().get(i).playerIndexOccupant());
+            String circleStyle = "-fx-fill: transparent; -fx-stroke: transparent;";
+            if(snap.offerTrack().get(i).playerIndexOccupant() != -1) {
+                // Determine the CSS styling injection based on the player's totem color
+                switch (snap.players().get(snap.offerTrack().get(i).playerIndexOccupant()-1).totemColor()) {
+                    case RED -> circleStyle = "-fx-fill: red;";
+                    case BLUE -> circleStyle = "-fx-fill: blue;";
+                    case WHITE -> circleStyle = "-fx-fill: #f7f7f7; -fx-stroke: #d0d0d0; -fx-stroke-type: inside; -fx-stroke-width: 1px;";
+                    case YELLOW -> circleStyle = "-fx-fill: yellow;";
+                    case BLACK -> circleStyle = "-fx-fill: black;";
+                }
+            }
+            addCardToOfferTrack(snap.offerTrack().get(i), circleStyle);
         }
         for (int i = 0; i < snap.lowerRowCards().size(); i++) {
             addCardToRow(CardRow.LOWER, snap.lowerRowCards().get(i), i);
@@ -243,7 +265,7 @@ public class GameScreenController {
         switch (color) {
             case RED -> circle.setStyle("-fx-fill: red;");
             case BLUE -> circle.setStyle("-fx-fill: blue;");
-            case WHITE -> circle.setStyle("-fx-fill: grey;");
+            case WHITE -> circle.setStyle("-fx-fill: #f7f7f7; -fx-stroke: #d0d0d0; -fx-stroke-type: inside; -fx-stroke-width: 1px;");
             case YELLOW -> circle.setStyle("-fx-fill: yellow;");
             case BLACK -> circle.setStyle("-fx-fill: black;");
         }
@@ -298,9 +320,7 @@ public class GameScreenController {
             cardView.setFitHeight(120.0);
             cardView.setPreserveRatio(true);
 
-            cardView.setOnMouseClicked(event ->
-                    LOGGER.fine(() -> "Card clicked! Row: " + row + ", Position: " + index));
-            // TODO: build and send a PlayerAction here instead of logging.
+            cardView.setOnMouseClicked(event -> handleCardClick(row, index));
 
             switch (row) {
                 case CardRow.UPPER -> topCardsRow.getChildren().add(cardView);
@@ -315,24 +335,36 @@ public class GameScreenController {
     /**
      * Adds card to offer track
      * @param tile card to add
+     * @param circleStyle CSS style for the token circle, determined by the occupant player's totem color
      */
-    private void addCardToOfferTrack(OfferTileDTO tile) {
+    private void addCardToOfferTrack(OfferTileDTO tile, String circleStyle) {
         try {
             InputStream imageStream = getClass().getResourceAsStream(tile.image());
             if (imageStream == null) {
                 LOGGER.warning(() -> "Card image not found: " + tile.image());
                 return;
             }
+
+            StackPane cardContainer = new StackPane();
+
             Image cardImage = new Image(imageStream);
             ImageView cardView = new ImageView(cardImage);
             cardView.setFitHeight(120.0);
             cardView.setPreserveRatio(true);
 
-            cardView.setOnMouseClicked(event ->
-                    handleOfferTrackPlacement(tile));
-            // TODO: build and send a PlayerAction here instead of logging.
+            Circle tokenCircle = new Circle();
+            tokenCircle.setRadius(8.0);
+            tokenCircle.setStyle(circleStyle);
 
-            middleCardsRow.getChildren().add(cardView);
+            StackPane.setAlignment(tokenCircle, Pos.TOP_CENTER);
+            StackPane.setMargin(tokenCircle, new Insets(30.0, 0.0, 0.0, 0.0));
+
+            cardContainer.getChildren().addAll(cardView, tokenCircle);
+
+            cardContainer.setOnMouseClicked(event ->
+                    handleOfferTrackPlacement(tile));
+
+            middleCardsRow.getChildren().add(cardContainer);
 
         } catch (Exception e) {
             guiView.showError("Errore", e.getMessage());
@@ -344,7 +376,6 @@ public class GameScreenController {
      */
     private void handleOfferTrackPlacement(OfferTileDTO tile) {
         if(guiView.isMyTurn()) {
-            System.out.println("Offer tile clicked! Position: " + tile.id().name());
 
             // Create the concrete network action payload
             PlayerAction action = new PlaceTotemAction(guiView.getPlayerId(), tile.id().name());
@@ -357,6 +388,16 @@ public class GameScreenController {
             }
 
         }
+    }
+
+    /**
+     * Handles clicks on cards in the upper/lower rows. The index is needed to identify the card in the snapshot,
+     * and the row is needed to determine which row of the snapshot to look at.
+     * @param row row of the clicked card
+     * @param index index of the clicked card inside the row
+     */
+    private void handleCardClick(CardRow row, int index) {
+
     }
 
 }

@@ -176,6 +176,7 @@ public class GuiView extends View {
     /**
      * Implementation of method sendAndAwaitUpdate described in the class-level comment.
      */
+    // TODO: add error handling logic
     public SendResult sendAndAwaitUpdate(Object action) {
         notifyAllListeners(action);
         // Snapshots taken AFTER notify so that errors from earlier actions

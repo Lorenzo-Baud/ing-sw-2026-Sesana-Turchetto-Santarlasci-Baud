@@ -130,6 +130,13 @@
                         <Insets left="9.0" />
                      </padding>
                   </Pane>
+                  <Label fx:id="yourTurnLabel" alignment="CENTER_RIGHT" prefHeight="18.0" text="È IL TUO TURNO" textFill="#ff4c4c">
+                     <padding>
+                        <Insets left="100.0" />
+                     </padding>
+                     <font>
+                        <Font name="System Bold" size="12.0" />
+                     </font></Label>
                </items>
             </ToolBar>
             <HBox prefHeight="501.0" prefWidth="800.0">
@@ -253,19 +260,19 @@
                           </padding>
                           <children>
 
-                              <ScrollPane fitToHeight="true" hbarPolicy="ALWAYS" maxWidth="1.7976931348623157E308" style="-fx-background: transparent; -fx-background-color: transparent;" vbarPolicy="NEVER" VBox.vgrow="ALWAYS">
+                              <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" maxWidth="1.7976931348623157E308" prefHeight="146.0" prefWidth="275.0" style="-fx-background: transparent; -fx-background-color: transparent;" vbarPolicy="NEVER" VBox.vgrow="ALWAYS">
                                   <content>
-                                      <HBox fx:id="topCardsRow" alignment="CENTER_LEFT" prefHeight="130.0" spacing="10.0" />
+                                      <HBox fx:id="topCardsRow" alignment="CENTER_LEFT" prefHeight="131.0" prefWidth="458.0" spacing="10.0" />
                                   </content>
                               </ScrollPane>
 
-                              <ScrollPane fitToHeight="true" hbarPolicy="AS_NEEDED" maxWidth="1.7976931348623157E308" style="-fx-background: transparent; -fx-background-color: transparent;" vbarPolicy="NEVER" VBox.vgrow="ALWAYS">
+                              <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="AS_NEEDED" maxWidth="1.7976931348623157E308" style="-fx-background: transparent; -fx-background-color: transparent;" vbarPolicy="NEVER" VBox.vgrow="ALWAYS">
                                   <content>
                                       <HBox fx:id="middleCardsRow" alignment="CENTER_LEFT" prefHeight="130.0" spacing="10.0" />
                                   </content>
                               </ScrollPane>
 
-                              <ScrollPane fitToHeight="true" hbarPolicy="AS_NEEDED" maxWidth="1.7976931348623157E308" style="-fx-background: transparent; -fx-background-color: transparent;" vbarPolicy="NEVER" VBox.vgrow="ALWAYS">
+                              <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="AS_NEEDED" maxWidth="1.7976931348623157E308" style="-fx-background: transparent; -fx-background-color: transparent;" vbarPolicy="NEVER" VBox.vgrow="ALWAYS">
                                   <content>
                                       <HBox fx:id="bottomCardsRow" alignment="CENTER_LEFT" prefHeight="130.0" spacing="10.0" />
                                   </content>
