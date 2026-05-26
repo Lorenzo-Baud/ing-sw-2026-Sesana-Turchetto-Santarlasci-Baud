@@ -229,7 +229,6 @@ public class GameScreenController {
             addCardToRow(CardRow.UPPER, snap.upperRowCards().get(i), i);
         }
         for(int i = 0; i < snap.offerTrack().size(); i++) {
-            System.out.println("Tile: " + i + " occupant: "+ snap.offerTrack().get(i).playerIndexOccupant());
             String circleStyle = "-fx-fill: transparent; -fx-stroke: transparent;";
             if(snap.offerTrack().get(i).playerIndexOccupant() != -1) {
                 // Determine the CSS styling injection based on the player's totem color
