@@ -424,42 +424,7 @@ public class TuiView extends View {
         return null;
     }
 
-    // Offer tile rules (cfr. offer_tiles.json):
-    //   A → food+3 (no picks)
-    //   B → 1 lower           D → 2 lower
-    //   C → 1 upper           F → 2 upper
-    //   E → 1 lower + 1 upper G → 1 lower + 2 upper
-    private static boolean allowsUpperPick(OffertileId id) {
-        return id == OffertileId.C || id == OffertileId.E
-                || id == OffertileId.F || id == OffertileId.G;
-    }
-    private static boolean allowsLowerPick(OffertileId id) {
-        return id == OffertileId.B || id == OffertileId.D
-                || id == OffertileId.E || id == OffertileId.G;
-    }
-    private static boolean allowsFood(OffertileId id) {
-        return id == OffertileId.A;
-    }
 
-    private static int maxUpperPicks(OffertileId id) {
-        return switch (id) {
-            case C -> 1;
-            case E -> 1;
-            case F -> 2;
-            case G -> 2;
-            default -> 0;
-        };
-    }
-
-    private static int maxLowerPicks(OffertileId id) {
-        return switch (id) {
-            case B -> 1;
-            case D -> 2;
-            case E -> 1;
-            case G -> 1;
-            default -> 0;
-        };
-    }
 
     /**
      * Sub-menu: choose a card from one of two rows. Returns {@code true}

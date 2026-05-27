@@ -1,6 +1,7 @@
 package it.polimi.ingws.gc8.View;
 
 import it.polimi.ingws.gc8.Client.ViewListener;
+import it.polimi.ingws.gc8.Model.Board.OffertileId;
 import it.polimi.ingws.gc8.Network.DTO.GameDTO;
 import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
 
@@ -156,6 +157,43 @@ public abstract class View {
         GameDTO g = gameView;
         if (g == null || g.currentPlayer() == null || getNickname() == null) return false;
         return getNickname().equals(g.currentPlayer().nickname());
+    }
+
+    public static int maxUpperPicks(OffertileId id) {
+        return switch (id) {
+            case C -> 1;
+            case E -> 1;
+            case F -> 2;
+            case G -> 2;
+            default -> 0;
+        };
+    }
+
+    public static int maxLowerPicks(OffertileId id) {
+        return switch (id) {
+            case B -> 1;
+            case D -> 2;
+            case E -> 1;
+            case G -> 1;
+            default -> 0;
+        };
+    }
+
+    // Offer tile rules (cfr. offer_tiles.json):
+    //   A → food+3 (no picks)
+    //   B → 1 lower           D → 2 lower
+    //   C → 1 upper           F → 2 upper
+    //   E → 1 lower + 1 upper G → 1 lower + 2 upper
+    private static boolean allowsUpperPick(OffertileId id) {
+        return id == OffertileId.C || id == OffertileId.E
+                || id == OffertileId.F || id == OffertileId.G;
+    }
+    private static boolean allowsLowerPick(OffertileId id) {
+        return id == OffertileId.B || id == OffertileId.D
+                || id == OffertileId.E || id == OffertileId.G;
+    }
+    public static boolean allowsFood(OffertileId id) {
+        return id == OffertileId.A;
     }
 
 }

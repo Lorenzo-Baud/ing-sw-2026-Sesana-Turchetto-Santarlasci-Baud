@@ -2,7 +2,10 @@ package it.polimi.ingws.gc8.View.GUI;
 
 import it.polimi.ingws.gc8.Controller.actions.PlaceTotemAction;
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
+import it.polimi.ingws.gc8.Controller.actions.ReturnTotemAction;
+import it.polimi.ingws.gc8.Controller.actions.TakeCardAction;
 import it.polimi.ingws.gc8.Model.Enum.CardRow;
+import it.polimi.ingws.gc8.Model.Enum.CardType;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 import it.polimi.ingws.gc8.Model.Enum.TotemColor;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
@@ -34,6 +37,8 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.logging.Logger;
 
+import static java.util.Locale.filter;
+
 /**
  * JavaFX controller for the main game screen.
  *
@@ -47,6 +52,11 @@ import java.util.logging.Logger;
 public class GameScreenController {
 
     private static final Logger LOGGER = Logger.getLogger(GameScreenController.class.getName());
+
+    /** Variables to track how many cards have been taken from each row during the current turn, to enforce quotas. */
+    int turnUpperTaken = 0;
+    int turnLowerTaken = 0;
+    boolean turnFoodTaken = false;
 
     /** Reference to the owning GuiView, injected before {@code load()}. */
     private GuiView guiView;
@@ -397,6 +407,119 @@ public class GameScreenController {
      */
     private void handleCardClick(CardRow row, int index) {
 
+        GameDTO g = guiView.getGameView();
+
+        // Ensure that is currently my turn
+        if (!guiView.isMyTurn()) {
+            return;
+        }
+
+        // Identify the specific row dataset based on the enum parameter
+        List<CardDTO> targetRowCards = (row == CardRow.UPPER) ? g.upperRowCards() : g.lowerRowCards();
+        if (targetRowCards == null || index < 0 || index >= targetRowCards.size()) {
+            guiView.showError("Errore", "Impossibile trovare la carta.");
+            return;
+        }
+
+        // Extract the target card snapshot from the row
+        CardDTO chosenCard = targetRowCards.get(index);
+
+        // Rule Validation: Event cards can never be drafted into the player's tribe
+        if (chosenCard != null && chosenCard.type() == CardType.EVENT) {
+            guiView.showError("Azione non valida", "Non puoi prendere una carta Evento.");
+            return;
+        }
+
+        // Quota Validation: Fetch the player's offer tile configuration to check quotas
+        OfferTileDTO myTile = guiView.getGameView().offerTrack().stream()
+                .filter(tile -> tile.playerIndexOccupant() == guiView.getPlayerId())
+                .findFirst()
+                .orElse(null);
+        if (myTile == null) {
+            guiView.showError("Errore", "Impossibile recuperare la tua posizione attuale sulla pista delle offerte.");
+            return;
+        }
+
+        // Enforce quota limitations based on current in-flight turn counters
+        if (row == CardRow.UPPER) {
+            int maxUpper = View.maxUpperPicks(myTile.id());
+            if (turnUpperTaken >= maxUpper) {
+                guiView.showError("Errore", "Hai già esaurito la tua quota di pescate dalla fila superiore (" + turnUpperTaken + "/" + maxUpper + ").");
+                return;
+            }
+        } else {
+            int maxLower = View.maxLowerPicks(myTile.id());
+            if (turnLowerTaken >= maxLower) {
+                guiView.showError("Errore", "Hai già esaurito la tua quota di pescate dalla fila inferiore (" + turnLowerTaken + "/" + maxLower + ").");
+                return;
+            }
+        }
+
+        if (guiView.getPlayerId() < 0) {
+            guiView.showError("Errore", "Id player inconsistente.");
+            return;
+        }
+
+        // Fire the action payload over the network pump and track the response status
+        View.SendResult result = guiView.sendAndAwaitUpdate(new TakeCardAction(guiView.getPlayerId(), index, row));
+
+        if (result == View.SendResult.OK) {
+            // Internally update local resolution counters upon successful server verification
+            if (row == CardRow.UPPER) {
+                turnUpperTaken++;
+            } else {
+                turnLowerTaken++;
+            }
+            System.out.println("GUI: Card draw applied successfully. Upper: " + turnUpperTaken + ", Lower: " + turnLowerTaken);
+        } else {
+            guiView.showError("Errore", "Impossibile pescare la carta");
+        }
+
+        int maxUpper = View.maxUpperPicks(myTile.id());
+        int maxLower = View.maxLowerPicks(myTile.id());
+        boolean canFood = View.allowsFood(myTile.id());
+
+        // Automatically return the totem when all possible action quotas are completely exhausted
+        if (turnUpperTaken == maxUpper && turnLowerTaken == maxLower){ // && (!canFood || turnFoodTaken)) {
+            System.out.println("GUI: All picks completed. Triggering automatic totem return.");
+            endTurnAndReturnTotem();
+        }
+
+    }
+
+
+    /**
+     * Checks if all actions are completed or can be invoked manually
+     * to return the totem and finalize the player's turn.
+     */
+    private void endTurnAndReturnTotem() {
+
+        GameDTO g = guiView.getGameView();
+
+        if (g == null) {
+            guiView.showError("Errore", "Stato inconsistente.");
+            return;
+        }
+
+        OfferTileDTO myTile = g.offerTrack().stream()
+                .filter(tile -> tile.playerIndexOccupant() == guiView.getPlayerId())
+                .findFirst()
+                .orElse(null);
+        if (myTile == null) {
+            guiView.showError("Errore", "Impossibile recuperare la tua posizione attuale sulla pista delle offerte.");
+            return;
+        }
+
+        // Fire the ReturnTotemAction over the network pump
+        View.SendResult result = guiView.sendAndAwaitUpdate(new ReturnTotemAction(guiView.getPlayerId()));
+
+        if (result ==View. SendResult.OK) {
+            turnUpperTaken = 0;
+            turnLowerTaken = 0;
+            turnFoodTaken = false;
+        } else {
+            guiView.showError("Errore", "Impossibile restituire il totem.");
+        }
     }
 
 }
