@@ -4,10 +4,7 @@ import it.polimi.ingws.gc8.Controller.actions.PlaceTotemAction;
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Controller.actions.ReturnTotemAction;
 import it.polimi.ingws.gc8.Controller.actions.TakeCardAction;
-import it.polimi.ingws.gc8.Model.Enum.CardRow;
-import it.polimi.ingws.gc8.Model.Enum.CardType;
-import it.polimi.ingws.gc8.Model.Enum.GamePhase;
-import it.polimi.ingws.gc8.Model.Enum.TotemColor;
+import it.polimi.ingws.gc8.Model.Enum.*;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 import it.polimi.ingws.gc8.Network.DTO.GameDTO;
 import it.polimi.ingws.gc8.Network.DTO.OfferTileDTO;
@@ -23,14 +20,15 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.scene.shape.Circle;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 import java.awt.event.MouseEvent;
 import java.io.InputStream;
@@ -119,6 +117,15 @@ public class GameScreenController {
 
     @FXML Label sideBarFoodLabel;
     @FXML Label sideBarPrestigeLabel;
+
+    /** Right bar labels */
+    @FXML Label artistNumberLabel;
+    @FXML Label shamanNumberLabel;
+    @FXML Label constructorNumberLabel;
+    @FXML Label hunterNumberLabel;
+    @FXML Label collectorNumberLabel;
+    @FXML Label inventorNumberLabel;
+    @FXML Label buildingNumberLabel;
 
     /** Injects the owning {@link GuiView} instance. */
     public void setGuiView(GuiView guiView) {
@@ -229,6 +236,29 @@ public class GameScreenController {
 
         }
 
+        // ---------- RIGHT BAR ----------
+        artistNumberLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).tribe().stream()
+            .filter(c -> c.type() == CardType.CHARACTER && c.characterType() == CharacterType.ARTIST)
+            .count()));
+        shamanNumberLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).tribe().stream()
+            .filter(c -> c.type() == CardType.CHARACTER && c.characterType() == CharacterType.SHAMAN)
+            .count()));
+        constructorNumberLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).tribe().stream()
+            .filter(c -> c.type() == CardType.CHARACTER && c.characterType() == CharacterType.BUILDER)
+            .count()));
+        hunterNumberLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).tribe().stream()
+            .filter(c -> c.type() == CardType.CHARACTER && c.characterType() == CharacterType.HUNTER)
+            .count()));
+        collectorNumberLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).tribe().stream()
+            .filter(c -> c.type() == CardType.CHARACTER && c.characterType() == CharacterType.COLLECTOR)
+            .count()));
+        inventorNumberLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).tribe().stream()
+            .filter(c -> c.type() == CardType.CHARACTER && c.characterType() == CharacterType.INVENTOR)
+            .count()));
+        buildingNumberLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).tribe().stream()
+            .filter(c -> c.type() == CardType.BUILDING)
+            .count()));
+
         // ---------- CARDS ROWS ----------
         // Clear and rebuild: avoids appending duplicates at every update.
         topCardsRow.getChildren().clear();
@@ -257,8 +287,8 @@ public class GameScreenController {
         }
 
         // ---------- SIDE BAR ----------
-        sideBarPrestigeLabel.setText(String.valueOf(snap.currentPlayer().prestigePoints()));
-        sideBarFoodLabel.setText(String.valueOf(snap.currentPlayer().foodPoints()));
+        sideBarPrestigeLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).prestigePoints()));
+        sideBarFoodLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).foodPoints()));
     }
 
     /** Hard cap on how long we wait for the server to acknowledge an action. */
@@ -520,6 +550,60 @@ public class GameScreenController {
         } else {
             guiView.showError("Errore", "Impossibile restituire il totem.");
         }
+    }
+
+    @FXML
+    private void handleShowTribePopupDirectly() {
+
+        // Creates new container
+        FlowPane tribeCardsContainer = new FlowPane();
+        tribeCardsContainer.setHgap(12.0);
+        tribeCardsContainer.setVgap(12.0);
+        tribeCardsContainer.setPadding(new Insets(15.0));
+        tribeCardsContainer.setPrefWrapLength(520.0);
+
+        tribeCardsContainer.setStyle("-fx-background-color: #34495e;");
+
+        // Populate the container with the player's current tribe card list
+        for (CardDTO card : guiView.getGameView().players().get(guiView.getPlayerId()-1).tribe()) {
+
+            InputStream imageStream = getClass().getResourceAsStream(card.front());
+
+            if (imageStream != null) {
+                StackPane cardHolder = new StackPane();
+
+                Image cardImage = new Image(imageStream);
+                ImageView cardView = new ImageView(cardImage);
+                cardView.setFitHeight(140.0);
+                cardView.setPreserveRatio(true);
+                cardView.setSmooth(true);
+
+                cardHolder.getChildren().add(cardView);
+                tribeCardsContainer.getChildren().add(cardHolder);
+            }
+        }
+
+        // Wrap the FlowPane inside a ScrollPane to support infinite cards vertical scrolling
+        ScrollPane scrollPane = new ScrollPane(tribeCardsContainer);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setPrefSize(550.0, 400.0);
+        scrollPane.setStyle("-fx-background: #34495e; -fx-background-color: #34495e; -fx-padding: 0; -fx-background-insets: 0;");
+
+        // Setup the secondary Stage object structure acting as a modal window
+        Stage popupStage = new Stage();
+        popupStage.setTitle("La mia tribu");
+
+        // Enforce modal layer over the primary game screen layout
+        popupStage.initModality(Modality.APPLICATION_MODAL);
+        popupStage.initOwner(middleCardsRow.getScene().getWindow());
+
+        // Set the scene and display the dynamic frame to the client user
+        Scene scene = new Scene(scrollPane);
+        popupStage.setScene(scene);
+        popupStage.setResizable(false);
+        popupStage.showAndWait();
     }
 
 }

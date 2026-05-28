@@ -338,105 +338,57 @@
 
                            <HBox alignment="CENTER_LEFT" prefWidth="100.0">
                                <children>
-                                   <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Cacciatori" textFill="#5c5c54" />
-                                   <Region HBox.hgrow="ALWAYS" />
-                                   <Label style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="2" textFill="#9e9e96" />
-                               </children>
-                           </HBox>
-                           <HBox spacing="6.0">
-                               <children>
-                                   <AnchorPane maxHeight="45.0" maxWidth="32.0" minHeight="45.0" minWidth="32.0" prefHeight="45.0" prefWidth="32.0" style="-fx-background-color: #ffffff; -fx-background-radius: 8px; -fx-border-color: #e6e6e2; -fx-border-radius: 8px;">
-                                       <children>
-                                           <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                               <children>
-                                                   <Circle fill="#d35400" radius="6.0" stroke="TRANSPARENT" />
-                                               </children>
-                                           </StackPane>
-                                       </children>
-                                   </AnchorPane>
-                                   <AnchorPane maxHeight="45.0" maxWidth="32.0" minHeight="45.0" minWidth="32.0" prefHeight="45.0" prefWidth="32.0" style="-fx-background-color: #ffffff; -fx-background-radius: 8px; -fx-border-color: #e6e6e2; -fx-border-radius: 8px;">
-                                       <children>
-                                           <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                               <children>
-                                                   <Circle fill="#d35400" radius="6.0" stroke="TRANSPARENT" />
-                                               </children>
-                                           </StackPane>
-                                       </children>
-                                   </AnchorPane>
-                               </children>
-                               <VBox.margin>
-                                   <Insets bottom="6.0" />
-                               </VBox.margin>
-                           </HBox>
-
-                           <HBox alignment="CENTER_LEFT" prefWidth="100.0">
-                               <children>
                                    <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Artisti" textFill="#5c5c54" />
                                    <Region HBox.hgrow="ALWAYS" />
-                                   <Label style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="1" textFill="#9e9e96" />
+                                   <Label fx:id="artistNumberLabel" style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="2" textFill="#9e9e96" />
                                </children>
-                           </HBox>
-                           <HBox spacing="6.0">
-                               <children>
-                                   <AnchorPane maxHeight="45.0" maxWidth="32.0" minHeight="45.0" minWidth="32.0" prefHeight="45.0" prefWidth="32.0" style="-fx-background-color: #ffffff; -fx-background-radius: 8px; -fx-border-color: #e6e6e2; -fx-border-radius: 8px;">
-                                       <children>
-                                           <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                               <children>
-                                                   <Circle fill="#8e44ad" radius="6.0" stroke="TRANSPARENT" />
-                                               </children>
-                                           </StackPane>
-                                       </children>
-                                   </AnchorPane>
-                               </children>
-                               <VBox.margin>
-                                   <Insets bottom="6.0" />
-                               </VBox.margin>
                            </HBox>
 
                            <HBox alignment="CENTER_LEFT" prefWidth="100.0">
                                <children>
                                    <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Costruttori" textFill="#5c5c54" />
                                    <Region HBox.hgrow="ALWAYS" />
-                                   <Label style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="1" textFill="#9e9e96" />
+                                   <Label fx:id="constructorNumberLabel" style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="1" textFill="#9e9e96" />
                                </children>
-                           </HBox>
-                           <HBox spacing="6.0">
-                               <children>
-                                   <AnchorPane maxHeight="45.0" maxWidth="32.0" minHeight="45.0" minWidth="32.0" prefHeight="45.0" prefWidth="32.0" style="-fx-background-color: #ffffff; -fx-background-radius: 8px; -fx-border-color: #e6e6e2; -fx-border-radius: 8px;">
-                                       <children>
-                                           <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                               <children>
-                                                   <Circle fill="#27ae60" radius="6.0" stroke="TRANSPARENT" />
-                                               </children>
-                                           </StackPane>
-                                       </children>
-                                   </AnchorPane>
-                               </children>
-                               <VBox.margin>
-                                   <Insets bottom="6.0" />
-                               </VBox.margin>
                            </HBox>
 
                            <HBox alignment="CENTER_LEFT" prefWidth="100.0">
                                <children>
-                                   <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Edifici" textFill="#5c5c54" />
+                                   <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Sciamani" textFill="#5c5c54" />
                                    <Region HBox.hgrow="ALWAYS" />
-                                   <Label style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="1" textFill="#9e9e96" />
+                                   <Label fx:id="shamanNumberLabel" style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="1" textFill="#9e9e96" />
                                </children>
                            </HBox>
-                           <HBox spacing="6.0">
+
+                           <HBox alignment="CENTER_LEFT" prefWidth="100.0">
                                <children>
-                                   <AnchorPane maxHeight="45.0" maxWidth="32.0" minHeight="45.0" minWidth="32.0" prefHeight="45.0" prefWidth="32.0" style="-fx-background-color: #ffffff; -fx-background-radius: 8px; -fx-border-color: #e6e6e2; -fx-border-radius: 8px;">
-                                       <children>
-                                           <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                               <children>
-                                                   <Circle fill="#718d4e" radius="6.0" stroke="TRANSPARENT" />
-                                               </children>
-                                           </StackPane>
-                                       </children>
-                                   </AnchorPane>
+                                   <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Cacciatori" textFill="#5c5c54" />
+                                   <Region HBox.hgrow="ALWAYS" />
+                                   <Label fx:id="hunterNumberLabel" style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="1" textFill="#9e9e96" />
                                </children>
                            </HBox>
+                        <HBox alignment="CENTER_LEFT" layoutX="22.0" layoutY="238.0" prefWidth="100.0">
+                           <children>
+                              <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Raccoglitori" textFill="#5c5c54" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Label fx:id="collectorNumberLabel" style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="1" textFill="#9e9e96" />
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" layoutX="22.0" layoutY="272.0" prefWidth="100.0">
+                           <children>
+                              <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Inventori" textFill="#5c5c54" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Label fx:id="inventorNumberLabel" style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="1" textFill="#9e9e96" />
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" layoutX="22.0" layoutY="305.0" prefWidth="100.0">
+                           <children>
+                              <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Edifici" textFill="#5c5c54" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Label fx:id="buildingNumberLabel" style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="1" textFill="#9e9e96" />
+                           </children>
+                        </HBox>
+                        <Button mnemonicParsing="false" onAction="#handleShowTribePopupDirectly" text="Visualizza tribu" />
                        </children>
                    </VBox>
                </children></HBox>
