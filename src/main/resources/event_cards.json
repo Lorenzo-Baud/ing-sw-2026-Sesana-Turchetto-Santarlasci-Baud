@@ -1,18 +1,18 @@
 [
 
-  {"front": "", "back": "", "isFinal": false, "era":  1, "type": "sustenance", "prestigeMalus": 1},
-  {"front": "", "back": "", "isFinal": false, "era":  1, "type": "hunt", "prestigeBonus": 1},
-  {"front": "", "back": "", "isFinal": false, "era":  1, "type": "cavePaintings", "malusArtists": 0, "bonusArtists": 1, "bonusPoints": 1, "malusPoints": 2},
-  {"front": "", "back": "", "isFinal": false, "era":  1, "type": "ritual", "prestigeBonus": 5, "prestigeMalus": 3},
+  {"front": "/cards/event_cards/card_086_hd.png", "back": "", "isFinal": false, "era":  1, "type": "sustenance", "prestigeMalus": 1},
+  {"front": "/cards/event_cards/card_085_hd.png", "back": "", "isFinal": false, "era":  1, "type": "hunt", "prestigeBonus": 1},
+  {"front": "/cards/event_cards/card_088_hd.png", "back": "", "isFinal": false, "era":  1, "type": "cavePaintings", "malusArtists": 0, "bonusArtists": 1, "bonusPoints": 1, "malusPoints": 2},
+  {"front": "/cards/event_cards/card_087_hd.png", "back": "", "isFinal": false, "era":  1, "type": "ritual", "prestigeBonus": 5, "prestigeMalus": 3},
 
-  {"front": "", "back": "", "isFinal": false, "era":  2, "type": "sustenance", "prestigeMalus": 2},
-  {"front": "", "back": "", "isFinal": false, "era":  2, "type": "hunt", "prestigeBonus": 2},
-  {"front": "", "back": "", "isFinal": false, "era":  2, "type": "cavePaintings", "malusArtists": 1, "bonusArtists": 2, "bonusPoints": 2, "malusPoints": 2},
-  {"front": "", "back": "", "isFinal": false, "era":  2, "type": "ritual", "prestigeBonus": 10, "prestigeMalus": 5},
+  {"front": "/cards/event_cards/card_090_hd.png", "back": "", "isFinal": false, "era":  2, "type": "sustenance", "prestigeMalus": 2},
+  {"front": "/cards/event_cards/card_089_hd.png", "back": "", "isFinal": false, "era":  2, "type": "hunt", "prestigeBonus": 2},
+  {"front": "/cards/event_cards/card_092_hd.png", "back": "", "isFinal": false, "era":  2, "type": "cavePaintings", "malusArtists": 1, "bonusArtists": 2, "bonusPoints": 2, "malusPoints": 2},
+  {"front": "/cards/event_cards/card_091_hd.png", "back": "", "isFinal": false, "era":  2, "type": "ritual", "prestigeBonus": 10, "prestigeMalus": 5},
 
-  {"front": "", "back": "", "isFinal": true, "era": 3, "type": "sustenance", "prestigeMalus": 3},
-  {"front": "", "back": "", "isFinal": false, "era": 3, "type": "hunt", "prestigeBonus": 3},
-  {"front": "", "back": "", "isFinal": false, "era": 3, "type": "cavePaintings", "malusArtists": 2, "bonusArtists": 3, "bonusPoints": 3, "malusPoints": 2},
-  {"front": "", "back": "", "isFinal": true, "era": 3, "type": "ritual", "prestigeBonus": 15, "prestigeMalus": 7}
+  {"front": "/cards/event_cards/card_095_hd.png", "back": "", "isFinal": true, "era": 3, "type": "sustenance", "prestigeMalus": 3},
+  {"front": "/cards/event_cards/card_093_hd.png", "back": "", "isFinal": false, "era": 3, "type": "hunt", "prestigeBonus": 3},
+  {"front": "/cards/event_cards/card_094_hd.png", "back": "", "isFinal": false, "era": 3, "type": "cavePaintings", "malusArtists": 2, "bonusArtists": 3, "bonusPoints": 3, "malusPoints": 2},
+  {"front": "/cards/event_cards/card_096_hd.png", "back": "", "isFinal": true, "era": 3, "type": "ritual", "prestigeBonus": 15, "prestigeMalus": 7}
 
 ]

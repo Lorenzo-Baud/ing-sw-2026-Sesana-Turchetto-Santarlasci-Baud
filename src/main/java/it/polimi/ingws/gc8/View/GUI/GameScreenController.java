@@ -510,10 +510,14 @@ public class GameScreenController {
         boolean canFood = View.allowsFood(myTile.id());
 
         // Automatically return the totem when all possible action quotas are completely exhausted
-        if (turnUpperTaken == maxUpper && turnLowerTaken == maxLower){ // && (!canFood || turnFoodTaken)) {
+        if (((turnLowerTaken <= maxLower && guiView.getGameView().lowerRowCards().isEmpty()) && turnUpperTaken == maxUpper) ||
+            ((turnUpperTaken <= maxUpper && guiView.getGameView().upperRowCards().isEmpty()) && turnLowerTaken == maxLower) ||
+            (guiView.getGameView().upperRowCards().isEmpty() && guiView.getGameView().lowerRowCards().isEmpty()) ||
+            (turnUpperTaken == maxUpper && turnLowerTaken == maxLower) ) { // && (!canFood || turnFoodTaken)) {
             System.out.println("GUI: All picks completed. Triggering automatic totem return.");
             endTurnAndReturnTotem();
         }
+
 
     }
 
