@@ -5,7 +5,6 @@ import it.polimi.ingws.gc8.Model.GameModel;
 import it.polimi.ingws.gc8.Model.Player;
 import it.polimi.ingws.gc8.Model.Board.OfferTile;
 import it.polimi.ingws.gc8.Model.Cards.Card;
-import it.polimi.ingws.gc8.Model.Enum.CardRow;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
@@ -123,13 +122,18 @@ public class ViewUpdater {
             playersDTOList.add(DtoMapper.toDTO(p));
         }
 
+        // Le righe vanno inviate COMPLETE (character + event + building): la
+        // view deve mostrare anche le carte Evento, che non sono pescabili ma
+        // restano visibili sulla board. getAvailableCardsFromRow() filtra via
+        // gli Event ed è pensato per la validazione della pesca, non per la
+        // visualizzazione: usarlo qui nasconderebbe gli eventi alla UI.
         List<CardDTO> upperRowDTO = new ArrayList<>();
-        for (Card c : model.getAvailableCardsFromRow(CardRow.UPPER)) {
+        for (Card c : model.getBoard().getUpperRow()) {
             upperRowDTO.add(DtoMapper.toDTO(c));
         }
 
         List<CardDTO> lowerRowDTO = new ArrayList<>();
-        for (Card c : model.getAvailableCardsFromRow(CardRow.LOWER)) {
+        for (Card c : model.getBoard().getLowerRow()) {
             lowerRowDTO.add(DtoMapper.toDTO(c));
         }
 
