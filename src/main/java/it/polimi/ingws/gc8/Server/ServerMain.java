@@ -1,6 +1,6 @@
 package it.polimi.ingws.gc8.Server;
 
-import it.polimi.ingws.gc8.Controller.MainController;
+import it.polimi.ingws.gc8.Controller.MatchRegistry;
 import it.polimi.ingws.gc8.Network.Connection.RMI.RMIServer;
 import it.polimi.ingws.gc8.Network.Connection.RMI.RMIServerConnection;
 import it.polimi.ingws.gc8.Network.Connection.Socket.SocketServer;
@@ -38,8 +38,8 @@ public class ServerMain {
         System.setProperty("java.rmi.server.hostname", hostname);
 
         try {
-            MainController mainController = new MainController();
-            RMIServer rmiServer = new RMIServer(mainController);
+            MatchRegistry matchRegistry = new MatchRegistry();
+            RMIServer rmiServer = new RMIServer(matchRegistry);
 
             Registry registry = LocateRegistry.createRegistry(port);
             registry.rebind(RMIServerConnection.SERVICE_NAME, rmiServer);
@@ -48,7 +48,7 @@ public class ServerMain {
                     + " (service=" + RMIServerConnection.SERVICE_NAME + ")");
 
             int socketPort = DEFAULT_SOCKET_PORT;
-            SocketServer socketServer = new SocketServer(socketPort, mainController);
+            SocketServer socketServer = new SocketServer(socketPort, matchRegistry);
             // Accept loop is NOT a daemon: it is the heartbeat of the TCP transport
             // and keeps the JVM alive. Per-client handlers spawned inside are daemon.
             Thread socketThread = new Thread(socketServer, "tcp-accept-loop");

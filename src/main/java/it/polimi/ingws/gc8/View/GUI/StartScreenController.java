@@ -4,11 +4,13 @@ import it.polimi.ingws.gc8.Client.ClientController;
 import it.polimi.ingws.gc8.Network.Connection.RMI.RMIServerConnection;
 import it.polimi.ingws.gc8.Network.Connection.ServerConnection;
 import it.polimi.ingws.gc8.Network.Connection.Socket.SocketServerConnection;
-import it.polimi.ingws.gc8.Network.DTO.LoginResult;
+import it.polimi.ingws.gc8.Network.DTO.JoinResult;
+import it.polimi.ingws.gc8.Network.DTO.MatchInfo;
 import javafx.fxml.FXML;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 
 import java.util.Arrays;
 import java.util.List;
@@ -56,10 +58,6 @@ public class StartScreenController {
 
     }
 
-    /**
-        * This method will be called when the "Start Game" button is clicked in the FXML
-        * It sets up the connection and the controller, then tries to connect to the server and start the game
-    */
     @FXML
     private void handleStartGame() {
 
@@ -68,48 +66,40 @@ public class StartScreenController {
         String selectedType = connectionTypeChoice.getValue();
         String username = usernameField.getText();
 
-        // Username validation
-        if(username == null || username.isEmpty() || username.length() > 12) {
+        if (username == null || username.isEmpty() || username.length() > 12) {
             guiView.showError(
                     "Username non valido",
-                    "Errore: il nome utente deve essere compreso tra 1 e 12 caratteri."
-            );
+                    "Errore: il nome utente deve essere compreso tra 1 e 12 caratteri.");
             return;
         }
 
-        // Initializes connection object
         ServerConnection connection = switch (selectedType) {
             case "RMI" -> new RMIServerConnection();
             case "Socket" -> new SocketServerConnection();
             default -> throw new IllegalArgumentException("Unknown transport: " + selectedType);
         };
         guiView.setConnection(connection);
-
-        // Initializes controller
         guiView.setController(new ClientController(connection, guiView));
 
-        // Connection to the server
         try {
             try {
                 connection.connect(address, Integer.parseInt(port));
             } catch (Exception ce) {
                 guiView.showError(
                         "Errore di connessione",
-                        "Errore: impossibile connettersi al server.\n" +
-                                "Assicurarsi di aver inserito indirizzo e porta corretti");
+                        "Impossibile connettersi al server.\nVerificare indirizzo e porta.");
                 return;
             }
 
-            // Start the network pump BEFORE login: it must be active when
-            // the server starts pushing lobby callbacks to us.
             guiView.getController().start();
-
             guiView.setNickname(username);
-            LoginResult login = connection.login(username);
-            guiView.setPlayerId(login.playerId());
 
-            // If the player is the host asks for number of players
-            if (login.isFirst()) {
+            JoinResult joinResult = handleMatchSelection(connection, username);
+            if (joinResult == null) return;
+
+            guiView.setPlayerId(joinResult.playerId());
+
+            if (joinResult.isHost()) {
                 int n = -1;
                 while (n == -1) {
                     n = askNumberOfPlayers();
@@ -120,9 +110,40 @@ public class StartScreenController {
             guiView.showLobby();
 
         } catch (Exception e) {
-            guiView.showError("Errore di connessione", e.getMessage());
+            guiView.showError("Errore", e.getMessage());
+        }
+    }
+
+    private JoinResult handleMatchSelection(ServerConnection connection, String nickname) throws Exception {
+        List<MatchInfo> matches = connection.listMatches();
+
+        if (matches.isEmpty()) {
+            return connection.createMatch(nickname);
         }
 
+        List<String> choices = new java.util.ArrayList<>();
+        choices.add("Nuova partita");
+        for (MatchInfo m : matches) {
+            choices.add(m.matchId() + " [" + m.hostNickname()
+                    + ", " + m.currentPlayers() + "/"
+                    + (m.expectedPlayers() > 0 ? m.expectedPlayers() : "?") + "]");
+        }
+
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(choices.get(0), choices);
+        dialog.setTitle("Selezione partita");
+        dialog.setHeaderText("Scegli una partita o creane una nuova");
+        dialog.setContentText("Partita:");
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isEmpty()) return null;
+
+        String selected = result.get();
+        if (selected.equals("Nuova partita")) {
+            return connection.createMatch(nickname);
+        }
+
+        int idx = choices.indexOf(selected) - 1;
+        return connection.joinMatch(matches.get(idx).matchId(), nickname);
     }
 
 

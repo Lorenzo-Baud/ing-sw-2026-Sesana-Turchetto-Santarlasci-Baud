@@ -3,6 +3,9 @@ package it.polimi.ingws.gc8.Controller;
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Model.Enum.TotemColor;
 import it.polimi.ingws.gc8.Model.Player;
+import it.polimi.ingws.gc8.Network.DTO.JoinResult;
+import it.polimi.ingws.gc8.Network.DTO.MatchInfo;
+import it.polimi.ingws.gc8.Network.DTO.MatchStatus;
 import it.polimi.ingws.gc8.Network.ViewUpdater;
 import it.polimi.ingws.gc8.Network.Connection.ClientHandler;
 import it.polimi.ingws.gc8.Network.Messages.LobbyUpdateMessage;
@@ -14,125 +17,124 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Application entry point for the server side.
- *
- * <p>Manages the lobby (host + expected size + auto-start), creates the
- * {@link GameController} when the game starts, and routes
- * {@link PlayerAction} messages to it.</p>
+ * Manages a single match: lobby, game start, and action routing.
+ * One instance per match; coordinated by {@link MatchRegistry}.
  */
 public class MainController {
 
     public static final int MIN_PLAYERS = 2;
     public static final int MAX_PLAYERS = 5;
 
-    /** Connected clients waiting in the lobby. */
+    private final String matchId;
+    private final MatchRegistry registry;
+
     private final List<ClientHandler> lobby;
-
-    /** Maps playerId → ClientHandler for routing and reconnection. */
     private final Map<Integer, ClientHandler> clientMap;
+    private final Map<String, Integer> nickToPlayerId;
 
-    /** The ViewUpdater that bridges GameController events to ClientHandlers. */
     private ViewUpdater viewUpdater;
-
-    /** Active game controller. */
     private GameController gameController;
+    private volatile MatchStatus status;
 
-    /** Tracks whether a game is in progress. */
-    private volatile boolean gameInProgress;
-
-    /** Lock for lobby operations, separate from GameController's gameLock. */
     private final Object lobbyLock;
-
-    /** Counter for assigning player IDs. */
     private int nextPlayerId;
-
-    /** Player id of the lobby creator (host); {@code -1} when no lobby exists. */
     private int hostPlayerId;
-
-    /** Expected number of players for this match; {@code 0} until the host chooses. */
     private int expectedPlayers;
+    private String hostNickname;
 
-    public MainController() {
+    public MainController(String matchId, MatchRegistry registry) {
+        this.matchId = matchId;
+        this.registry = registry;
         this.lobby = new CopyOnWriteArrayList<>();
         this.clientMap = new ConcurrentHashMap<>();
+        this.nickToPlayerId = new ConcurrentHashMap<>();
         this.lobbyLock = new Object();
-        this.gameInProgress = false;
+        this.status = MatchStatus.LOBBY;
         this.nextPlayerId = 1;
         this.hostPlayerId = -1;
         this.expectedPlayers = 0;
     }
 
     /**
-     * Called when a new client connects.
-     * Creates a {@link ClientHandler} entry, adds it to the lobby,
-     * notifies all lobby members of the updated state and auto-starts
-     * the game if the expected number of players has been reached.
+     * Joins a player to this match or reconnects them if already known.
      *
-     * @param clientHandler the newly connected client
+     * @param nickname      the player's nickname
+     * @param clientHandler the handler for this client
+     * @return the join result with matchId, playerId, and host flag
+     * @throws IllegalStateException if nickname is taken, lobby full, or match in progress with unknown nick
      */
-    public void registerClient(ClientHandler clientHandler) {
+    public JoinResult joinOrReconnect(String nickname, ClientHandler clientHandler) {
         synchronized (lobbyLock) {
-            if (gameInProgress) {
-                clientHandler.sendError("Game already in progress. Cannot join.");
-                return;
-            }
-            if (lobby.size() >= MAX_PLAYERS) {
-                clientHandler.sendError("Lobby is full.");
-                return;
+            Integer existingId = nickToPlayerId.get(nickname);
+
+            if (existingId != null) {
+                if (status == MatchStatus.LOBBY) {
+                    throw new IllegalStateException("Nickname già in uso in questa lobby");
+                }
+                // Reconnection to in-progress match
+                clientHandler.attachToMatch(this, existingId);
+                clientMap.put(existingId, clientHandler);
+                if (viewUpdater != null) {
+                    viewUpdater.addListener(clientHandler);
+                    viewUpdater.sendFullSnapshotTo(clientHandler, gameController.getModel());
+                    viewUpdater.notifyPlayerReconnected(nickname);
+                }
+                return new JoinResult(matchId, existingId, isHost(existingId));
             }
 
-            // First registered player becomes the host (lobby creator).
+            if (status != MatchStatus.LOBBY) {
+                throw new IllegalStateException("Match in corso, nickname non riconosciuto");
+            }
+            if (lobby.size() >= MAX_PLAYERS) {
+                throw new IllegalStateException("Lobby piena");
+            }
+
+            int playerId = nextPlayerId++;
+            nickToPlayerId.put(nickname, playerId);
+            clientHandler.attachToMatch(this, playerId);
+
             if (hostPlayerId == -1) {
-                hostPlayerId = clientHandler.getPlayerId();
+                hostPlayerId = playerId;
+                hostNickname = nickname;
             }
 
             lobby.add(clientHandler);
-            clientMap.put(clientHandler.getPlayerId(), clientHandler);
+            clientMap.put(playerId, clientHandler);
             broadcastLobbyUpdate();
             maybeAutoStart();
+            return new JoinResult(matchId, playerId, isHost(playerId));
         }
     }
 
-    /**
-     * Called when a client disconnects.
-     * If in lobby, removes them and updates the others.
-     * If a game is in progress, notifies the others about the disconnection.
-     *
-     * @param clientHandler the disconnected client
-     */
     public void unregisterClient(ClientHandler clientHandler) {
         synchronized (lobbyLock) {
-            if (!gameInProgress) {
+            if (status == MatchStatus.LOBBY) {
                 lobby.remove(clientHandler);
                 clientMap.remove(clientHandler.getPlayerId());
+                nickToPlayerId.values().remove(Integer.valueOf(clientHandler.getPlayerId()));
                 if (viewUpdater != null) {
                     viewUpdater.removeListener(clientHandler);
                 }
                 if (clientHandler.getPlayerId() == hostPlayerId) {
-                    // Transfer host to next remaining player, if any.
                     hostPlayerId = lobby.isEmpty() ? -1 : lobby.get(0).getPlayerId();
+                    hostNickname = lobby.isEmpty() ? null : lobby.get(0).getNickname();
                 }
                 broadcastLobbyUpdate();
+                if (lobby.isEmpty()) {
+                    registry.removeMatch(matchId);
+                }
             } else {
                 if (viewUpdater != null) {
                     viewUpdater.notifyPlayerDisconnected(clientHandler.getNickname());
                 }
-                // TODO: implementare logica pause/timeout
+                // TODO: FA3 — logica pause/timeout
             }
         }
     }
 
-    /**
-     * Sets the expected number of players for the lobby. Allowed only to
-     * the host while the game has not yet started; invalid invocations
-     * are silently ignored.
-     *
-     * @param playerId id of the requesting player (must be the host)
-     * @param n        expected number of players
-     */
     public void setExpectedPlayers(int playerId, int n) {
         synchronized (lobbyLock) {
-            if (gameInProgress) return;
+            if (status != MatchStatus.LOBBY) return;
             if (playerId != hostPlayerId) return;
             if (n < MIN_PLAYERS || n > MAX_PLAYERS) return;
             this.expectedPlayers = n;
@@ -141,25 +143,14 @@ public class MainController {
         }
     }
 
-    /**
-     * Manually requests the start of the game. Normally not needed: the
-     * server auto-starts the match as soon as the lobby reaches
-     * {@link #expectedPlayers}.
-     */
     public void requestStartGame() {
         synchronized (lobbyLock) {
             tryStartGame();
         }
     }
 
-    /**
-     * Routes an incoming {@link PlayerAction} to the {@link GameController}.
-     * Called by {@link ClientHandler} when it receives a player's action.
-     *
-     * @param action the action to dispatch
-     */
     public void dispatchAction(PlayerAction action) {
-        if (!gameInProgress || gameController == null) {
+        if (status != MatchStatus.IN_GAME || gameController == null) {
             ClientHandler sender = clientMap.get(action.getPlayerId());
             if (sender != null) {
                 sender.sendError("No game in progress.");
@@ -169,54 +160,24 @@ public class MainController {
         gameController.handleAction(action);
     }
 
-    /**
-     * Handles reconnection of a previously connected client.
-     * Re-associates them with their player slot and sends a full game snapshot.
-     *
-     * @param clientHandler the reconnecting client
-     * @param playerId      the player ID to reclaim
-     */
-    public void handleReconnection(ClientHandler clientHandler, int playerId) {
-        synchronized (lobbyLock) {
-            clientMap.put(playerId, clientHandler);
-            if (gameInProgress && viewUpdater != null) {
-                viewUpdater.addListener(clientHandler);
-                viewUpdater.sendFullSnapshotTo(clientHandler, gameController.getModel());
-                viewUpdater.notifyPlayerReconnected(clientHandler.getNickname());
-            }
-        }
-    }
-
-    /**
-     * @return the next available player ID
-     */
-    public int assignPlayerId() {
-        synchronized (lobbyLock) {
-            return nextPlayerId++;
-        }
-    }
-
-    /** @return true if a game is currently in progress */
-    public boolean isGameInProgress() {
-        return gameInProgress;
-    }
-
-    /** @return number of players currently in the lobby */
-    public int getLobbySize() {
-        return lobby.size();
-    }
-
-    /** @return true if the given player is the lobby host */
     public boolean isHost(int playerId) {
         synchronized (lobbyLock) {
             return playerId == hostPlayerId;
         }
     }
 
-    /** @return the expected number of players for this match (0 if not set yet) */
-    public int getExpectedPlayers() {
+    public String getMatchId() {
+        return matchId;
+    }
+
+    public MatchStatus getStatus() {
+        return status;
+    }
+
+    public MatchInfo toMatchInfo() {
         synchronized (lobbyLock) {
-            return expectedPlayers;
+            return new MatchInfo(matchId, hostNickname,
+                    lobby.size(), expectedPlayers, status);
         }
     }
 
@@ -231,12 +192,11 @@ public class MainController {
         }
     }
 
-    /** Caller MUST hold {@link #lobbyLock}. */
     private void tryStartGame() {
-        if (gameInProgress) return;
+        if (status != MatchStatus.LOBBY) return;
         if (lobby.size() < MIN_PLAYERS) return;
 
-        gameInProgress = true;
+        status = MatchStatus.IN_GAME;
 
         viewUpdater = new ViewUpdater();
         for (ClientHandler ch : lobby) {
@@ -250,13 +210,9 @@ public class MainController {
             ClientHandler ch = lobby.get(i);
             players.add(new Player(ch.getPlayerId(), ch.getNickname(), colors[i]));
         }
-        gameController.startGame(players);    }
+        gameController.startGame(players);
+    }
 
-    /**
-     * Caller MUST hold {@link #lobbyLock}.
-     * Broadcasts the raw expectedPlayers (0 = not yet chosen by the host);
-     * the View is responsible for rendering 0 as "?" or similar.
-     */
     private void broadcastLobbyUpdate() {
         List<String> names = new ArrayList<>();
         for (ClientHandler ch : lobby) {

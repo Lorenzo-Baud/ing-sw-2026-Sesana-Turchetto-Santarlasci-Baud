@@ -3,6 +3,8 @@ package it.polimi.ingws.gc8.Controller;
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Network.Connection.ClientConnection;
 import it.polimi.ingws.gc8.Network.Connection.ClientHandler;
+import it.polimi.ingws.gc8.Network.DTO.JoinResult;
+import it.polimi.ingws.gc8.Network.DTO.MatchStatus;
 import it.polimi.ingws.gc8.Network.Messages.ErrorMessage;
 import it.polimi.ingws.gc8.Network.Messages.LobbyUpdateMessage;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,177 +17,151 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MainControllerTest {
 
+    private MatchRegistry registry;
     private MainController mainController;
 
     private TestConnection conn1;
     private TestConnection conn2;
-    private TestConnection conn3;
-
-    private ClientHandler client1;
-    private ClientHandler client2;
-
 
     @BeforeEach
     void setUp() {
-        mainController = new MainController();
-
+        registry = new MatchRegistry();
+        mainController = registry.createMatch();
         conn1 = new TestConnection();
         conn2 = new TestConnection();
-        conn3 = new TestConnection();
-
-        client1 = new ClientHandler(conn1, mainController, 1, "PlayerOne");
-        client2 = new ClientHandler(conn2, mainController, 2, "PlayerTwo");
     }
 
     @Test
-    void registerClientSuccessAndHostAssignmentTesting() {
-        mainController.registerClient(client1);
+    void joinOrReconnectFirstPlayerBecomesHost() {
+        ClientHandler handler = new ClientHandler(conn1, registry, "PlayerOne");
+        JoinResult result = mainController.joinOrReconnect("PlayerOne", handler);
 
-        assertEquals(1, mainController.getLobbySize());
-        assertTrue(mainController.isHost(1));
-        assertFalse(mainController.isHost(2));
+        assertTrue(result.isHost());
+        assertEquals(mainController.getMatchId(), result.matchId());
         assertTrue(conn1.receivedThisMessageType(LobbyUpdateMessage.class));
     }
 
     @Test
-    void registerClientGameAlreadyInProgressTesting() {
-        mainController.registerClient(client1);
-        mainController.registerClient(client2);
+    void joinOrReconnectSecondPlayerNotHost() {
+        ClientHandler h1 = new ClientHandler(conn1, registry, "PlayerOne");
+        mainController.joinOrReconnect("PlayerOne", h1);
+
+        ClientHandler h2 = new ClientHandler(conn2, registry, "PlayerTwo");
+        JoinResult result = mainController.joinOrReconnect("PlayerTwo", h2);
+
+        assertFalse(result.isHost());
+    }
+
+    @Test
+    void joinOrReconnectDuplicateNicknameInLobbyThrows() {
+        ClientHandler h1 = new ClientHandler(conn1, registry, "PlayerOne");
+        mainController.joinOrReconnect("PlayerOne", h1);
+
+        ClientHandler h2 = new ClientHandler(conn2, registry, "PlayerOne");
+        assertThrows(IllegalStateException.class,
+                () -> mainController.joinOrReconnect("PlayerOne", h2));
+    }
+
+    @Test
+    void joinOrReconnectLobbyFull() {
+        for (int i = 0; i < MainController.MAX_PLAYERS; i++) {
+            TestConnection c = new TestConnection();
+            ClientHandler h = new ClientHandler(c, registry, "P" + i);
+            mainController.joinOrReconnect("P" + i, h);
+        }
+
+        TestConnection extra = new TestConnection();
+        ClientHandler extraH = new ClientHandler(extra, registry, "Extra");
+        assertThrows(IllegalStateException.class,
+                () -> mainController.joinOrReconnect("Extra", extraH));
+    }
+
+    @Test
+    void setExpectedPlayersOnlyHost() {
+        ClientHandler h1 = new ClientHandler(conn1, registry, "Host");
+        JoinResult r1 = mainController.joinOrReconnect("Host", h1);
+
+        ClientHandler h2 = new ClientHandler(conn2, registry, "Guest");
+        JoinResult r2 = mainController.joinOrReconnect("Guest", h2);
+
+        mainController.setExpectedPlayers(r2.playerId(), 3);
+        assertEquals(MatchStatus.LOBBY, mainController.getStatus());
+
+        mainController.setExpectedPlayers(r1.playerId(), 3);
+        assertEquals(MatchStatus.LOBBY, mainController.getStatus());
+    }
+
+    @Test
+    void autoStartWhenExpectedPlayersReached() {
+        ClientHandler h1 = new ClientHandler(conn1, registry, "Host");
+        JoinResult r1 = mainController.joinOrReconnect("Host", h1);
+
+        ClientHandler h2 = new ClientHandler(conn2, registry, "Guest");
+        mainController.joinOrReconnect("Guest", h2);
+
+        mainController.setExpectedPlayers(r1.playerId(), 2);
+        assertEquals(MatchStatus.IN_GAME, mainController.getStatus());
+    }
+
+    @Test
+    void requestStartGameNotEnoughPlayers() {
+        ClientHandler h1 = new ClientHandler(conn1, registry, "Alone");
+        mainController.joinOrReconnect("Alone", h1);
+
         mainController.requestStartGame();
-
-        TestConnection lateConn = new TestConnection();
-        ClientHandler lateClient = new ClientHandler(lateConn, mainController, 4, "LatePlayer");
-
-        mainController.registerClient(lateClient);
-
-        assertEquals(2, mainController.getLobbySize());
-    }
-
-
-    @Test
-    void unregisterClientNotInGameTransfersHostTesting() {
-        mainController.registerClient(client1);
-        mainController.registerClient(client2);
-
-        assertTrue(mainController.isHost(1));
-
-        mainController.unregisterClient(client1);
-
-        assertEquals(1, mainController.getLobbySize());
-        assertFalse(mainController.isHost(1));
-        assertTrue(mainController.isHost(2));
+        assertEquals(MatchStatus.LOBBY, mainController.getStatus());
     }
 
     @Test
-    void unregisterClientNotInGameEmptyLobbyTest() {
-        mainController.registerClient(client1);
-        mainController.unregisterClient(client1);
+    void requestStartGameEnoughPlayers() {
+        ClientHandler h1 = new ClientHandler(conn1, registry, "P1");
+        mainController.joinOrReconnect("P1", h1);
 
-        assertEquals(0, mainController.getLobbySize());
-        assertFalse(mainController.isHost(1));
-    }
+        ClientHandler h2 = new ClientHandler(conn2, registry, "P2");
+        mainController.joinOrReconnect("P2", h2);
 
-    @Test
-    void unregisterClient_GameInProgressTesting() {
-        mainController.registerClient(client1);
-        mainController.registerClient(client2);
         mainController.requestStartGame();
-
-        mainController.unregisterClient(client1);
-
-        assertTrue(mainController.isGameInProgress());
+        assertEquals(MatchStatus.IN_GAME, mainController.getStatus());
     }
 
     @Test
-    void setExpectedPlayersInvalidConditionsTesting() {
-        mainController.registerClient(client1);
-        mainController.registerClient(client2);
+    void unregisterClientInLobbyTransfersHost() {
+        ClientHandler h1 = new ClientHandler(conn1, registry, "Host");
+        JoinResult r1 = mainController.joinOrReconnect("Host", h1);
 
-        mainController.setExpectedPlayers(2, 3);
-        assertEquals(0, mainController.getExpectedPlayers());
+        ClientHandler h2 = new ClientHandler(conn2, registry, "Next");
+        JoinResult r2 = mainController.joinOrReconnect("Next", h2);
 
-        mainController.setExpectedPlayers(1, 1);
-        assertEquals(0, mainController.getExpectedPlayers());
-
-        mainController.setExpectedPlayers(1, 6);
-        assertEquals(0, mainController.getExpectedPlayers());
+        assertTrue(mainController.isHost(r1.playerId()));
+        mainController.unregisterClient(h1);
+        assertTrue(mainController.isHost(r2.playerId()));
     }
 
     @Test
-    void setExpectedPlayersAutoStartGameTesting() {
-        mainController.registerClient(client1);
-        mainController.registerClient(client2);
+    void dispatchActionNoGameInProgress() {
+        ClientHandler h1 = new ClientHandler(conn1, registry, "P1");
+        JoinResult r = mainController.joinOrReconnect("P1", h1);
 
-        mainController.setExpectedPlayers(1, 2); // Host (1) sets expected players to 2
+        GeneralAction action = new GeneralAction(r.playerId());
+        mainController.dispatchAction(action);
 
-        assertEquals(2, mainController.getExpectedPlayers());
-        assertTrue(mainController.isGameInProgress()); // Game should auto-start
+        assertTrue(conn1.receivedErrorMessage("No game in progress."));
     }
 
     @Test
-    void setExpectedPlayersGameAlreadyInProgressTesting() {
-        mainController.registerClient(client1);
-        mainController.registerClient(client2);
-        mainController.requestStartGame();
+    void matchRegistryListOpenMatches() {
+        assertEquals(1, registry.listOpenMatches().size());
 
-        mainController.setExpectedPlayers(1, 3); // Attempting to change mid-game
-
-        assertEquals(0, mainController.getExpectedPlayers()); // Should remain unchanged
+        MainController second = registry.createMatch();
+        assertEquals(2, registry.listOpenMatches().size());
     }
 
     @Test
-    void requestStartGameNotEnoughPlayersTesting() {
-        mainController.registerClient(client1); // Only 1 player
-        mainController.requestStartGame();
-
-        assertFalse(mainController.isGameInProgress()); // Start aborted
-    }
-
-    @Test
-    void dispatchActionSuccessTesting() {
-        mainController.registerClient(client1);
-        mainController.registerClient(client2);
-        mainController.requestStartGame();
-
-        GeneralAction action = new GeneralAction(1);
-        try {
-            mainController.dispatchAction(action);
-        } catch (Exception ignored) { }
-
-        assertFalse(conn1.receivedErrorMessage("No game in progress."));
-    }
-
-    @Test
-    void reconnectionGameInProgressTesting() {
-        mainController.registerClient(client1);
-        mainController.registerClient(client2);
-        mainController.requestStartGame();
-
-        TestConnection reconnectConn = new TestConnection();
-        ClientHandler reconnectingClient = new ClientHandler(reconnectConn, mainController, 1, "Roberto Trani");
-
-        mainController.handleReconnection(reconnectingClient, 1);
-        assertTrue(mainController.isGameInProgress());
-    }
-
-    @Test
-    void reconnectionGameNotInProgressTesting() {
-        mainController.registerClient(client1);
-
-        TestConnection reconnectConn = new TestConnection();
-        ClientHandler reconnectingClient = new ClientHandler(reconnectConn, mainController, 1, "Roberto Trani");
-
-        mainController.handleReconnection(reconnectingClient, 1);
-        assertFalse(mainController.isGameInProgress());
-    }
-
-    @Test
-    void assignPlayerIdTesting() {
-        int firstId = mainController.assignPlayerId();
-        int secondId = mainController.assignPlayerId();
-
-        assertEquals(1, firstId);
-        assertEquals(2, secondId);
+    void matchRegistryRemoveMatch() {
+        String id = mainController.getMatchId();
+        registry.removeMatch(id);
+        assertNull(registry.getMatch(id));
+        assertEquals(0, registry.listOpenMatches().size());
     }
 
     private static class TestConnection implements ClientConnection {
@@ -213,7 +189,6 @@ class MainControllerTest {
             return connected;
         }
 
-        // Utility to check if a specific ErrorMessage was sent
         public boolean receivedErrorMessage(String expectedText) {
             return sentMessages.stream()
                     .filter(msg -> msg instanceof ErrorMessage)
@@ -225,7 +200,6 @@ class MainControllerTest {
             return sentMessages.stream().anyMatch(type::isInstance);
         }
     }
-
 
     private static class GeneralAction implements PlayerAction {
         private final int playerId;

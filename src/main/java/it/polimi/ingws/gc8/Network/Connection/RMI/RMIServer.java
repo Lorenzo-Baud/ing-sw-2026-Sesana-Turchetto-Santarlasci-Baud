@@ -1,81 +1,119 @@
 package it.polimi.ingws.gc8.Network.Connection.RMI;
 
 import it.polimi.ingws.gc8.Controller.MainController;
+import it.polimi.ingws.gc8.Controller.MatchRegistry;
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Network.Connection.ClientHandler;
+import it.polimi.ingws.gc8.Network.DTO.JoinResult;
 import it.polimi.ingws.gc8.Network.DTO.LoginResult;
+import it.polimi.ingws.gc8.Network.DTO.MatchInfo;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Server-side implementation of {@link RemoteServer}: the remote object
- * published in the registry and the entry point for RMI clients.
- *
- * <p>Responsibility: translate semantic RMI invocations into calls on
- * {@link MainController}. The rest of the project sees only the
- * transport-agnostic abstraction
- * {@link it.polimi.ingws.gc8.Network.Connection.ClientConnection}.</p>
- */
 public class RMIServer extends UnicastRemoteObject implements RemoteServer {
 
     public static final int EXPORT_PORT = 1099;
 
-    private final MainController mainController;
-    private final Map<Integer, RMIClientConnection> connections;
+    private final MatchRegistry registry;
+    private final Map<String, RMIClientConnection> connections = new ConcurrentHashMap<>();
 
-    public RMIServer(MainController mainController) throws RemoteException {
+    public RMIServer(MatchRegistry registry) throws RemoteException {
         super(EXPORT_PORT);
-        this.mainController = mainController;
-        this.connections = new ConcurrentHashMap<>();
+        this.registry = registry;
     }
 
     @Override
-    public LoginResult login(String nickname, RemoteView clientView) throws RemoteException {
+    public List<MatchInfo> listOpenMatches() throws RemoteException {
+        return registry.listOpenMatches();
+    }
+
+    @Override
+    public JoinResult createMatch(String nickname, RemoteView clientView) throws RemoteException {
         if (clientView == null || nickname == null || nickname.isBlank()) {
-            throw new RemoteException("Invalid login parameters");
+            throw new RemoteException("Invalid parameters");
         }
 
-        int playerId = mainController.assignPlayerId();
         RMIClientConnection connection = new RMIClientConnection(clientView);
-        connections.put(playerId, connection);
+        ClientHandler handler = new ClientHandler(connection, registry, nickname);
 
-        ClientHandler handler = new ClientHandler(connection, mainController, playerId, nickname);
-        mainController.registerClient(handler);
+        MainController match = registry.createMatch();
+        JoinResult result = match.joinOrReconnect(nickname, handler);
 
-        Thread t = new Thread(handler, "client-handler-rmi-" + playerId);
+        String key = result.matchId() + ":" + result.playerId();
+        connections.put(key, connection);
+
+        Thread t = new Thread(handler, "client-handler-rmi-" + result.playerId());
         t.setDaemon(true);
         t.start();
 
-        boolean isFirst = mainController.isHost(playerId);
-        return new LoginResult(playerId, isFirst);
+        return result;
     }
 
     @Override
-    public void setExpectedPlayers(int playerId, int n) throws RemoteException {
-        mainController.setExpectedPlayers(playerId, n);
+    public JoinResult joinMatch(String matchId, String nickname, RemoteView clientView) throws RemoteException {
+        if (clientView == null || nickname == null || nickname.isBlank() || matchId == null) {
+            throw new RemoteException("Invalid parameters");
+        }
+
+        MainController match = registry.getMatch(matchId);
+        if (match == null) {
+            throw new RemoteException("Match non trovato: " + matchId);
+        }
+
+        RMIClientConnection connection = new RMIClientConnection(clientView);
+        ClientHandler handler = new ClientHandler(connection, registry, nickname);
+
+        JoinResult result;
+        try {
+            result = match.joinOrReconnect(nickname, handler);
+        } catch (IllegalStateException e) {
+            throw new RemoteException(e.getMessage());
+        }
+
+        String key = result.matchId() + ":" + result.playerId();
+        connections.put(key, connection);
+
+        Thread t = new Thread(handler, "client-handler-rmi-" + result.playerId());
+        t.setDaemon(true);
+        t.start();
+
+        return result;
     }
 
     @Override
-    public void requestStartGame(int playerId) throws RemoteException {
-        // playerId currently kept for logging / future authorization checks
-        mainController.requestStartGame();
+    public void setExpectedPlayers(int playerId, String matchId, int n) throws RemoteException {
+        MainController match = registry.getMatch(matchId);
+        if (match != null) {
+            match.setExpectedPlayers(playerId, n);
+        }
     }
 
     @Override
-    public void submitAction(PlayerAction action) throws RemoteException {
+    public void requestStartGame(int playerId, String matchId) throws RemoteException {
+        MainController match = registry.getMatch(matchId);
+        if (match != null) {
+            match.requestStartGame();
+        }
+    }
+
+    @Override
+    public void submitAction(PlayerAction action, String matchId) throws RemoteException {
         if (action == null) return;
-        RMIClientConnection conn = connections.get(action.getPlayerId());
+        String key = matchId + ":" + action.getPlayerId();
+        RMIClientConnection conn = connections.get(key);
         if (conn != null) {
             conn.enqueueAction(action);
         }
     }
 
     @Override
-    public void logout(int playerId) throws RemoteException {
-        RMIClientConnection conn = connections.remove(playerId);
+    public void logout(int playerId, String matchId) throws RemoteException {
+        String key = matchId + ":" + playerId;
+        RMIClientConnection conn = connections.remove(key);
         if (conn != null) {
             conn.close();
         }

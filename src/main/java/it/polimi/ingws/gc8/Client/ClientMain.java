@@ -4,7 +4,8 @@ import it.polimi.ingws.gc8.Controller.MainController;
 import it.polimi.ingws.gc8.Network.Connection.RMI.RMIServerConnection;
 import it.polimi.ingws.gc8.Network.Connection.ServerConnection;
 import it.polimi.ingws.gc8.Network.Connection.Socket.SocketServerConnection;
-import it.polimi.ingws.gc8.Network.DTO.LoginResult;
+import it.polimi.ingws.gc8.Network.DTO.JoinResult;
+import it.polimi.ingws.gc8.Network.DTO.MatchInfo;
 import it.polimi.ingws.gc8.View.GUI.GuiView;
 import it.polimi.ingws.gc8.View.TUI.Printer;
 import it.polimi.ingws.gc8.View.TUI.TuiView;
@@ -13,24 +14,9 @@ import it.polimi.ingws.gc8.View.View;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.rmi.NotBoundException;
+import java.util.List;
+import java.util.Scanner;
 
-/**
- * Client-side entry point.
- *
- * <p>Wiring (top-down):</p>
- * <ol>
- *   <li>{@link Bootstrap} collects UI flavor, host, port and nickname.</li>
- *   <li>Build a {@link ServerConnection} for the chosen transport (currently
- *       only RMI; socket pluggable in {@link #createConnection}).</li>
- *   <li>Build the concrete {@link View} for the chosen UI flavor.</li>
- *   <li>Build a {@link ClientController} bridging View ↔ network.</li>
- *   <li>{@code connect()} → {@code controller.start()} → {@code login()}.</li>
- *   <li>If the server reports {@code isFirst==true}, ask the host how many
- *       players the match must have and call {@code setExpectedPlayers()}.</li>
- *   <li>{@code view.run()} (blocking): the user sees the lobby progression
- *       and the game starts automatically when all players have joined.</li>
- * </ol>
- */
 public class ClientMain {
 
     public static void main(String[] args) {
@@ -42,19 +28,16 @@ public class ClientMain {
             return;
         }
 
-
-        // Start the gui
-        if(cfg.uiFlavor() == UiFlavor.GUI) {
+        if (cfg.uiFlavor() == UiFlavor.GUI) {
             View view = createView(UiFlavor.GUI);
             view.run();
             return;
         }
 
-        ServerConnection connection = createConnection(cfg.transport() );
+        ServerConnection connection = createConnection(cfg.transport());
         View view = createView(cfg.uiFlavor());
         ClientController controller = new ClientController(connection, view);
 
-        // Graceful shutdown on Ctrl+C / JVM exit.
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             controller.stop();
             connection.disconnect();
@@ -67,41 +50,78 @@ public class ClientMain {
                 Printer.printError(friendlyConnectError(ce, cfg.host(), cfg.port()));
                 return;
             }
-            Printer.printSuccess("[Client] Connected to "
-                    + cfg.host() + ":" + cfg.port());
+            Printer.printSuccess("[Client] Connesso a " + cfg.host() + ":" + cfg.port());
 
-            // Start the network pump BEFORE login: it must be active when
-            // the server starts pushing lobby callbacks to us.
             controller.start();
 
+            JoinResult joinResult = runMatchSelection(connection, cfg.nickname());
             view.setNickname(cfg.nickname());
-            LoginResult login = connection.login(cfg.nickname());
-            view.setPlayerId(login.playerId());
-            Printer.printSuccess("[Client] Logged in as '" + cfg.nickname()
-                    + "' (playerId=" + login.playerId()
-                    + (login.isFirst() ? ", host" : "") + ")");
+            view.setPlayerId(joinResult.playerId());
 
-            if (login.isFirst()) {
+            Printer.printSuccess("[Client] In partita '" + joinResult.matchId()
+                    + "' (playerId=" + joinResult.playerId()
+                    + (joinResult.isHost() ? ", host" : "") + ")");
+
+            if (joinResult.isHost()) {
                 int n = Bootstrap.askExpectedPlayers(
                         MainController.MIN_PLAYERS, MainController.MAX_PLAYERS);
                 connection.setExpectedPlayers(n);
-                Printer.printInfo("Lobby configurata per " + n + " giocatori. "
-                        + "In attesa degli altri…");
+                Printer.printInfo("Lobby configurata per " + n + " giocatori. In attesa degli altri…");
             } else {
                 Printer.printInfo("Sei in lobby, in attesa che la partita parta…");
             }
 
-            // Hands off to the View: blocks until the user quits or the
-            // game ends. The View's dispatcher will print LobbyUpdate
-            // messages and proceed to the game once the server auto-starts.
             view.run();
 
         } catch (Exception e) {
             Printer.printError("[Client] " + e.getMessage());
-            e.printStackTrace();
         } finally {
             controller.stop();
             connection.disconnect();
+        }
+    }
+
+    private static JoinResult runMatchSelection(ServerConnection connection, String nickname) throws Exception {
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            List<MatchInfo> matches = connection.listMatches();
+
+            Printer.printInfo("=== Selezione Partita ===");
+            if (matches.isEmpty()) {
+                Printer.printInfo("Nessuna partita disponibile.");
+            } else {
+                for (int i = 0; i < matches.size(); i++) {
+                    MatchInfo m = matches.get(i);
+                    Printer.printInfo((i + 1) + ") " + m.matchId()
+                            + " [host: " + m.hostNickname()
+                            + ", giocatori: " + m.currentPlayers()
+                            + "/" + (m.expectedPlayers() > 0 ? m.expectedPlayers() : "?") + "]");
+                }
+            }
+            Printer.printInfo("[N] Nuova partita | [J <id>] Unisciti | [R] Aggiorna");
+            System.out.print("> ");
+
+            String line = scanner.nextLine().trim();
+            if (line.equalsIgnoreCase("N")) {
+                return connection.createMatch(nickname);
+            } else if (line.toUpperCase().startsWith("J ")) {
+                String matchId = line.substring(2).trim();
+                try {
+                    return connection.joinMatch(matchId, nickname);
+                } catch (Exception e) {
+                    Printer.printError(e.getMessage());
+                }
+            } else if (line.equalsIgnoreCase("R")) {
+                continue;
+            } else if (!matches.isEmpty()) {
+                try {
+                    int idx = Integer.parseInt(line) - 1;
+                    if (idx >= 0 && idx < matches.size()) {
+                        return connection.joinMatch(matches.get(idx).matchId(), nickname);
+                    }
+                } catch (NumberFormatException ignored) {}
+                Printer.printError("Comando non riconosciuto.");
+            }
         }
     }
 
@@ -115,17 +135,11 @@ public class ClientMain {
     private static ServerConnection createConnection(String transport) {
         return switch (transport) {
             case "rmi" -> new RMIServerConnection();
-            case "socket" -> new SocketServerConnection();   // future
+            case "socket" -> new SocketServerConnection();
             default -> throw new IllegalArgumentException("Unknown transport: " + transport);
         };
     }
 
-    /**
-     * Translates the raw RMI/network exception thrown by
-     * {@link ServerConnection#connect(String, int)} into a user-friendly
-     * sentence shown via {@link Printer#printError(String)} — never a
-     * stack trace.
-     */
     private static String friendlyConnectError(Throwable e, String host, int port) {
         Throwable cur = e;
         while (cur != null) {

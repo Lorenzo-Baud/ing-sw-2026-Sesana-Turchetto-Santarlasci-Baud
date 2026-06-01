@@ -2,19 +2,15 @@ package it.polimi.ingws.gc8.Network.Connection.RMI;
 
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Network.Connection.ServerConnection;
-import it.polimi.ingws.gc8.Network.DTO.LoginResult;
+import it.polimi.ingws.gc8.Network.DTO.JoinResult;
+import it.polimi.ingws.gc8.Network.DTO.MatchInfo;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
 
-/**
- * Client-side adapter implementing {@link ServerConnection} on top of RMI.
- * Exposes a transport-agnostic API to the application: the rest of the
- * client (View, ClientController) does not need to know that RMI is
- * the underlying transport.
- */
 public class RMIServerConnection implements ServerConnection {
 
     public static final String SERVICE_NAME = "MesosServer";
@@ -22,6 +18,7 @@ public class RMIServerConnection implements ServerConnection {
     private RemoteServer remoteServer;
     private RMIClientView clientView;
     private int playerId = -1;
+    private String matchId;
     private volatile boolean connected;
 
     @Override
@@ -33,23 +30,39 @@ public class RMIServerConnection implements ServerConnection {
     }
 
     @Override
-    public LoginResult login(String nickname) throws Exception {
+    public List<MatchInfo> listMatches() throws Exception {
         ensureConnected();
-        LoginResult result = remoteServer.login(nickname, clientView);
+        return remoteServer.listOpenMatches();
+    }
+
+    @Override
+    public JoinResult createMatch(String nickname) throws Exception {
+        ensureConnected();
+        JoinResult result = remoteServer.createMatch(nickname, clientView);
         this.playerId = result.playerId();
+        this.matchId = result.matchId();
+        return result;
+    }
+
+    @Override
+    public JoinResult joinMatch(String matchId, String nickname) throws Exception {
+        ensureConnected();
+        JoinResult result = remoteServer.joinMatch(matchId, nickname, clientView);
+        this.playerId = result.playerId();
+        this.matchId = result.matchId();
         return result;
     }
 
     @Override
     public void setExpectedPlayers(int n) throws Exception {
         ensureConnected();
-        remoteServer.setExpectedPlayers(playerId, n);
+        remoteServer.setExpectedPlayers(playerId, matchId, n);
     }
 
     @Override
     public void requestStartGame() throws Exception {
         ensureConnected();
-        remoteServer.requestStartGame(playerId);
+        remoteServer.requestStartGame(playerId, matchId);
     }
 
     @Override
@@ -62,7 +75,7 @@ public class RMIServerConnection implements ServerConnection {
                     + (action == null ? "null" : action.getClass().getName()));
         }
         try {
-            remoteServer.submitAction(playerAction);
+            remoteServer.submitAction(playerAction, matchId);
         } catch (RemoteException e) {
             connected = false;
             throw new IllegalStateException("Connection lost while sending action", e);
@@ -80,19 +93,15 @@ public class RMIServerConnection implements ServerConnection {
         if (!connected) return;
         connected = false;
         try {
-            if (remoteServer != null && playerId > 0) {
-                remoteServer.logout(playerId);
+            if (remoteServer != null && playerId > 0 && matchId != null) {
+                remoteServer.logout(playerId, matchId);
             }
-        } catch (RemoteException ignored) {
-            // server unreachable: nothing to do
-        }
+        } catch (RemoteException ignored) {}
         try {
             if (clientView != null) {
                 UnicastRemoteObject.unexportObject(clientView, true);
             }
-        } catch (Exception ignored) {
-            // already unexported or never exported
-        }
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -102,6 +111,10 @@ public class RMIServerConnection implements ServerConnection {
 
     public int getPlayerId() {
         return playerId;
+    }
+
+    public String getMatchId() {
+        return matchId;
     }
 
     private void ensureConnected() {
