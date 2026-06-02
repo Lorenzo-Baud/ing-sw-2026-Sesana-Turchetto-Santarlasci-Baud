@@ -1,17 +1,17 @@
 # Software Engineering 2025-2026
 
-##Group
--Simone Sesana
--Andrea Turchetto
--Arturo Santarlasci
--Lorenzo Marc Baud
+## Group
+-Simone Sesana  
+-Andrea Turchetto  
+-Arturo Santarlasci  
+-Lorenzo Marc Baud  
 
-##UML
+## UML
 
-##JavaDoc
+## JavaDoc
 
-##Implemented features
+## Implemented features
 
-##Advanced dunctionalities
+## Advanced functionalities
 
-##Jar files 
+## Jar files 
