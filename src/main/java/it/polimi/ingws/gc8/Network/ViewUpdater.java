@@ -82,11 +82,6 @@ public class ViewUpdater {
      */
     public void broadcastModel(GameModel model) {
         GameDTO dto = buildGameDTO(model);
-        System.out.println("[DEBUG ViewUpdater] broadcastModel"
-                + " currentPlayer=" + (dto.currentPlayer() == null ? "null" : dto.currentPlayer().nickname())
-                + " currentPlayerIndex=" + dto.currentPlayerIndex()
-                + " phase=" + dto.phase()
-                + " listeners=" + listeners.size());
         ModelUpdateMessage modelUpdate = new ModelUpdateMessage(dto);
         for (GameEventListener listener : listeners) {
             listener.onGameUpdate(modelUpdate);
@@ -239,5 +234,18 @@ public class ViewUpdater {
      */
     public void notifyPlayerReconnected(String playerNickname) {
         broadcast(new ConnectionUpdateMessage(playerNickname, true));
+    }
+
+    // --- Event resolution notifications ---
+
+    /**
+     * Broadcasts the outcome of one or more Event cards resolved at the end of
+     * a round / era, so the views can tell players what happened (and to whom).
+     *
+     * @param resolved the per-event outcomes (type, final flag, prestige deltas)
+     */
+    public void notifyEventsResolved(java.util.List<EventResolvedMessage.ResolvedEvent> resolved) {
+        if (resolved == null || resolved.isEmpty()) return;
+        broadcast(new EventResolvedMessage(resolved));
     }
 }

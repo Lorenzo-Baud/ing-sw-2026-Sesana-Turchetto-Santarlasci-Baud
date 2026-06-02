@@ -2,12 +2,17 @@ package it.polimi.ingws.gc8.Controller.states;
 
 import it.polimi.ingws.gc8.Controller.GameController;
 import it.polimi.ingws.gc8.Network.ViewUpdater;
+import it.polimi.ingws.gc8.Network.Messages.EventResolvedMessage;
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Model.GameModel;
+import it.polimi.ingws.gc8.Model.Player;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.EventCard;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * State active during {@link GamePhase#END_ROUND}.
@@ -34,11 +39,28 @@ public class EndRoundState implements GameState {
         GameModel model = context.getModel();
         ViewUpdater viewUpdater = context.getViewUpdater();
 
-        // 1. Resolve event cards
+        // 1. Resolve event cards, capturing the prestige variation each one
+        //    produces so the views can report what happened (and to whom).
+        List<Player> players = model.getPlayers();
+        List<EventResolvedMessage.ResolvedEvent> resolvedOutcomes = new ArrayList<>();
         List<EventCard> events = model.getEventsToResolve();
         for (EventCard event : events) {
-            event.resolveEvent(model.getPlayers());
+            Map<Integer, Integer> before = new HashMap<>();
+            for (Player p : players) before.put(p.getPlayerId(), p.getPrestigePoints());
+
+            event.resolveEvent(players);
+
+            List<EventResolvedMessage.PlayerDelta> deltas = new ArrayList<>();
+            for (Player p : players) {
+                int delta = p.getPrestigePoints() - before.get(p.getPlayerId());
+                if (delta != 0) {
+                    deltas.add(new EventResolvedMessage.PlayerDelta(p.getNickname(), delta));
+                }
+            }
+            resolvedOutcomes.add(new EventResolvedMessage.ResolvedEvent(
+                    event.getEventType().name(), event.isFinal(), deltas));
         }
+        viewUpdater.notifyEventsResolved(resolvedOutcomes);
 
         // 2. Check if the game is over (tribe deck exhausted)
         if (model.isGameOver()) {

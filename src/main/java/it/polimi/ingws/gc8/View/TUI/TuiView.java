@@ -15,6 +15,7 @@ import it.polimi.ingws.gc8.Network.DTO.OfferTileDTO;
 import it.polimi.ingws.gc8.Network.DTO.PlayerDTO;
 import it.polimi.ingws.gc8.Network.Messages.ConnectionUpdateMessage;
 import it.polimi.ingws.gc8.Network.Messages.ErrorMessage;
+import it.polimi.ingws.gc8.Network.Messages.EventResolvedMessage;
 import it.polimi.ingws.gc8.Network.Messages.GameOverMessage;
 import it.polimi.ingws.gc8.Network.Messages.LobbyUpdateMessage;
 import it.polimi.ingws.gc8.Network.Messages.ModelUpdateMessage;
@@ -710,6 +711,26 @@ public class TuiView extends View {
                     ? who + " reconnected."
                     : who + " disconnected.";
             enqueueNotice(m.isConnected() ? NoticeLevel.INFO : NoticeLevel.ERROR, text);
+
+        } else if (msg instanceof EventResolvedMessage m) {
+            for (EventResolvedMessage.ResolvedEvent ev : m.getEvents()) {
+                StringBuilder sb = new StringBuilder(">>> Event resolved: ");
+                sb.append(ev.eventType());
+                if (ev.isFinal()) sb.append(" [FINAL]");
+                if (ev.deltas().isEmpty()) {
+                    sb.append(" — no prestige changes.");
+                } else {
+                    sb.append(" — ");
+                    for (int i = 0; i < ev.deltas().size(); i++) {
+                        EventResolvedMessage.PlayerDelta d = ev.deltas().get(i);
+                        if (i > 0) sb.append(", ");
+                        sb.append(d.nickname())
+                                .append(d.prestigeDelta() >= 0 ? " +" : " ")
+                                .append(d.prestigeDelta()).append("PP");
+                    }
+                }
+                enqueueNotice(NoticeLevel.INFO, sb.toString());
+            }
 
         } else if (msg instanceof PhaseUpdateMessage || msg instanceof TurnUpdateMessage) {
             // Informational: next ModelUpdateMessage will bring the state.

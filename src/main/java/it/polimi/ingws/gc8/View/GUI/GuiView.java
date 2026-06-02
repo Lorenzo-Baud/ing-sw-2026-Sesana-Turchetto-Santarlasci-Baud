@@ -155,6 +155,26 @@ public class GuiView extends View {
         alert.showAndWait();
     }
 
+    /**
+     * Shows an informational alert. Safe to call from any thread: if not on the
+     * FX application thread, the dialog is scheduled via {@link Platform#runLater}.
+     */
+    public void showInfo(String title, String content) {
+        if (Platform.isFxApplicationThread()) {
+            showInfoOnFxThread(title, content);
+        } else {
+            Platform.runLater(() -> showInfoOnFxThread(title, content));
+        }
+    }
+
+    private void showInfoOnFxThread(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
     // ------------------------------------------------------------------
     // Queue access — re-exposed protected so that screen controllers in
     // this same package can consume View.messages.

@@ -9,8 +9,12 @@ import it.polimi.ingws.gc8.Model.Enum.Era;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class BuildingCard extends Card {
+
+    private static final Logger LOGGER = Logger.getLogger(BuildingCard.class.getName());
 
     private String id;
     private int foodCost;
@@ -63,7 +67,7 @@ public class BuildingCard extends Card {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed to parse buildings from " + path + ": building deck may be incomplete", e);
         }
 
         return cards;

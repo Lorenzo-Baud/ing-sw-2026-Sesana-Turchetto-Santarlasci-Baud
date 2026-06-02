@@ -10,6 +10,7 @@ import it.polimi.ingws.gc8.Network.DTO.GameDTO;
 import it.polimi.ingws.gc8.Network.DTO.OfferTileDTO;
 import it.polimi.ingws.gc8.Network.Messages.ConnectionUpdateMessage;
 import it.polimi.ingws.gc8.Network.Messages.ErrorMessage;
+import it.polimi.ingws.gc8.Network.Messages.EventResolvedMessage;
 import it.polimi.ingws.gc8.Network.Messages.GameOverMessage;
 import it.polimi.ingws.gc8.Network.Messages.ModelUpdateMessage;
 import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
@@ -330,6 +331,7 @@ public class GameScreenController {
                 case GameOverMessage m -> {
                     // TODO: show game over screen
                 }
+                case EventResolvedMessage m -> guiView.showInfo("Eventi risolti", formatResolvedEvents(m));
                 case ErrorMessage m -> guiView.showError("Errore", m.getError());
                 case ConnectionUpdateMessage m -> {
                     // TODO: handle this
@@ -339,6 +341,32 @@ public class GameScreenController {
                 }
             }
         }
+    }
+
+    /**
+     * Builds a human-readable summary of the events resolved at the end of a
+     * round / era, including the per-player prestige variation each produced.
+     */
+    private static String formatResolvedEvents(EventResolvedMessage m) {
+        StringBuilder sb = new StringBuilder();
+        for (EventResolvedMessage.ResolvedEvent ev : m.getEvents()) {
+            sb.append("• ").append(ev.eventType());
+            if (ev.isFinal()) sb.append(" [FINAL]");
+            if (ev.deltas().isEmpty()) {
+                sb.append(": nessuna variazione di prestigio.");
+            } else {
+                sb.append(": ");
+                for (int i = 0; i < ev.deltas().size(); i++) {
+                    EventResolvedMessage.PlayerDelta d = ev.deltas().get(i);
+                    if (i > 0) sb.append(", ");
+                    sb.append(d.nickname())
+                            .append(d.prestigeDelta() >= 0 ? " +" : " ")
+                            .append(d.prestigeDelta()).append("PP");
+                }
+            }
+            sb.append('\n');
+        }
+        return sb.toString().trim();
     }
 
     /**

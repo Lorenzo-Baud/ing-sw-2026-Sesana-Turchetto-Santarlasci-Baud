@@ -13,6 +13,8 @@ import it.polimi.ingws.gc8.Model.Enum.EventType;
 
 import java.io.File;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Represents the main game board containing all shared components.
@@ -20,6 +22,8 @@ import java.util.*;
  * available for purchase, and the tracks for turn order and offers.
  */
 public class Board {
+
+    private static final Logger LOGGER = Logger.getLogger(Board.class.getName());
 
     private Deque<Card> tribeDeck;
     private List<Card> lowerRow;
@@ -157,7 +161,7 @@ public class Board {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed to parse character_cards.json: tribe deck may be incomplete", e);
         }
 
         // Event cards parsing
@@ -219,7 +223,7 @@ public class Board {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed to parse event_cards.json: tribe deck may be incomplete", e);
         }
 
         // Final deck composition
