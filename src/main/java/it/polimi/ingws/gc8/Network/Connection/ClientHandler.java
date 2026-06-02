@@ -14,6 +14,9 @@ import it.polimi.ingws.gc8.Network.DTO.JoinResult;
 import it.polimi.ingws.gc8.Network.Messages.ErrorMessage;
 import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * Handles the bidirectional communication with a single connected player.
  * Transport-agnostic: delegates all I/O to a {@link ClientConnection}.
@@ -23,11 +26,16 @@ import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
  */
 public class ClientHandler implements Runnable, GameEventListener {
 
+    private static final Logger LOGGER = Logger.getLogger(ClientHandler.class.getName());
+
     private final ClientConnection connection;
     private final MatchRegistry registry;
     private volatile MainController match;
     private volatile int playerId;
-    private final String nickname;
+    // Not final: for TCP the handler is created at handshake (nickname still
+    // unknown) and the nickname only arrives later with the create/join
+    // request. RMI instead knows it at construction time.
+    private volatile String nickname;
 
     public ClientHandler(ClientConnection connection, MatchRegistry registry, String nickname) {
         this.connection = connection;
@@ -54,7 +62,10 @@ public class ClientHandler implements Runnable, GameEventListener {
                 }
             }
         } catch (Exception e) {
-            // Connection lost or protocol error
+            // Connection lost (EOF when the client quits) or protocol error.
+            // Logged at FINE so it is available when debugging but does not
+            // spam the console on normal disconnections.
+            LOGGER.log(Level.FINE, "Client handler terminated", e);
         } finally {
             connection.close();
             if (match != null) {
@@ -69,6 +80,7 @@ public class ClientHandler implements Runnable, GameEventListener {
 
         } else if (message instanceof CreateMatchRequest req) {
             try {
+                this.nickname = req.nickname();
                 MainController newMatch = registry.createMatch();
                 JoinResult result = newMatch.joinOrReconnect(req.nickname(), this);
                 connection.sendMessage(result);
@@ -83,6 +95,7 @@ public class ClientHandler implements Runnable, GameEventListener {
                     sendError("Match non trovato: " + req.matchId());
                     return;
                 }
+                this.nickname = req.nickname();
                 JoinResult result = target.joinOrReconnect(req.nickname(), this);
                 connection.sendMessage(result);
             } catch (IllegalStateException e) {
