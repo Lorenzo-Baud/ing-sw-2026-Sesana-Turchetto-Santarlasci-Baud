@@ -1,1 +1,17 @@
-# ing-sw-2026-Sesana-Turchetto-Santarlasci-Marc
+# Software Engineering 2025-2026
+
+##Group
+-Simone Sesana
+-Andrea Turchetto
+-Arturo Santarlasci
+-Lorenzo Marc Baud
+
+##UML
+
+##JavaDoc
+
+##Implemented features
+
+##Advanced dunctionalities
+
+##Jar files 
