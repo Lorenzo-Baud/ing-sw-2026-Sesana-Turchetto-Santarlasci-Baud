@@ -337,7 +337,12 @@ public class GameScreenController {
                     // TODO: show game over screen
                 }
                 case EventResolvedMessage m -> guiView.showInfo("Eventi risolti", formatResolvedEvents(m));
-                case ErrorMessage m -> guiView.showError("Errore", m.getError());
+                case ErrorMessage m -> {
+                    System.out.println("Received error message from server: " + m.getError());
+                    guiView.lastErrorMessageAt = System.currentTimeMillis();
+                    guiView.showError("Errore", m.getError());
+                    return;
+                }
                 case ConnectionUpdateMessage m -> {
                     // TODO: handle this
                 }
@@ -487,12 +492,6 @@ public class GameScreenController {
         // Extract the target card snapshot from the row
         CardDTO chosenCard = targetRowCards.get(index);
 
-        // Rule Validation: Event cards can never be drafted into the player's tribe
-        if (chosenCard != null && chosenCard.type() == CardType.EVENT) {
-            guiView.showError("Azione non valida", "Non puoi prendere una carta Evento.");
-            return;
-        }
-
         // Quota Validation: Fetch the player's offer tile configuration to check quotas
         OfferTileDTO myTile = guiView.getGameView().offerTrack().stream()
                 .filter(tile -> tile.playerIndexOccupant() == guiView.getPlayerId())
@@ -523,8 +522,19 @@ public class GameScreenController {
             return;
         }
 
+        // Calculates the index that has to be sent to the server based on the available cards
+        int server_index = 0;
+        for (CardDTO card : targetRowCards) {
+            if(card.type() != CardType.EVENT && !chosenCard.equals(card)) {
+                server_index++;
+            } else {
+                break;
+            }
+        }
+        System.out.println(server_index);
+
         // Fire the action payload over the network pump and track the response status
-        View.SendResult result = guiView.sendAndAwaitUpdate(new TakeCardAction(guiView.getPlayerId(), index, row));
+        View.SendResult result = guiView.sendAndAwaitUpdate(new TakeCardAction(guiView.getPlayerId(), server_index, row));
 
         if (result == View.SendResult.OK) {
             // Internally update local resolution counters upon successful server verification
@@ -534,8 +544,6 @@ public class GameScreenController {
                 turnLowerTaken++;
             }
             System.out.println("GUI: Card draw applied successfully. Upper: " + turnUpperTaken + ", Lower: " + turnLowerTaken);
-        } else {
-            guiView.showError("Errore", "Impossibile pescare la carta");
         }
 
         int maxUpper = View.maxUpperPicks(myTile.id());

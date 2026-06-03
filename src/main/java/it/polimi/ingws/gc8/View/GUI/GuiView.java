@@ -41,6 +41,8 @@ public class GuiView extends View {
     /** Reference to the main window of the application. */
     private Stage primaryStage;
 
+    public volatile long lastErrorMessageAt = 0;
+
     // ------------------------------------------------------------------
     // Accessors for session-scoped objects
     // ------------------------------------------------------------------
@@ -88,6 +90,9 @@ public class GuiView extends View {
     // from any caller thread.
     // ------------------------------------------------------------------
 
+    /**
+     * Shows start screen
+     */
     public void showStartScreen() {
         Platform.runLater(() -> {
             try {
@@ -103,6 +108,9 @@ public class GuiView extends View {
         });
     }
 
+    /**
+     * Shows lobby screen
+     */
     public void showLobby() {
         Platform.runLater(() -> {
             try {
@@ -117,6 +125,9 @@ public class GuiView extends View {
         });
     }
 
+    /**
+     * Shows game screen
+     */
     public void showGame() {
         Platform.runLater(() -> {
             try {
@@ -138,6 +149,8 @@ public class GuiView extends View {
     /**
      * Shows an error alert. Safe to call from any thread: if not on the FX
      * application thread, the dialog is scheduled via {@link Platform#runLater}.
+     * @param title title of the error dialog
+     * @param content content of the error dialog
      */
     public void showError(String title, String content) {
         if (Platform.isFxApplicationThread()) {
@@ -147,6 +160,11 @@ public class GuiView extends View {
         }
     }
 
+    /**
+     * Actually shows error dialog on the FX application thread. Not to be called directly from outside this class.
+     * @param title title of the error dialog
+     * @param content content of the error dialog
+     */
     private void showErrorOnFxThread(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
@@ -158,6 +176,8 @@ public class GuiView extends View {
     /**
      * Shows an informational alert. Safe to call from any thread: if not on the
      * FX application thread, the dialog is scheduled via {@link Platform#runLater}.
+     * @param content content of the info dialog
+     * @param title title of the info dialog
      */
     public void showInfo(String title, String content) {
         if (Platform.isFxApplicationThread()) {
@@ -167,6 +187,11 @@ public class GuiView extends View {
         }
     }
 
+    /***
+     * Actually shows info dialog on the FX application thread
+     * @param content content of the info dialog
+     * @param title title of the info dialog
+     */
     private void showInfoOnFxThread(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
@@ -196,15 +221,19 @@ public class GuiView extends View {
     /**
      * Implementation of method sendAndAwaitUpdate described in the class-level comment.
      */
-    // TODO: add error handling logic
     public SendResult sendAndAwaitUpdate(Object action) {
+
         notifyAllListeners(action);
+
+        long errorBefore = lastErrorMessageAt;
+
         // Snapshots taken AFTER notify so that errors from earlier actions
         // (already enqueued before this call) do not look "fresh" to us.
         GameDTO before = gameView;
         long deadline = System.currentTimeMillis() + SEND_TIMEOUT_MS;
         while (System.currentTimeMillis() < deadline) {
             if (gameView != before) return SendResult.OK;
+            if (lastErrorMessageAt != errorBefore) return SendResult.ERROR;
             try {
                 sleep(50);
             } catch (InterruptedException ie) {
