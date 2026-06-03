@@ -101,8 +101,9 @@ public class StartScreenController {
 
             if (joinResult.isHost()) {
                 int n = -1;
-                while (n == -1) {
-                    n = askNumberOfPlayers();
+                n = askNumberOfPlayers();
+                if(n == -1) {
+                    return;
                 }
                 connection.setExpectedPlayers(n);
             }

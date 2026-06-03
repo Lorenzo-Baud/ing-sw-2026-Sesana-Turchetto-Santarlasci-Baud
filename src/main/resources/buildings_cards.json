@@ -8,7 +8,7 @@
     "foodCost": 4,
     "prestigeBonus": 3,
     "era": "ERA_1",
-    "front": "",
+    "front": "/cards/building_cards/card_097_hd.png",
     "back": "",
     "effectType": "SET_COMPLETION",
     "effectParams": {
@@ -22,7 +22,7 @@
     "foodCost": 4,
     "prestigeBonus": 4,
     "era": "ERA_1",
-    "front": "",
+    "front": "/cards/building_cards/card_098_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -37,7 +37,7 @@
     "foodCost": 3,
     "prestigeBonus": 4,
     "era": "ERA_1",
-    "front": "",
+    "front": "/cards/building_cards/card_102_hd.png",
     "back": "",
     "effectType": "INVENTOR_PAIR",
     "effectParams": {
@@ -51,7 +51,7 @@
     "foodCost": 5,
     "prestigeBonus": 2,
     "era": "ERA_1",
-    "front": "",
+    "front": "/cards/building_cards/card_100_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -65,7 +65,7 @@
     "foodCost": 3,
     "prestigeBonus": 3,
     "era": "ERA_1",
-    "front": "",
+    "front": "/cards/building_cards/card_101_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -79,7 +79,7 @@
     "foodCost": 5,
     "prestigeBonus": 3,
     "era": "ERA_1",
-    "front": "",
+    "front": "/cards/building_cards/card_099_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -98,7 +98,7 @@
     "foodCost": 7,
     "prestigeBonus": 0,
     "era": "ERA_2",
-    "front": "",
+    "front": "/cards/building_cards/card_103_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -113,7 +113,7 @@
     "foodCost": 6,
     "prestigeBonus": 4,
     "era": "ERA_2",
-    "front": "",
+    "front": "/cards/building_cards/card_104_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -127,7 +127,7 @@
     "foodCost": 6,
     "prestigeBonus": 4,
     "era": "ERA_2",
-    "front": "",
+    "front": "/cards/building_cards/card_107_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -141,7 +141,7 @@
     "foodCost": 5,
     "prestigeBonus": 6,
     "era": "ERA_2",
-    "front": "",
+    "front": "/cards/building_cards/card_108_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -157,7 +157,7 @@
     "foodCost": 7,
     "prestigeBonus": 4,
     "era": "ERA_2",
-    "front": "",
+    "front": "/cards/building_cards/card_105_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -172,7 +172,7 @@
     "foodCost": 7,
     "prestigeBonus": 2,
     "era": "ERA_2",
-    "front": "",
+    "front": "/cards/building_cards/card_106_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -189,7 +189,7 @@
     "foodCost": 5,
     "prestigeBonus": 6,
     "era": "ERA_2",
-    "front": "",
+    "front": "/cards/building_cards/card_109_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -208,7 +208,7 @@
     "foodCost": 9,
     "prestigeBonus": 3,
     "era": "ERA_3",
-    "front": "",
+    "front": "/cards/building_cards/card_116_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -222,7 +222,7 @@
     "foodCost": 10,
     "prestigeBonus": 25,
     "era": "ERA_3",
-    "front": "",
+    "front": "/cards/building_cards/card_117_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {},
@@ -234,7 +234,7 @@
     "foodCost": 8,
     "prestigeBonus": 8,
     "era": "ERA_3",
-    "front": "",
+    "front": "/cards/building_cards/card_110_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -250,7 +250,7 @@
     "foodCost": 7,
     "prestigeBonus": 4,
     "era": "ERA_3",
-    "front": "",
+    "front": "/cards/building_cards/card_112_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -266,7 +266,7 @@
     "foodCost": 7,
     "prestigeBonus": 4,
     "era": "ERA_3",
-    "front": "",
+    "front": "/cards/building_cards/card_114_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -282,7 +282,7 @@
     "foodCost": 6,
     "prestigeBonus": 3,
     "era": "ERA_3",
-    "front": "",
+    "front": "/cards/building_cards/card_113_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -298,7 +298,7 @@
     "foodCost": 6,
     "prestigeBonus": 6,
     "era": "ERA_3",
-    "front": "",
+    "front": "/cards/building_cards/card_115_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {
@@ -314,7 +314,7 @@
     "foodCost": 7,
     "prestigeBonus": 6,
     "era": "ERA_3",
-    "front": "",
+    "front": "/cards/building_cards/card_111_hd.png",
     "back": "",
     "effectType": "CONFIGURABLE",
     "effectParams": {

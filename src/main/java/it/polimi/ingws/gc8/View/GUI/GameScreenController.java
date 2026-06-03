@@ -266,9 +266,12 @@ public class GameScreenController {
         middleCardsRow.getChildren().clear();
         bottomCardsRow.getChildren().clear();
 
+        // Upper row cards
         for (int i = 0; i < snap.upperRowCards().size(); i++) {
             addCardToRow(CardRow.UPPER, snap.upperRowCards().get(i), i);
         }
+
+        // Offer track cards
         for(int i = 0; i < snap.offerTrack().size(); i++) {
             String circleStyle = "-fx-fill: transparent; -fx-stroke: transparent;";
             if(snap.offerTrack().get(i).playerIndexOccupant() != -1) {
@@ -283,6 +286,8 @@ public class GameScreenController {
             }
             addCardToOfferTrack(snap.offerTrack().get(i), circleStyle);
         }
+
+        // Lower row cards
         for (int i = 0; i < snap.lowerRowCards().size(); i++) {
             addCardToRow(CardRow.LOWER, snap.lowerRowCards().get(i), i);
         }
