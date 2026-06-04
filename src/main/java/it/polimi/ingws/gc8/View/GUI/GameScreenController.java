@@ -489,9 +489,6 @@ public class GameScreenController {
             return;
         }
 
-        // Extract the target card snapshot from the row
-        CardDTO chosenCard = targetRowCards.get(index);
-
         // Quota Validation: Fetch the player's offer tile configuration to check quotas
         OfferTileDTO myTile = guiView.getGameView().offerTrack().stream()
                 .filter(tile -> tile.playerIndexOccupant() == guiView.getPlayerId())
@@ -522,19 +519,7 @@ public class GameScreenController {
             return;
         }
 
-        // Calculates the index that has to be sent to the server based on the available cards
-        int server_index = 0;
-        for (CardDTO card : targetRowCards) {
-            if(card.type() != CardType.EVENT && !chosenCard.equals(card)) {
-                server_index++;
-            } else {
-                break;
-            }
-        }
-        System.out.println(server_index);
-
-        // Fire the action payload over the network pump and track the response status
-        View.SendResult result = guiView.sendAndAwaitUpdate(new TakeCardAction(guiView.getPlayerId(), server_index, row));
+        View.SendResult result = guiView.sendAndAwaitUpdate(new TakeCardAction(guiView.getPlayerId(), index, row));
 
         if (result == View.SendResult.OK) {
             // Internally update local resolution counters upon successful server verification

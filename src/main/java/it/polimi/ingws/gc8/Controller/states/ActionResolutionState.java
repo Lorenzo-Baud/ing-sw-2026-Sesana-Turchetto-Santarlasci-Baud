@@ -123,15 +123,16 @@ public class ActionResolutionState implements GameState {
             }
         }
 
-        // Find the card by its index in the row's available list
-        List<Card> availableCards = model.getAvailableCardsFromRow(row);
+        List<Card> rowCards = (row == CardRow.UPPER)
+                ? model.getBoard().getUpperRow()
+                : model.getBoard().getLowerRow();
         int idx = action.getCardIndex();
-        if (idx < 0 || idx >= availableCards.size()) {
+        if (idx < 0 || idx >= rowCards.size()) {
             viewUpdater.notifyError(player.getPlayerId(), "INVALID_CARD",
                     "Card index out of range for the specified row.");
             return;
         }
-        Card targetCard = availableCards.get(idx);
+        Card targetCard = rowCards.get(idx);
 
         // Determine card type and execute
         if (targetCard instanceof BuildingCard building) {
