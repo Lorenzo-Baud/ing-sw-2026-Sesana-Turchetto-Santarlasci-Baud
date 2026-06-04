@@ -338,10 +338,9 @@ public class GameScreenController {
                 }
                 case EventResolvedMessage m -> guiView.showInfo("Eventi risolti", formatResolvedEvents(m));
                 case ErrorMessage m -> {
-                    System.out.println("Received error message from server: " + m.getError());
+                    LOGGER.fine(() -> "Received error message from server: " + m.getError());
                     guiView.lastErrorMessageAt = System.currentTimeMillis();
                     guiView.showError("Errore", m.getError());
-                    return;
                 }
                 case ConnectionUpdateMessage m -> {
                     // TODO: handle this
