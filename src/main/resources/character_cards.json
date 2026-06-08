@@ -49,7 +49,7 @@
   {"front":  "/cards/character_cards/collectors/collector_7.png", "back": "", "era": "2", "number_of_players": 4, "type": "collector", "foodDiscount": 3},
   {"front":  "/cards/character_cards/collectors/collector_9.png", "back": "", "era": "2", "number_of_players": 5, "type": "collector", "foodDiscount": 3},
 
-  {"front":  "/cards/character_cards/artists/artist_9png", "back": "", "era": "2", "number_of_players": 0, "type": "artist"},
+  {"front":  "/cards/character_cards/artists/artist_9.png", "back": "", "era": "2", "number_of_players": 0, "type": "artist"},
   {"front":  "/cards/character_cards/artists/artist_11.png", "back": "", "era": "2", "number_of_players": 0, "type": "artist"},
   {"front":  "/cards/character_cards/artists/artist_12.png", "back": "", "era": "2", "number_of_players": 0, "type": "artist"},
   {"front":  "/cards/character_cards/artists/artist_4.png", "back": "", "era": "2", "number_of_players": 3, "type": "artist"},

@@ -1,9 +1,7 @@
 package it.polimi.ingws.gc8.View.GUI;
 
-import it.polimi.ingws.gc8.Controller.actions.PlaceTotemAction;
-import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
-import it.polimi.ingws.gc8.Controller.actions.ReturnTotemAction;
-import it.polimi.ingws.gc8.Controller.actions.TakeCardAction;
+import it.polimi.ingws.gc8.Controller.actions.*;
+import it.polimi.ingws.gc8.Model.Board.OffertileId;
 import it.polimi.ingws.gc8.Model.Enum.*;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 import it.polimi.ingws.gc8.Network.DTO.GameDTO;
@@ -89,6 +87,13 @@ public class GameScreenController {
     @FXML Circle topBarP4Marker;
     @FXML Circle topBarP5Marker;
     private List<Circle> topBarPlayerMarkers;
+
+    /** Labels for food in turn order track */
+    @FXML Label turnOrderTrackLabel1;
+    @FXML Label turnOrderTrackLabel2;
+    @FXML Label turnOrderTrackLabel3;
+    @FXML Label turnOrderTrackLabel4;
+    @FXML Label turnOrderTrackLabel5;
 
     /** Player markers on side bar. */
     @FXML Circle leftBarTurnOrderCircle1;
@@ -198,6 +203,38 @@ public class GameScreenController {
             leftBarTurnOrderTiles.get(i).setVisible(false);
         }
 
+        // Turn order left bar initialization
+        switch(guiView.getGameView().players().size()) {
+            case 2:
+                turnOrderTrackLabel1.setText("+1\uD83C\uDF56");
+                turnOrderTrackLabel2.setText("-1\uD83C\uDF56/-2PP");
+                turnOrderTrackLabel1.setVisible(true);
+                turnOrderTrackLabel2.setVisible(true);
+                break;
+            case 3:
+                turnOrderTrackLabel1.setText("+2\uD83C\uDF56");
+                turnOrderTrackLabel3.setText("-1\uD83C\uDF56/-2PP");
+                turnOrderTrackLabel1.setVisible(true);
+                turnOrderTrackLabel3.setVisible(true);
+                break;
+            case 4:
+                turnOrderTrackLabel1.setText("+2\uD83C\uDF56");
+                turnOrderTrackLabel2.setText("+1\uD83C\uDF56");
+                turnOrderTrackLabel4.setText("-1\uD83C\uDF56/-2PP");
+                turnOrderTrackLabel1.setVisible(true);
+                turnOrderTrackLabel2.setVisible(true);
+                turnOrderTrackLabel4.setVisible(true);
+                break;
+            case 5:
+                turnOrderTrackLabel1.setText("+3\uD83C\uDF56");
+                turnOrderTrackLabel2.setText("+1\uD83C\uDF56");
+                turnOrderTrackLabel5.setText("-1\uD83C\uDF56/-2PP");
+                turnOrderTrackLabel1.setVisible(true);
+                turnOrderTrackLabel2.setVisible(true);
+                turnOrderTrackLabel5.setVisible(true);
+                break;
+        }
+
     }
 
     /**
@@ -214,6 +251,21 @@ public class GameScreenController {
         // Only fire when we transition from "not my turn" to "my turn",
         // not every update.
         yourTurnLabel.setVisible(guiView.isMyTurn());
+
+        OfferTileDTO myTile = guiView.getGameView().offerTrack().stream()
+                .filter(tile -> tile.playerIndexOccupant() == guiView.getPlayerId())
+                .findFirst()
+                .orElse(null);
+
+        if(myTile != null) {
+            int maxUpper = View.maxUpperPicks(myTile.id());
+            int maxLower = View.maxLowerPicks(myTile.id());
+
+            // Sets turn label text
+            yourTurnLabel.setText("È il tuo turno! ↓" + turnLowerTaken + "/" + maxLower + " ↑" + turnUpperTaken + "/" + maxUpper);
+        }
+
+
         previousMyTurn = myTurn;
 
 
@@ -303,6 +355,26 @@ public class GameScreenController {
     /** Convenience overload that reads the current snapshot. */
     private void updateInterface() {
         renderFromSnapshot(guiView.getGameView());
+
+        /*
+            If the player placed his totem on the food tile takes food and
+            returns to turn order track
+         */
+        if(guiView.isMyTurn()) {
+            OfferTileDTO myTile = guiView.getGameView().offerTrack().stream()
+                    .filter(tile -> tile.playerIndexOccupant() == guiView.getPlayerId())
+                    .findFirst()
+                    .orElse(null);
+            if(myTile != null) {
+                if(myTile.id() == OffertileId.A) {
+                    if (guiView.sendAndAwaitUpdate(new TakeFoodAction(guiView.getPlayerId())) == View.SendResult.OK) {
+                        guiView.showInfo("Turno terminato", "Hai guadagnato 3 cibo e sei ritornato automaticamente in psoizione");
+                        endTurnAndReturnTotem();
+                    }
+                }
+            }
+        }
+
     }
 
     /** Maps a TotemColor to a JavaFX fill style and applies it to the given circle. */
@@ -532,13 +604,12 @@ public class GameScreenController {
 
         int maxUpper = View.maxUpperPicks(myTile.id());
         int maxLower = View.maxLowerPicks(myTile.id());
-        boolean canFood = View.allowsFood(myTile.id());
 
         // Automatically return the totem when all possible action quotas are completely exhausted
         if (((turnLowerTaken <= maxLower && guiView.getGameView().lowerRowCards().isEmpty()) && turnUpperTaken == maxUpper) ||
             ((turnUpperTaken <= maxUpper && guiView.getGameView().upperRowCards().isEmpty()) && turnLowerTaken == maxLower) ||
             (guiView.getGameView().upperRowCards().isEmpty() && guiView.getGameView().lowerRowCards().isEmpty()) ||
-            (turnUpperTaken == maxUpper && turnLowerTaken == maxLower) ) { // && (!canFood || turnFoodTaken)) {
+            (turnUpperTaken == maxUpper && turnLowerTaken == maxLower) ) {
             System.out.println("GUI: All picks completed. Triggering automatic totem return.");
             endTurnAndReturnTotem();
         }
