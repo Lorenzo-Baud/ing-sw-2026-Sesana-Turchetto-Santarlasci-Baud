@@ -366,10 +366,13 @@ public class GameScreenController {
                     .findFirst()
                     .orElse(null);
             if(myTile != null) {
-                if(myTile.id() == OffertileId.A) {
+                if(myTile.id() == OffertileId.A && !turnFoodTaken) {
+                    turnFoodTaken = true;
                     if (guiView.sendAndAwaitUpdate(new TakeFoodAction(guiView.getPlayerId())) == View.SendResult.OK) {
-                        guiView.showInfo("Turno terminato", "Hai guadagnato 3 cibo e sei ritornato automaticamente in psoizione");
                         endTurnAndReturnTotem();
+                        guiView.showInfo("Turno terminato", "Hai guadagnato 3 cibo e sei ritornato automaticamente in posizione");
+                    } else {
+                        turnFoodTaken = false;
                     }
                 }
             }
