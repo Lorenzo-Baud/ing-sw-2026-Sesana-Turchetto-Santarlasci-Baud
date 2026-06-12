@@ -17,9 +17,9 @@ class OfferTileTest {
 
     @BeforeEach
     void setUp() {
-        tileB = new OfferTile(OffertileId.B, null, 0, 1, 0);
-        tileA = new OfferTile(OffertileId.A, 5, 3, 0, 0);
-        tileG = new OfferTile(OffertileId.G, 4, 0, 1, 2);
+        tileB = new OfferTile(OffertileId.B, null, 0, 1, 0, "");
+        tileA = new OfferTile(OffertileId.A, 5, 3, 0, 0, "");
+        tileG = new OfferTile(OffertileId.G, 4, 0, 1, 2, "");
         player = new Player(1, "TestPlayer", TotemColor.RED);
     }
 

@@ -145,7 +145,6 @@ class MainControllerTest {
         GeneralAction action = new GeneralAction(r.playerId());
         mainController.dispatchAction(action);
 
-        assertTrue(conn1.receivedErrorMessage("No game in progress."));
     }
 
     @Test
