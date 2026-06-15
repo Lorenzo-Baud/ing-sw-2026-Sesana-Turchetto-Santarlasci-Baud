@@ -12,6 +12,8 @@ import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.EventType;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -105,7 +107,14 @@ public class Board {
 
         // Character card parsing
         try {
-            JsonNode root = mapper.readTree(new File("src/main/resources/character_cards.json"));
+
+            InputStream is = Board.class.getResourceAsStream("/character_cards.json");
+
+            if (is == null) {
+                throw new FileNotFoundException("Impossibile trovare character_cards.json nelle risorse del JAR");
+            }
+
+            JsonNode root = mapper.readTree(is);
 
             // Characters cards parsing
             for (JsonNode node : root) {
@@ -166,7 +175,14 @@ public class Board {
 
         // Event cards parsing
         try {
-            JsonNode root = mapper.readTree(new File("src/main/resources/event_cards.json"));
+
+            InputStream is = Board.class.getResourceAsStream("/event_cards.json");
+
+            if (is == null) {
+                throw new FileNotFoundException("Impossibile trovare event_cards.json nelle risorse del JAR");
+            }
+
+            JsonNode root = mapper.readTree(is);
 
             for (JsonNode node : root) {
                 String front = node.get("front").asText();
@@ -337,7 +353,8 @@ public class Board {
      */
     private List<BuildingCard> loadBuildingDecks(int playerCount) {
         List<BuildingCard> all = BuildingCard.loadFromJson(
-                "src/main/resources/buildings_cards.json");
+                "/buildings_cards.json");
+
         List<BuildingCard> era1 = new ArrayList<>();
         List<BuildingCard> era2 = new ArrayList<>();
         List<BuildingCard> era3 = new ArrayList<>();

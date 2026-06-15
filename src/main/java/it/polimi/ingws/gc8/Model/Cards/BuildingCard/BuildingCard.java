@@ -7,6 +7,8 @@ import it.polimi.ingws.gc8.Model.Enum.CardType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -41,7 +43,15 @@ public class BuildingCard extends Card {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            JsonNode root = mapper.readTree(new File(path));
+
+            InputStream is = BuildingCard.class.getResourceAsStream(path);
+
+            if (is == null) {
+                throw new FileNotFoundException("Impossibile trovare buildings_cards.json nelle risorse del JAR");
+            }
+
+            JsonNode root = mapper.readTree(is);
+
 
             for (JsonNode node : root) {
                 // Skip comment entries

@@ -50,7 +50,7 @@ class BuildingCardTest {
 
     @Test
     void testLoadFromJson_RealFile() {
-        List<BuildingCard> cards = BuildingCard.loadFromJson("src/main/resources/buildings_cards.json");
+        List<BuildingCard> cards = BuildingCard.loadFromJson("/buildings_cards.json");
 
         assertNotNull(cards);
         assertFalse(cards.isEmpty(), "The list should not be empty if the JSON is correctly populated");
