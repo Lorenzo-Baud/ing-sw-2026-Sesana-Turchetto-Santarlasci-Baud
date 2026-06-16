@@ -10,6 +10,7 @@ import it.polimi.ingws.gc8.Network.ViewUpdater;
 
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.IntPredicate;
 
 /**
  * Main game controller. Owns a single game instance and uses the State pattern
@@ -37,6 +38,10 @@ public class GameController {
 
     /** Index of the current player within offerOrder. */
     private int offerOrderIndex;
+
+    /** FA3: tells whether a given playerId is currently disconnected.
+     *  Set by {@link MainController}; defaults to "nobody disconnected". */
+    private IntPredicate disconnectedCheck = id -> false;
 
     public GameController(ViewUpdater viewUpdater) {
         this.model = new MesosGame(viewUpdater);
@@ -112,6 +117,26 @@ public class GameController {
         }
     }
 
+    /**
+     * Forces the game to end immediately (FA3): used when the sole-survivor
+     * timeout expires and the only connected player wins by default.
+     * Transitions the model to {@link GamePhase#GAME_OVER} and broadcasts a
+     * {@link it.polimi.ingws.gc8.Network.Messages.GameOverMessage}.
+     *
+     * @param endMessage human-readable summary of how the game ended
+     */
+    public void forceGameOver(String endMessage) {
+        gameLock.lock();
+        try {
+            if (model.getPhase() != GamePhase.GAME_OVER) {
+                transitionTo(GamePhase.GAME_OVER);
+            }
+            viewUpdater.notifyGameOver(model, endMessage);
+        } finally {
+            gameLock.unlock();
+        }
+    }
+
     public GameModel getModel() {
         return model;
     }
@@ -122,6 +147,36 @@ public class GameController {
 
     public Player getPlayerById(int playerId) {
         return playerMap.get(playerId);
+    }
+
+    /**
+     * FA3: registers the predicate used by game states to skip the turn of
+     * disconnected players. Set by {@link MainController} after game start.
+     */
+    public void setDisconnectedCheck(IntPredicate check) {
+        this.disconnectedCheck = (check == null) ? id -> false : check;
+    }
+
+    /** FA3: @return true if the given player is currently disconnected. */
+    public boolean isDisconnected(int playerId) {
+        return disconnectedCheck.test(playerId);
+    }
+
+    /**
+     * FA3: a player disconnected while the game is running. Lets the current
+     * state advance past them if they were the active player. Acquires the
+     * game lock so it serializes with normal action handling.
+     */
+    public void onPlayerDisconnected() {
+        gameLock.lock();
+        try {
+            GameState current = states.get(model.getPhase());
+            if (current != null) {
+                current.onCurrentPlayerDisconnected(this);
+            }
+        } finally {
+            gameLock.unlock();
+        }
     }
 
     public GameState getCurrentState() {

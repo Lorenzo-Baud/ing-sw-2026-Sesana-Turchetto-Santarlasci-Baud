@@ -32,15 +32,22 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
     }
 
     @Override
-    public JoinResult createMatch(String nickname, RemoteView clientView) throws RemoteException {
+    public JoinResult createMatch(String matchName, String nickname, RemoteView clientView) throws RemoteException {
         if (clientView == null || nickname == null || nickname.isBlank()) {
             throw new RemoteException("Invalid parameters");
+        }
+
+        // Validate/reserve the name first, so a collision doesn't leak a connection.
+        MainController match;
+        try {
+            match = registry.createMatch(matchName);
+        } catch (IllegalStateException e) {
+            throw new RemoteException(e.getMessage());
         }
 
         RMIClientConnection connection = new RMIClientConnection(clientView);
         ClientHandler handler = new ClientHandler(connection, registry, nickname);
 
-        MainController match = registry.createMatch();
         JoinResult result = match.joinOrReconnect(nickname, handler);
 
         String key = result.matchId() + ":" + result.playerId();
@@ -107,6 +114,14 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
         RMIClientConnection conn = connections.get(key);
         if (conn != null) {
             conn.enqueueAction(action);
+        }
+    }
+
+    @Override
+    public void pong(int playerId, String matchId) throws RemoteException {
+        MainController match = registry.getMatch(matchId);
+        if (match != null) {
+            match.onPong(playerId);
         }
     }
 

@@ -13,7 +13,7 @@ public interface RemoteServer extends Remote {
 
     List<MatchInfo> listOpenMatches() throws RemoteException;
 
-    JoinResult createMatch(String nickname, RemoteView clientView) throws RemoteException;
+    JoinResult createMatch(String matchName, String nickname, RemoteView clientView) throws RemoteException;
 
     JoinResult joinMatch(String matchId, String nickname, RemoteView clientView) throws RemoteException;
 
@@ -22,6 +22,9 @@ public interface RemoteServer extends Remote {
     void requestStartGame(int playerId, String matchId) throws RemoteException;
 
     void submitAction(PlayerAction action, String matchId) throws RemoteException;
+
+    /** FA3: heartbeat reply from the client to keep its liveness timer fresh. */
+    void pong(int playerId, String matchId) throws RemoteException;
 
     void logout(int playerId, String matchId) throws RemoteException;
 }

@@ -119,7 +119,9 @@ public class StartScreenController {
         List<MatchInfo> matches = connection.listMatches();
 
         if (matches.isEmpty()) {
-            return connection.createMatch(nickname);
+            String name = promptMatchName();
+            if (name == null) return null;
+            return connection.createMatch(name, nickname);
         }
 
         List<String> choices = new java.util.ArrayList<>();
@@ -140,11 +142,28 @@ public class StartScreenController {
 
         String selected = result.get();
         if (selected.equals("Nuova partita")) {
-            return connection.createMatch(nickname);
+            String name = promptMatchName();
+            if (name == null) return null;
+            return connection.createMatch(name, nickname);
         }
 
         int idx = choices.indexOf(selected) - 1;
         return connection.joinMatch(matches.get(idx).matchId(), nickname);
+    }
+
+    /**
+     * Prompts the host for a match name. Must run on the FX thread.
+     * @return the trimmed name, or {@code null} if cancelled/blank
+     */
+    private String promptMatchName() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Nuova partita");
+        dialog.setHeaderText("Dai un nome alla partita");
+        dialog.setContentText("Nome:");
+        Optional<String> res = dialog.showAndWait();
+        if (res.isEmpty()) return null;
+        String name = res.get().trim();
+        return name.isEmpty() ? null : name;
     }
 
 

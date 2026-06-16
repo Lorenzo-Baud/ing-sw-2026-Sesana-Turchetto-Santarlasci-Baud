@@ -13,6 +13,7 @@ import it.polimi.ingws.gc8.Network.Connection.Socket.commands.SetExpectedPlayers
 import it.polimi.ingws.gc8.Network.DTO.JoinResult;
 import it.polimi.ingws.gc8.Network.Messages.ErrorMessage;
 import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
+import it.polimi.ingws.gc8.Network.Messages.PongMessage;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -81,7 +82,7 @@ public class ClientHandler implements Runnable, GameEventListener {
         } else if (message instanceof CreateMatchRequest req) {
             try {
                 this.nickname = req.nickname();
-                MainController newMatch = registry.createMatch();
+                MainController newMatch = registry.createMatch(req.matchName());
                 JoinResult result = newMatch.joinOrReconnect(req.nickname(), this);
                 connection.sendMessage(result);
             } catch (IllegalStateException e) {
@@ -114,6 +115,10 @@ public class ClientHandler implements Runnable, GameEventListener {
                 return;
             }
             match.dispatchAction(action);
+
+        } else if (message instanceof PongMessage) {
+            // FA3: heartbeat reply (TCP path); refresh this player's liveness.
+            match.onPong(this.playerId);
 
         } else if (message instanceof SetExpectedPlayersCommand cmd) {
             match.setExpectedPlayers(this.playerId, cmd.n());

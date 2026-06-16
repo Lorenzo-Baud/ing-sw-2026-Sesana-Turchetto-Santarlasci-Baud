@@ -236,6 +236,39 @@ public class ViewUpdater {
         broadcast(new ConnectionUpdateMessage(playerNickname, true));
     }
 
+    /**
+     * Broadcasts that the match has been suspended because a single player is
+     * left connected (FA3). Sent as an informational {@link ErrorMessage} with
+     * code {@code SUSPENDED}, which existing views already render as a notice.
+     *
+     * @param soleSurvivorNickname the nickname of the only connected player
+     */
+    public void notifyMatchSuspended(String soleSurvivorNickname) {
+        broadcast(new ErrorMessage("SUSPENDED",
+                "Partita sospesa: sei l'unico giocatore connesso. In attesa di altri..."));
+    }
+
+    /**
+     * Broadcasts that a suspended match has resumed because enough players
+     * reconnected (FA3).
+     */
+    public void notifyMatchResumed() {
+        broadcast(new ErrorMessage("RESUMED",
+                "Partita ripresa: abbastanza giocatori sono riconnessi."));
+    }
+
+    /**
+     * Ends the game and broadcasts a {@link GameOverMessage} carrying the final
+     * snapshot. Used by FA3 when the sole-survivor timeout expires.
+     *
+     * @param model      the current game model (its phase should already be GAME_OVER)
+     * @param endMessage a human-readable summary of how the game ended
+     */
+    public void notifyGameOver(GameModel model, String endMessage) {
+        if (model == null) return;
+        broadcast(new GameOverMessage(endMessage, buildGameDTO(model)));
+    }
+
     // --- Event resolution notifications ---
 
     /**

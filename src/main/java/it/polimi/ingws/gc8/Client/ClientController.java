@@ -2,6 +2,7 @@ package it.polimi.ingws.gc8.Client;
 
 import it.polimi.ingws.gc8.Network.Messages.ErrorMessage;
 import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
+import it.polimi.ingws.gc8.Network.Messages.PingMessage;
 import it.polimi.ingws.gc8.Network.Connection.ServerConnection;
 import it.polimi.ingws.gc8.View.View;
 
@@ -69,7 +70,15 @@ public class ClientController implements ViewListener {
         while (running) {
             try {
                 Object raw = serverConnection.receive(); // Blocks until a message arrives
-                if (raw instanceof NetworkMessage m) {
+                if (raw instanceof PingMessage) {
+                    // FA3: heartbeat — reply immediately, never forward to the UI.
+                    try {
+                        serverConnection.pong();
+                    } catch (Exception ignored) {
+                        // A failed pong means the link is down; the next receive()
+                        // will surface the error through the normal path.
+                    }
+                } else if (raw instanceof NetworkMessage m) {
                     view.addMessage(m);                 // Queues the message into the queue
                 }
                 // Unknown messages are discarded

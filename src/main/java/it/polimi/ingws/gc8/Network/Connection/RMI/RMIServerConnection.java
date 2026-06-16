@@ -36,9 +36,9 @@ public class RMIServerConnection implements ServerConnection {
     }
 
     @Override
-    public JoinResult createMatch(String nickname) throws Exception {
+    public JoinResult createMatch(String matchName, String nickname) throws Exception {
         ensureConnected();
-        JoinResult result = remoteServer.createMatch(nickname, clientView);
+        JoinResult result = remoteServer.createMatch(matchName, nickname, clientView);
         this.playerId = result.playerId();
         this.matchId = result.matchId();
         return result;
@@ -79,6 +79,16 @@ public class RMIServerConnection implements ServerConnection {
         } catch (RemoteException e) {
             connected = false;
             throw new IllegalStateException("Connection lost while sending action", e);
+        }
+    }
+
+    @Override
+    public void pong() throws Exception {
+        if (!connected || remoteServer == null) return;
+        try {
+            remoteServer.pong(playerId, matchId);
+        } catch (RemoteException e) {
+            connected = false;
         }
     }
 

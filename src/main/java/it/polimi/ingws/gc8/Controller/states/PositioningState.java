@@ -9,6 +9,8 @@ import it.polimi.ingws.gc8.Model.Player;
 import it.polimi.ingws.gc8.Model.Board.OfferTile;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 
+import java.util.List;
+
 /**
  * State active during {@link GamePhase#POSITIONING}.
  * Players place their totems on offer tiles, one at a time,
@@ -55,28 +57,65 @@ public class PositioningState implements GameState {
             return;
         }
 
-        // Execute the action on the model
-        model.placeTotem(player, targetTile);
-        
-        // Check if all totems are placed → transition
-        if (model.allTotemsPlaced()) {
-            context.transitionTo(GamePhase.ACTION_RESOLUTION);
+        // Execute the action on the model (and transition if it was the last).
+        placeAndCheckTransition(context, player, targetTile);
 
-        }
+        // FA3: if the next player(s) in turn order are disconnected, auto-skip
+        // them so a single offline player cannot stall the positioning phase.
+        skipDisconnectedPlayers(context);
     }
 
     @Override
     public void onEnter(GameController context) {
-        // Notify the first player in turn order that it's their turn
-        Player firstPlayer = context.getModel().getCurrentPlayer();
-        if (firstPlayer != null) {
-            context.getViewUpdater().notifyPlayerTurn(firstPlayer);
+        // FA3: the first player(s) may already be disconnected; skip them.
+        skipDisconnectedPlayers(context);
+
+        // Notify whoever is up now (only if we are still positioning).
+        GameModel model = context.getModel();
+        if (model.getPhase() == GamePhase.POSITIONING) {
+            Player firstPlayer = model.getCurrentPlayer();
+            if (firstPlayer != null) {
+                context.getViewUpdater().notifyPlayerTurn(firstPlayer);
+            }
+        }
+    }
+
+    /**
+     * FA3: while the current player is disconnected, auto-place their totem on
+     * the first available offer tile (no gains for them) so the phase can
+     * progress. The loop terminates when a connected player is reached or the
+     * phase transitions; each iteration consumes one tile, so it is bounded.
+     */
+    private void skipDisconnectedPlayers(GameController context) {
+        GameModel model = context.getModel();
+        while (model.getPhase() == GamePhase.POSITIONING) {
+            Player current = model.getCurrentPlayer();
+            if (current == null || !context.isDisconnected(current.getPlayerId())) {
+                break;
+            }
+            List<OfferTile> available = model.getAvailableOfferTiles();
+            if (available.isEmpty()) break; // safety: nothing to place on
+            placeAndCheckTransition(context, current, available.get(0));
+        }
+    }
+
+    /** Places a totem and transitions to action resolution if it was the last. */
+    private void placeAndCheckTransition(GameController context, Player player, OfferTile tile) {
+        context.getModel().placeTotem(player, tile);
+        if (context.getModel().allTotemsPlaced()) {
+            context.transitionTo(GamePhase.ACTION_RESOLUTION);
         }
     }
 
     @Override
     public void onExit(GameController context) {
         // No cleanup needed
+    }
+
+    @Override
+    public void onCurrentPlayerDisconnected(GameController context) {
+        // FA3: if the player who just dropped is the one to act, skip them.
+        skipDisconnectedPlayers(context);
     }
 
     private OfferTile findOfferTile(GameModel model, String tileId) {

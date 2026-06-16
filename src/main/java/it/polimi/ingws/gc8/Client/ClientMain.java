@@ -98,12 +98,18 @@ public class ClientMain {
                             + "/" + (m.expectedPlayers() > 0 ? m.expectedPlayers() : "?") + "]");
                 }
             }
-            Printer.printInfo("[N] Nuova partita | [J <id>] Unisciti | [R] Aggiorna");
+            Printer.printInfo("[N] Nuova partita | [J <nome>] Unisciti | [R] Aggiorna");
             System.out.print("> ");
 
             String line = scanner.nextLine().trim();
             if (line.equalsIgnoreCase("N")) {
-                return connection.createMatch(nickname);
+                System.out.print("Nome della partita: ");
+                String matchName = scanner.nextLine().trim();
+                try {
+                    return connection.createMatch(matchName, nickname);
+                } catch (Exception e) {
+                    Printer.printError(e.getMessage());
+                }
             } else if (line.toUpperCase().startsWith("J ")) {
                 String matchId = line.substring(2).trim();
                 try {

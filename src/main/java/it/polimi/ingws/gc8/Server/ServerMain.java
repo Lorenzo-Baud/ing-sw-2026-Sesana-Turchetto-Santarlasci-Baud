@@ -10,6 +10,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.Enumeration;
 
 /**
@@ -54,6 +55,21 @@ public class ServerMain {
             Thread socketThread = new Thread(socketServer, "tcp-accept-loop");
             socketThread.start();
             System.out.println("[Server] MESOS TCP ready on " + hostname + ":" + socketPort);
+
+            // Graceful shutdown (Ctrl-C / SIGTERM): unexport the RMI objects so
+            // port 1099 is released, and close the TCP accept loop. Without this
+            // the non-daemon RMI threads keep the JVM (and the port) alive,
+            // causing "Address already in use" on the next start.
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                System.out.println("[Server] Shutting down…");
+                socketServer.stop();
+                try {
+                    UnicastRemoteObject.unexportObject(rmiServer, true);
+                } catch (Exception ignored) {}
+                try {
+                    UnicastRemoteObject.unexportObject(registry, true);
+                } catch (Exception ignored) {}
+            }, "server-shutdown"));
 
             System.out.println("[Server] Clients must connect using host '" + hostname + "'.");
             if (LOOPBACK.equals(hostname)) {

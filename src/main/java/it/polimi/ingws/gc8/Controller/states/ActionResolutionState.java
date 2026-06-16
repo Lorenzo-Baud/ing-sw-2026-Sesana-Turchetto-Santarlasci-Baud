@@ -83,6 +83,9 @@ public class ActionResolutionState implements GameState {
             Player firstPlayer = offerOrder.get(0);
             context.getModel().setCurrentPlayer(firstPlayer); // Questo scatena notifyUpdate!
         }
+
+        // FA3: the first offer player(s) may be disconnected; skip them.
+        skipDisconnectedOfferPlayers(context);
     }
 
     @Override
@@ -90,6 +93,13 @@ public class ActionResolutionState implements GameState {
         // Clear offer order tracking
         context.setOfferOrder(null);
         context.setOfferOrderIndex(0);
+    }
+
+    @Override
+    public void onCurrentPlayerDisconnected(GameController context) {
+        // FA3: if the active offer player just dropped, auto-return their totem
+        // (no gains) and advance, so the phase keeps moving.
+        skipDisconnectedOfferPlayers(context);
     }
 
     private void handleTakeCard(GameController context, Player player, TakeCardAction action) {
@@ -186,6 +196,18 @@ public class ActionResolutionState implements GameState {
     }
 
     private void handleReturnTotem(GameController context, Player player) {
+        advanceToNextOfferPlayer(context, player);
+
+        // FA3: skip any disconnected players who are next in the offer order.
+        skipDisconnectedOfferPlayers(context);
+    }
+
+    /**
+     * Returns the given player's totem and advances the offer order to the next
+     * player, transitioning to {@link GamePhase#END_ROUND} when the order is
+     * exhausted.
+     */
+    private void advanceToNextOfferPlayer(GameController context, Player player) {
         GameModel model = context.getModel();
 
         model.returnTotemToTurnOrder(player);
@@ -201,9 +223,23 @@ public class ActionResolutionState implements GameState {
         if (nextIndex >= offerOrder.size()) {
             context.transitionTo(GamePhase.END_ROUND);
         } else {
-
             Player nextPlayer = offerOrder.get(nextIndex);
             context.getModel().setCurrentPlayer(nextPlayer);
+        }
+    }
+
+    /**
+     * FA3: while the current offer player is disconnected, auto-return their
+     * totem with no picks (no gains) and advance, so an offline player cannot
+     * stall the action-resolution phase. Bounded by the offer order size.
+     */
+    private void skipDisconnectedOfferPlayers(GameController context) {
+        while (context.getModel().getPhase() == GamePhase.ACTION_RESOLUTION) {
+            Player current = getCurrentOfferPlayer(context);
+            if (current == null || !context.isDisconnected(current.getPlayerId())) {
+                break;
+            }
+            advanceToNextOfferPlayer(context, current);
         }
     }
 

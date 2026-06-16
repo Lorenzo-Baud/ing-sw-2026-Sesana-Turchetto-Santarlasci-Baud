@@ -9,12 +9,17 @@ import it.polimi.ingws.gc8.Network.DTO.MatchStatus;
 import it.polimi.ingws.gc8.Network.ViewUpdater;
 import it.polimi.ingws.gc8.Network.Connection.ClientHandler;
 import it.polimi.ingws.gc8.Network.Messages.LobbyUpdateMessage;
+import it.polimi.ingws.gc8.Network.Messages.PingMessage;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Manages a single match: lobby, game start, and action routing.
@@ -25,12 +30,27 @@ public class MainController {
     public static final int MIN_PLAYERS = 2;
     public static final int MAX_PLAYERS = 5;
 
+    /** FA3: minimum connected players for the game to keep running. */
+    public static final int MIN_TO_CONTINUE = 2;
+    /** FA3: how long a sole survivor waits before winning by default. */
+    public static final long SOLE_SURVIVOR_TIMEOUT_MS = 60_000L;
+    /** FA3: how often the server pings connected clients. */
+    public static final long PING_INTERVAL_MS = 10_000L;
+    /** FA3: a client with no pong within this window is considered gone (> 2× interval). */
+    public static final long PING_TIMEOUT_MS = 25_000L;
+
     private final String matchId;
     private final MatchRegistry registry;
 
     private final List<ClientHandler> lobby;
     private final Map<Integer, ClientHandler> clientMap;
     private final Map<String, Integer> nickToPlayerId;
+
+    /** FA3: per-player connection state, populated when the game starts. */
+    private final Map<Integer, ConnectionState> connState;
+
+    /** FA3: last time (ms) a pong was received from each player. */
+    private final Map<Integer, Long> lastPongMs;
 
     private ViewUpdater viewUpdater;
     private GameController gameController;
@@ -42,17 +62,32 @@ public class MainController {
     private int expectedPlayers;
     private String hostNickname;
 
+    /** FA3: true while the match is suspended waiting for more players. */
+    private volatile boolean suspended;
+    /** FA3: per-match scheduler for the sole-survivor timeout. */
+    private final ScheduledExecutorService scheduler;
+    /** FA3: pending sole-survivor timeout task (guarded by lobbyLock). */
+    private ScheduledFuture<?> soleSurvivorTask;
+
     public MainController(String matchId, MatchRegistry registry) {
         this.matchId = matchId;
         this.registry = registry;
         this.lobby = new CopyOnWriteArrayList<>();
         this.clientMap = new ConcurrentHashMap<>();
         this.nickToPlayerId = new ConcurrentHashMap<>();
+        this.connState = new ConcurrentHashMap<>();
+        this.lastPongMs = new ConcurrentHashMap<>();
         this.lobbyLock = new Object();
         this.status = MatchStatus.LOBBY;
         this.nextPlayerId = 1;
         this.hostPlayerId = -1;
         this.expectedPlayers = 0;
+        this.suspended = false;
+        this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "match-scheduler-" + matchId);
+            t.setDaemon(true);
+            return t;
+        });
     }
 
     /**
@@ -71,14 +106,22 @@ public class MainController {
                 if (status == MatchStatus.LOBBY) {
                     throw new IllegalStateException("Nickname già in uso in questa lobby");
                 }
+                // FA3: reject a second live connection for the same nickname
+                // instead of silently replacing the existing one.
+                if (connState.get(existingId) == ConnectionState.CONNECTED) {
+                    throw new IllegalStateException("Nickname già attivo in questa partita");
+                }
                 // Reconnection to in-progress match
                 clientHandler.attachToMatch(this, existingId);
                 clientMap.put(existingId, clientHandler);
+                connState.put(existingId, ConnectionState.CONNECTED);
+                lastPongMs.put(existingId, System.currentTimeMillis());
                 if (viewUpdater != null) {
                     viewUpdater.addListener(clientHandler);
                     viewUpdater.sendFullSnapshotTo(clientHandler, gameController.getModel());
                     viewUpdater.notifyPlayerReconnected(nickname);
                 }
+                maybeResumeAfterReconnect();
                 return new JoinResult(matchId, existingId, isHost(existingId));
             }
 
@@ -122,12 +165,24 @@ public class MainController {
                 broadcastLobbyUpdate();
                 if (lobby.isEmpty()) {
                     registry.removeMatch(matchId);
+                    shutdown();
                 }
             } else {
+                int pid = clientHandler.getPlayerId();
+                // FA3: keep the handler reference in clientMap so we still know
+                // the nickname, but mark the player as disconnected.
+                connState.put(pid, ConnectionState.DISCONNECTED);
                 if (viewUpdater != null) {
+                    viewUpdater.removeListener(clientHandler);
                     viewUpdater.notifyPlayerDisconnected(clientHandler.getNickname());
                 }
-                // TODO: FA3 — logica pause/timeout
+                evaluateSuspensionAfterDisconnect();
+                // FA3: if the game is still running (not suspended) and the
+                // leaver was the active player, advance past them so the turn
+                // does not stall.
+                if (!suspended && gameController != null) {
+                    gameController.onPlayerDisconnected();
+                }
             }
         }
     }
@@ -154,6 +209,14 @@ public class MainController {
             ClientHandler sender = clientMap.get(action.getPlayerId());
             if (sender != null) {
                 sender.sendError("No game in progress.");
+            }
+            return;
+        }
+        // FA3: while suspended (single player connected) reject game actions.
+        if (suspended) {
+            if (viewUpdater != null) {
+                viewUpdater.notifyError(action.getPlayerId(), "SUSPENDED",
+                        "Partita sospesa: in attesa di altri giocatori.");
             }
             return;
         }
@@ -204,13 +267,157 @@ public class MainController {
         }
 
         gameController = new GameController(viewUpdater);
+        gameController.setDisconnectedCheck(this::isDisconnected);
         TotemColor[] colors = TotemColor.values();
         List<Player> players = new ArrayList<>();
         for (int i = 0; i < lobby.size(); i++) {
             ClientHandler ch = lobby.get(i);
             players.add(new Player(ch.getPlayerId(), ch.getNickname(), colors[i]));
+            // FA3: everyone starts connected, with a fresh liveness timestamp.
+            connState.put(ch.getPlayerId(), ConnectionState.CONNECTED);
+            lastPongMs.put(ch.getPlayerId(), System.currentTimeMillis());
         }
         gameController.startGame(players);
+
+        // FA3: start the heartbeat once the game is actually running.
+        scheduler.scheduleAtFixedRate(this::heartbeatTick,
+                PING_INTERVAL_MS, PING_INTERVAL_MS, TimeUnit.MILLISECONDS);
+    }
+
+    // ------------------------------------------------------------------
+    // FA3 — disconnection resilience (suspend / resume / sole-survivor)
+    // ------------------------------------------------------------------
+
+    /** @return true if the given player is currently disconnected (FA3). */
+    public boolean isDisconnected(int playerId) {
+        return connState.get(playerId) == ConnectionState.DISCONNECTED;
+    }
+
+    /** FA3: records a heartbeat reply from the given player. */
+    public void onPong(int playerId) {
+        lastPongMs.put(playerId, System.currentTimeMillis());
+    }
+
+    /**
+     * FA3 heartbeat: pings every connected client and closes connections that
+     * have not replied within {@link #PING_TIMEOUT_MS}, catching silent drops
+     * (cable pull, NAT timeout) that produce no EOF. Runs on the per-match
+     * scheduler thread; closing a connection triggers the normal
+     * {@link #unregisterClient} path on the client-handler thread.
+     */
+    private void heartbeatTick() {
+        if (status != MatchStatus.IN_GAME) return;
+        long now = System.currentTimeMillis();
+        for (Integer id : new ArrayList<>(clientMap.keySet())) {
+            if (connState.get(id) != ConnectionState.CONNECTED) continue;
+            ClientHandler ch = clientMap.get(id);
+            if (ch == null) continue;
+            Long last = lastPongMs.get(id);
+            if (last != null && now - last > PING_TIMEOUT_MS) {
+                ch.close(); // -> run() finally -> unregisterClient -> DISCONNECTED
+            } else {
+                ch.onGameUpdate(new PingMessage());
+            }
+        }
+    }
+
+    /** @return number of players currently marked CONNECTED (FA3). */
+    public int countConnected() {
+        int n = 0;
+        for (ConnectionState s : connState.values()) {
+            if (s == ConnectionState.CONNECTED) n++;
+        }
+        return n;
+    }
+
+    /**
+     * Caller MUST hold {@link #lobbyLock}. Evaluates whether the match must be
+     * suspended after a player disconnected: if exactly one player is left
+     * connected, suspend and arm the sole-survivor timeout.
+     */
+    private void evaluateSuspensionAfterDisconnect() {
+        if (status != MatchStatus.IN_GAME) return;
+        int connected = countConnected();
+        if (connected == 1 && !suspended) {
+            suspended = true;
+            int survivor = onlyConnectedPlayerId();
+            if (viewUpdater != null) {
+                ClientHandler ch = clientMap.get(survivor);
+                viewUpdater.notifyMatchSuspended(ch == null ? null : ch.getNickname());
+            }
+            scheduleSoleSurvivorTimeout();
+        }
+        // connected == 0: server still up but nobody to play; leave suspended
+        // state untouched (a reconnection re-evaluates via maybeResume).
+    }
+
+    /**
+     * Caller MUST hold {@link #lobbyLock}. Resumes a suspended match once enough
+     * players are connected again, cancelling the sole-survivor timeout.
+     */
+    private void maybeResumeAfterReconnect() {
+        if (!suspended) return;
+        cancelSoleSurvivorTimeout();
+        if (countConnected() >= MIN_TO_CONTINUE) {
+            suspended = false;
+            if (viewUpdater != null) {
+                viewUpdater.notifyMatchResumed();
+            }
+        }
+    }
+
+    /** Caller MUST hold {@link #lobbyLock}. */
+    private int onlyConnectedPlayerId() {
+        for (Map.Entry<Integer, ConnectionState> e : connState.entrySet()) {
+            if (e.getValue() == ConnectionState.CONNECTED) return e.getKey();
+        }
+        return -1;
+    }
+
+    /** Caller MUST hold {@link #lobbyLock}. */
+    private void scheduleSoleSurvivorTimeout() {
+        cancelSoleSurvivorTimeout();
+        soleSurvivorTask = scheduler.schedule(this::declareSoleSurvivorWinner,
+                SOLE_SURVIVOR_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+    }
+
+    /** Caller MUST hold {@link #lobbyLock}. */
+    private void cancelSoleSurvivorTimeout() {
+        if (soleSurvivorTask != null) {
+            soleSurvivorTask.cancel(false);
+            soleSurvivorTask = null;
+        }
+    }
+
+    /**
+     * Sole-survivor timeout fired: the only connected player wins by default.
+     * Re-checks the condition under the lock to avoid a race with a last-moment
+     * reconnection.
+     */
+    private void declareSoleSurvivorWinner() {
+        GameController gc;
+        String winner;
+        synchronized (lobbyLock) {
+            if (!suspended || status != MatchStatus.IN_GAME) return;
+            if (countConnected() != 1) return;
+            int survivor = onlyConnectedPlayerId();
+            ClientHandler ch = clientMap.get(survivor);
+            winner = ch == null ? "?" : ch.getNickname();
+            gc = gameController;
+            status = MatchStatus.FINISHED;
+            soleSurvivorTask = null;
+        }
+        // Broadcast outside lobbyLock: forceGameOver takes the game lock.
+        if (gc != null) {
+            gc.forceGameOver("Vittoria di " + winner + " (unico giocatore rimasto connesso).");
+        }
+        shutdown();
+        registry.removeMatch(matchId);
+    }
+
+    /** Releases per-match resources (FA3 scheduler). */
+    public void shutdown() {
+        scheduler.shutdownNow();
     }
 
     private void broadcastLobbyUpdate() {

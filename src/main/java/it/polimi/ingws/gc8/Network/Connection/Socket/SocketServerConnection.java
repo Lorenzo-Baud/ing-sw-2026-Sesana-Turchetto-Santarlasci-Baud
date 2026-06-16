@@ -10,6 +10,7 @@ import it.polimi.ingws.gc8.Network.Connection.Socket.commands.SetExpectedPlayers
 import it.polimi.ingws.gc8.Network.DTO.JoinResult;
 import it.polimi.ingws.gc8.Network.DTO.MatchInfo;
 import it.polimi.ingws.gc8.Network.Messages.ErrorMessage;
+import it.polimi.ingws.gc8.Network.Messages.PongMessage;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -52,9 +53,9 @@ public class SocketServerConnection implements ServerConnection {
     }
 
     @Override
-    public JoinResult createMatch(String nickname) throws Exception {
+    public JoinResult createMatch(String matchName, String nickname) throws Exception {
         ensureConnected();
-        writeOnLock(new CreateMatchRequest(nickname));
+        writeOnLock(new CreateMatchRequest(matchName, nickname));
         Object resp = waitForResponse(JoinResult.class);
         if (resp instanceof ErrorMessage err) {
             throw new IOException(err.getError());
@@ -92,6 +93,16 @@ public class SocketServerConnection implements ServerConnection {
         if (!connected) return;
         try {
             writeOnLock(action);
+        } catch (IOException e) {
+            disconnect();
+        }
+    }
+
+    @Override
+    public void pong() throws Exception {
+        if (!connected) return;
+        try {
+            writeOnLock(new PongMessage());
         } catch (IOException e) {
             disconnect();
         }

@@ -31,4 +31,15 @@ public interface   GameState {
      * @param context the GameController
      */
     void onExit(GameController context);
+
+    /**
+     * FA3: invoked when a player disconnects while the game is running, so a
+     * turn-based state can advance past the active player if it was them.
+     * Default: no-op (states that are not turn-based ignore it).
+     *
+     * @param context the GameController
+     */
+    default void onCurrentPlayerDisconnected(GameController context) {
+        // no-op by default
+    }
 }

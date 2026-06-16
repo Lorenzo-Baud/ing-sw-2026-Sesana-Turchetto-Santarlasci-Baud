@@ -26,7 +26,7 @@ class MainControllerTest {
     @BeforeEach
     void setUp() {
         registry = new MatchRegistry();
-        mainController = registry.createMatch();
+        mainController = registry.createMatch("test-match");
         conn1 = new TestConnection();
         conn2 = new TestConnection();
     }
@@ -151,7 +151,7 @@ class MainControllerTest {
     void matchRegistryListOpenMatches() {
         assertEquals(1, registry.listOpenMatches().size());
 
-        MainController second = registry.createMatch();
+        MainController second = registry.createMatch("test-match-2");
         assertEquals(2, registry.listOpenMatches().size());
     }
 

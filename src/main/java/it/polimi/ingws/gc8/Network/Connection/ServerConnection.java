@@ -11,7 +11,7 @@ public interface ServerConnection {
 
     List<MatchInfo> listMatches() throws Exception;
 
-    JoinResult createMatch(String nickname) throws Exception;
+    JoinResult createMatch(String matchName, String nickname) throws Exception;
 
     JoinResult joinMatch(String matchId, String nickname) throws Exception;
 
@@ -20,6 +20,12 @@ public interface ServerConnection {
     void requestStartGame() throws Exception;
 
     void sendAction(Object action);
+
+    /**
+     * FA3: replies to a server heartbeat ({@code PingMessage}). Transport-specific:
+     * RMI invokes a remote method, TCP writes a {@code PongMessage} on the stream.
+     */
+    void pong() throws Exception;
 
     Object receive() throws Exception;
 
