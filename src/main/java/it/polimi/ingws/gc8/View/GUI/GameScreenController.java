@@ -12,29 +12,27 @@ import it.polimi.ingws.gc8.Network.Messages.EventResolvedMessage;
 import it.polimi.ingws.gc8.Network.Messages.GameOverMessage;
 import it.polimi.ingws.gc8.Network.Messages.ModelUpdateMessage;
 import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
-import it.polimi.ingws.gc8.View.TUI.Printer;
-import it.polimi.ingws.gc8.View.TUI.TuiView;
 import it.polimi.ingws.gc8.View.View;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Circle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.awt.event.MouseEvent;
 import java.io.InputStream;
 import java.util.List;
 import java.util.logging.Logger;
-
-import static java.util.Locale.filter;
 
 /**
  * JavaFX controller for the main game screen.
@@ -95,7 +93,7 @@ public class GameScreenController {
     @FXML Label turnOrderTrackLabel4;
     @FXML Label turnOrderTrackLabel5;
 
-    /** Player markers on side bar. */
+    /** Player markers on sidebar. */
     @FXML Circle leftBarTurnOrderCircle1;
     @FXML Circle leftBarTurnOrderCircle2;
     @FXML Circle leftBarTurnOrderCircle3;
@@ -471,7 +469,13 @@ public class GameScreenController {
             cardView.setFitHeight(120.0);
             cardView.setPreserveRatio(true);
 
-            cardView.setOnMouseClicked(event -> handleCardClick(row, index));
+            cardView.setOnMouseClicked(event -> {
+                if (event.getButton() == MouseButton.PRIMARY) {
+                    handleCardClick(row, index);
+                } else if (event.getButton() == MouseButton.SECONDARY) {
+                    displayCardInfo(row, index);
+                }
+            });
 
             switch (row) {
                 case CardRow.UPPER -> topCardsRow.getChildren().add(cardView);
@@ -694,9 +698,9 @@ public class GameScreenController {
         scrollPane.setPrefSize(550.0, 400.0);
         scrollPane.setStyle("-fx-background: #34495e; -fx-background-color: #34495e; -fx-padding: 0; -fx-background-insets: 0;");
 
-        // Setup the secondary Stage object structure acting as a modal window
+        // Set up the secondary Stage object structure acting as a modal window
         Stage popupStage = new Stage();
-        popupStage.setTitle("La mia tribu");
+        popupStage.setTitle("La mia tribù");
 
         // Enforce modal layer over the primary game screen layout
         popupStage.initModality(Modality.APPLICATION_MODAL);
@@ -707,6 +711,149 @@ public class GameScreenController {
         popupStage.setScene(scene);
         popupStage.setResizable(false);
         popupStage.showAndWait();
+    }
+
+    /**
+     * Displays infos for a card
+     * @param row card row
+     * @param index card index
+     */
+    void displayCardInfo(CardRow row, int index) {
+
+        // Retrieve card data
+        CardDTO card;
+        if(row == CardRow.UPPER) {
+            card = guiView.getGameView().upperRowCards().get(index);
+        } else {
+            card = guiView.getGameView().lowerRowCards().get(index);
+        }
+
+
+        String title = "";
+        String description = "";
+
+        switch (card.type()) {
+            case EVENT:
+                switch (card.eventType()) {
+                    case sustenance:
+                        title = "Evento sostentamento";
+                        description = "Pagate 1 cibo per ogni carta personaggio nella vostra tribù (gli edifici non contano). " +
+                                "Se una volta pagato tutto il cibo che avete non siete riusciti a sfamare tutti i " +
+                                "vostri personaggi , perdete i punti prestigio indicati dalla carta evento per ogni personaggio che" +
+                                " non avete sfamato ";
+                        break;
+                    case ritual:
+                        title = "Evento rituale sciamanico";
+                        description = "Il giocatore con più icone nella propria tribù, guadagna i punti prestigio indicati." +
+                                " Il giocatore con meno icone nella propria tribù, perde i punti prestigio indicati. " +
+                                "In caso di parità, tutti i giocatori in parità ottengono o perdono i punti prestigio indicati ";
+                        break;
+                    case cavePaintings:
+                        title = "Evento pitture rupestri";
+                        description = "Per ottenere punti con questo evento dovete avere un numero minimo di artisti," +
+                                " come indicato sulla carta evento. Se avete il numero di artisti indicato nella riga " +
+                                "superiore della carta evento, perdete i punti prestigio indicati. Se invece avete il " +
+                                "numero di artisti indicato nella riga inferiore della carta evento guadagnate i punti prestigio " +
+                                "indicati per ogni vostro artista ";
+                        break;
+                    case hunt:
+                        title = "Evento caccia";
+                        description = "Prendete un cibo e guadagnate i punti prestigio indicati sulla carta " +
+                                "evento per ogni cacciatore nella vostra tribù";
+                        break;
+                }
+                break;
+            case CHARACTER:
+                switch (card.characterType()) {
+                    case BUILDER:
+                        title = "Costruttore";
+                        description = "Durante la partita ogni costruttore riduce di quanto indicato " +
+                                "in alto a destra il costo in cibo di ogni edificio che prendete. A fine partita ogni " +
+                                "costruttore fornisce i punti prestigio indicati in basso a sinistra sulla carta ";
+                        break;
+
+                    case HUNTER:
+                        title = "Cacciatore";
+                        description = "Ogni volta che aggiungete la vostra tribù un cacciatore senza icona, non ottenete niente." +
+                                " Ogni volta che aggiungete un cacciatore con un'icona, prendete immediatamente un cibo " +
+                                "per ogni cacciatore nella vostra tribù (con o senza icona). Durante l'evento caccia prendete " +
+                                "cibo e guadagnate punti prestigio in base al numero di cacciatori nella vostra tribù. ";
+                        break;
+
+                    case SHAMAN:
+                        title = "Sciamano";
+                        description = "Possono mostrare da una a tre icone. Durante l'evento rituale sciamanico, avere la" +
+                                " maggioranza di queste icone fornisce punti prestigio. Averne invece la minoranza fa perdere punti prestigio.";
+                        break;
+
+                    case COLLECTOR:
+                        title = "Raccoglitore";
+                        description = "Durante l'evento sostentamento forniscono uno sconto di tre cibi sul totale che dovreste pagare." +
+                                " Nota: non ottenete mai cibo direttamente dai raccoglitori";
+                        break;
+
+                    case INVENTOR:
+                        title = "Inventore";
+                        description = "A fine partita forniscono un numero di punti prestigio pari al numero di inventori " +
+                                "nella vostra tribù moltiplicato per il numero di icone e invenzioni diverse che avete. " +
+                                "Ci sono 10 diverse icone invenzione";
+                        break;
+
+                    case ARTIST:
+                        title = "Artista";
+                        description = "Durante l'evento pittura rupestri potete ottenere o perdere punti prestigio in" +
+                                " base al numero di artisti che avete nella vostra tribù. A fine partita ottenete 10 " +
+                                "punti prestigio per ogni due pittori nella vostra tribù.";
+                        break;
+                }
+                break;
+            case BUILDING:
+                title = "Edificio";
+                description = "Questa carta edificio ha un costo di " + card.buildingFoodCost().toString() + " cibo e " +
+                        "permette di ottenere " + card.buildingPrestigeBonus() + " punti prestigio a fine partita. " +
+                        "L'effetto è riportato nell'immagine";
+                break;
+        }
+
+        showCardDialog(card, title, description);
+
+    }
+
+    /**
+     * Displays a dialog containing an image and a description
+     * @param card card DTO
+     * @param cardDescription card description
+     * @param dialogTitle title of the dialog
+     */
+    public void showCardDialog(CardDTO card, String dialogTitle, String cardDescription) {
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle(dialogTitle);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+
+        Label descriptionLabel = new Label(cardDescription);
+        descriptionLabel.setWrapText(true);
+        descriptionLabel.setMaxWidth(300);
+
+        VBox dialogContainer = new VBox(15);
+        dialogContainer.setAlignment(Pos.CENTER);
+
+        InputStream imageStream = getClass().getResourceAsStream(card.front());
+        if (imageStream == null) {
+            LOGGER.warning(() -> "Card image not found: " + card.front());
+            descriptionLabel.setText("Immagine non trovata! " + cardDescription);
+        } else {
+            Image cardImage = new Image(imageStream);
+            ImageView cardView = new ImageView(cardImage);
+            cardView.setFitHeight(150.0);
+            cardView.setPreserveRatio(true);
+            dialogContainer.getChildren().add(cardView);
+        }
+
+        dialogContainer.getChildren().add(descriptionLabel);
+        dialog.getDialogPane().setContent(dialogContainer);
+        dialog.showAndWait();
+
     }
 
 }
