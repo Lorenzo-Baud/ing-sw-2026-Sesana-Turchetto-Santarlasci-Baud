@@ -259,10 +259,11 @@ public class GameScreenController {
             int maxUpper = View.maxUpperPicks(myTile.id());
             int maxLower = View.maxLowerPicks(myTile.id());
 
-            // Sets turn label text
             yourTurnLabel.setText("È il tuo turno! ↓" + turnLowerTaken + "/" + maxLower + " ↑" + turnUpperTaken + "/" + maxUpper);
-        }
 
+        } else {
+            yourTurnLabel.setText("È il tuo turno!");
+        }
 
         previousMyTurn = myTurn;
 
