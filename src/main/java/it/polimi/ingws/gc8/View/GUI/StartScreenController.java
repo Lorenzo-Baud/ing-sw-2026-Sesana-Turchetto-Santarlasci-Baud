@@ -99,7 +99,9 @@ public class StartScreenController {
 
             guiView.setPlayerId(joinResult.playerId());
 
-            if (joinResult.isHost()) {
+            // FA2/FA3: on reconnection to an already-started match, skip lobby
+            // setup; the full snapshot from the server drives the next screen.
+            if (joinResult.isHost() && !joinResult.reconnected()) {
                 int n = -1;
                 n = askNumberOfPlayers();
                 if(n == -1) {

@@ -130,18 +130,23 @@ public class MainController {
                 if (connState.get(existingId) == ConnectionState.CONNECTED) {
                     throw new IllegalStateException("Nickname già attivo in questa partita");
                 }
-                // Reconnection to in-progress match
+                // Reconnection to in-progress match.
                 clientHandler.attachToMatch(this, existingId);
                 clientMap.put(existingId, clientHandler);
                 connState.put(existingId, ConnectionState.CONNECTED);
                 lastPongMs.put(existingId, System.currentTimeMillis());
+                // NB: we deliberately do NOT add this client as a listener nor push
+                // the snapshot here. On TCP everything shares one ordered stream, so
+                // any push sent before the JoinResult response would desync the
+                // synchronous lobby handshake. The snapshot is delivered by
+                // completeReconnection(...) AFTER the response is on the wire.
+                // The notification to the OTHER players is safe to send now.
                 if (viewUpdater != null) {
-                    viewUpdater.addListener(clientHandler);
-                    viewUpdater.sendFullSnapshotTo(clientHandler, gameController.getModel());
                     viewUpdater.notifyPlayerReconnected(nickname);
                 }
                 maybeResumeAfterReconnect();
-                return new JoinResult(matchId, existingId, isHost(existingId));
+                // reconnected = true: the client must skip lobby setup.
+                return new JoinResult(matchId, existingId, isHost(existingId), true);
             }
 
             if (status != MatchStatus.LOBBY) {
@@ -164,7 +169,26 @@ public class MainController {
             clientMap.put(playerId, clientHandler);
             broadcastLobbyUpdate();
             maybeAutoStart();
-            return new JoinResult(matchId, playerId, isHost(playerId));
+            return new JoinResult(matchId, playerId, isHost(playerId), false);
+        }
+    }
+
+    /**
+     * Completes a reconnection by attaching the client to the broadcast and
+     * sending it the full snapshot. MUST be called by the transport layer
+     * <strong>after</strong> the {@link JoinResult} response has been delivered,
+     * so on TCP the snapshot never races ahead of the lobby handshake on the
+     * shared stream. No-op if the match is not in game (e.g. a lobby join).
+     *
+     * @param clientHandler the reconnected client's handler
+     */
+    public void completeReconnection(ClientHandler clientHandler) {
+        synchronized (lobbyLock) {
+            if (status != MatchStatus.IN_GAME || viewUpdater == null || gameController == null) {
+                return;
+            }
+            viewUpdater.addListener(clientHandler);
+            viewUpdater.sendFullSnapshotTo(clientHandler, gameController.getModel());
         }
     }
 

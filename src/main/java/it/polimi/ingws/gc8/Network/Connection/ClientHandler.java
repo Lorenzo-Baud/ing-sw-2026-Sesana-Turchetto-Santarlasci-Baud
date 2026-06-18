@@ -99,6 +99,11 @@ public class ClientHandler implements Runnable, GameEventListener {
                 this.nickname = req.nickname();
                 JoinResult result = target.joinOrReconnect(req.nickname(), this);
                 connection.sendMessage(result);
+                // FA2/FA3: deliver the snapshot only AFTER the JoinResult is on the
+                // wire, so it does not desync the synchronous lobby handshake.
+                if (result.reconnected()) {
+                    target.completeReconnection(this);
+                }
             } catch (IllegalStateException e) {
                 sendError(e.getMessage());
             }

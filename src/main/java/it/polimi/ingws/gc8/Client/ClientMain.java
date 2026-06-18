@@ -62,7 +62,11 @@ public class ClientMain {
                     + "' (playerId=" + joinResult.playerId()
                     + (joinResult.isHost() ? ", host" : "") + ")");
 
-            if (joinResult.isHost()) {
+            if (joinResult.reconnected()) {
+                // FA2/FA3: rientro in una partita già avviata — niente setup lobby,
+                // si attende lo snapshot completo dal server.
+                Printer.printInfo("Riconnesso alla partita in corso. Ripristino in corso…");
+            } else if (joinResult.isHost()) {
                 int n = Bootstrap.askExpectedPlayers(
                         MainController.MIN_PLAYERS, MainController.MAX_PLAYERS);
                 connection.setExpectedPlayers(n);

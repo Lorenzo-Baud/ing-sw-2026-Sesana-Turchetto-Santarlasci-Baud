@@ -88,6 +88,11 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
         t.setDaemon(true);
         t.start();
 
+        // FA2/FA3: deliver the snapshot after the join result is returned.
+        if (result.reconnected()) {
+            match.completeReconnection(handler);
+        }
+
         return result;
     }
 
