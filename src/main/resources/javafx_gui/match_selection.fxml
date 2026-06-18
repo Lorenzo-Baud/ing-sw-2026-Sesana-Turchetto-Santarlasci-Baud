@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane prefHeight="640.0" prefWidth="640.0" styleClass="dusk-root" stylesheets="@css/theme.css"
+           xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <VBox spacing="14.0">
+         <padding>
+            <Insets bottom="40.0" left="44.0" right="44.0" top="40.0" />
+         </padding>
+         <children>
+            <Label styleClass="title-lg" text="Scegli una partita" />
+            <Label styleClass="subtitle" text="Unisciti a una partita aperta, creane una nuova o riconnettiti dopo un'interruzione del server.">
+               <VBox.margin>
+                  <Insets bottom="6.0" top="-4.0" />
+               </VBox.margin>
+            </Label>
+
+            <HBox alignment="CENTER_LEFT">
+               <children>
+                  <Label styleClass="field-label" text="PARTITE DISPONIBILI" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
+                  <Button mnemonicParsing="false" onAction="#handleRefresh" styleClass="btn-ghost" text="Aggiorna" />
+               </children>
+            </HBox>
+
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+                        styleClass="transparent-scroll" VBox.vgrow="ALWAYS">
+               <content>
+                  <VBox fx:id="matchesList" spacing="9.0">
+                     <padding>
+                        <Insets bottom="2.0" right="4.0" top="2.0" />
+                     </padding>
+                  </VBox>
+               </content>
+            </ScrollPane>
+
+            <HBox spacing="14.0">
+               <children>
+                  <!-- New match -->
+                  <VBox spacing="9.0" styleClass="panel-dark" HBox.hgrow="ALWAYS">
+                     <padding>
+                        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                     </padding>
+                     <children>
+                        <Label styleClass="field-label" text="NUOVA PARTITA" />
+                        <TextField fx:id="newMatchNameField" promptText="Nome partita" />
+                        <HBox alignment="CENTER_LEFT" spacing="9.0">
+                           <children>
+                              <Label styleClass="field-label" text="GIOCATORI" />
+                              <ChoiceBox fx:id="playerCountChoice" prefWidth="70.0" />
+                           </children>
+                        </HBox>
+                        <Button fx:id="createButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false"
+                                onAction="#handleCreate" styleClass="btn-accent" text="Crea" />
+                     </children>
+                  </VBox>
+
+                  <!-- Join / reconnect by name -->
+                  <VBox spacing="9.0" styleClass="panel-dark" HBox.hgrow="ALWAYS">
+                     <padding>
+                        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                     </padding>
+                     <children>
+                        <Label styleClass="field-label" text="UNISCITI / RICONNETTITI PER NOME" />
+                        <TextField fx:id="joinByNameField" promptText="Nome / ID partita" />
+                        <Label styleClass="subtitle" text="Usa il nome della partita per rientrare dopo un crash del server." wrapText="true" />
+                        <Region VBox.vgrow="ALWAYS" />
+                        <Button fx:id="joinByNameButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false"
+                                onAction="#handleJoinByName" styleClass="btn-ghost" text="Entra" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</StackPane>

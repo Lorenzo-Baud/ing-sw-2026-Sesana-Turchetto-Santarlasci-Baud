@@ -4,18 +4,18 @@ import it.polimi.ingws.gc8.Client.ClientController;
 import it.polimi.ingws.gc8.Network.Connection.RMI.RMIServerConnection;
 import it.polimi.ingws.gc8.Network.Connection.ServerConnection;
 import it.polimi.ingws.gc8.Network.Connection.Socket.SocketServerConnection;
-import it.polimi.ingws.gc8.Network.DTO.JoinResult;
-import it.polimi.ingws.gc8.Network.DTO.MatchInfo;
 import javafx.fxml.FXML;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextInputDialog;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
+/**
+ * JavaFX controller for the access (login) screen.
+ *
+ * <p>Collects the connection parameters, opens the transport, starts the
+ * client controller and then hands off to the dedicated match-selection
+ * screen (FA1 multi-match, FA2/FA3 reconnection). The actual match
+ * create/join/reconnect logic lives in {@link MatchSelectionController}.
+ */
 public class StartScreenController {
 
     // Reference to the main view manager to coordinate scene switches
@@ -82,113 +82,19 @@ public class StartScreenController {
         guiView.setController(new ClientController(connection, guiView));
 
         try {
-            try {
-                connection.connect(address, Integer.parseInt(port));
-            } catch (Exception ce) {
-                guiView.showError(
-                        "Errore di connessione",
-                        "Impossibile connettersi al server.\nVerificare indirizzo e porta.");
-                return;
-            }
-
-            guiView.getController().start();
-            guiView.setNickname(username);
-
-            JoinResult joinResult = handleMatchSelection(connection, username);
-            if (joinResult == null) return;
-
-            guiView.setPlayerId(joinResult.playerId());
-
-            // FA2/FA3: on reconnection to an already-started match, skip lobby
-            // setup; the full snapshot from the server drives the next screen.
-            if (joinResult.isHost() && !joinResult.reconnected()) {
-                int n = -1;
-                n = askNumberOfPlayers();
-                if(n == -1) {
-                    return;
-                }
-                connection.setExpectedPlayers(n);
-            }
-
-            guiView.showLobby();
-
-        } catch (Exception e) {
-            guiView.showError("Errore", e.getMessage());
-        }
-    }
-
-    private JoinResult handleMatchSelection(ServerConnection connection, String nickname) throws Exception {
-        List<MatchInfo> matches = connection.listMatches();
-
-        if (matches.isEmpty()) {
-            String name = promptMatchName();
-            if (name == null) return null;
-            return connection.createMatch(name, nickname);
+            connection.connect(address, Integer.parseInt(port));
+        } catch (Exception ce) {
+            guiView.showError(
+                    "Errore di connessione",
+                    "Impossibile connettersi al server.\nVerificare indirizzo e porta.");
+            return;
         }
 
-        List<String> choices = new java.util.ArrayList<>();
-        choices.add("Nuova partita");
-        for (MatchInfo m : matches) {
-            choices.add(m.matchId() + " [" + m.hostNickname()
-                    + ", " + m.currentPlayers() + "/"
-                    + (m.expectedPlayers() > 0 ? m.expectedPlayers() : "?") + "]");
-        }
+        guiView.getController().start();
+        guiView.setNickname(username);
 
-        ChoiceDialog<String> dialog = new ChoiceDialog<>(choices.get(0), choices);
-        dialog.setTitle("Selezione partita");
-        dialog.setHeaderText("Scegli una partita o creane una nuova");
-        dialog.setContentText("Partita:");
-
-        Optional<String> result = dialog.showAndWait();
-        if (result.isEmpty()) return null;
-
-        String selected = result.get();
-        if (selected.equals("Nuova partita")) {
-            String name = promptMatchName();
-            if (name == null) return null;
-            return connection.createMatch(name, nickname);
-        }
-
-        int idx = choices.indexOf(selected) - 1;
-        return connection.joinMatch(matches.get(idx).matchId(), nickname);
+        // FA1 (multi-match) + FA2/FA3 (reconnection) are handled on the
+        // dedicated, themed match-selection screen.
+        guiView.showMatchSelection();
     }
-
-    /**
-     * Prompts the host for a match name. Must run on the FX thread.
-     * @return the trimmed name, or {@code null} if cancelled/blank
-     */
-    private String promptMatchName() {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Nuova partita");
-        dialog.setHeaderText("Dai un nome alla partita");
-        dialog.setContentText("Nome:");
-        Optional<String> res = dialog.showAndWait();
-        if (res.isEmpty()) return null;
-        String name = res.get().trim();
-        return name.isEmpty() ? null : name;
-    }
-
-
-    /**
-     * Asks the first player how many participants the match should have.
-     * Called only when the server reports {@code isFirst == true}.
-     * @return the chosen number of players
-     */
-    private int askNumberOfPlayers() {
-        // Define the available options
-        List<Integer> choices = Arrays.asList(2, 3, 4, 5);
-
-        // Create the dialog with a default selection
-        ChoiceDialog<Integer> dialog = new ChoiceDialog<>(2, choices);
-        dialog.setTitle("Configurazione del gioco");
-        dialog.setHeaderText("Imposta il numero di giocatori");
-        dialog.setContentText("Numero di giocatori:");
-
-        // Display the dialog and capture the response
-        Optional<Integer> result = dialog.showAndWait();
-
-        return result.orElse(-1);
-
-    }
-
 }

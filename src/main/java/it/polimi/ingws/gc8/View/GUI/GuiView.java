@@ -101,9 +101,32 @@ public class GuiView extends View {
                 ctrl.setGuiView(this);
                 loader.setController(ctrl);
                 primaryStage.setScene(new Scene(loader.load()));
+                primaryStage.sizeToScene();
+                primaryStage.centerOnScreen();
                 primaryStage.show();
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Failed to load start_screen.fxml", e);
+            }
+        });
+    }
+
+    /**
+     * Shows the match-selection screen (FA1 multi-match, FA2/FA3 reconnection).
+     * Must be called only after the connection has been established and the
+     * nickname set.
+     */
+    public void showMatchSelection() {
+        Platform.runLater(() -> {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/javafx_gui/match_selection.fxml"));
+                MatchSelectionController ctrl = new MatchSelectionController();
+                ctrl.setGuiView(this);
+                loader.setController(ctrl);
+                primaryStage.setScene(new Scene(loader.load()));
+                primaryStage.sizeToScene();
+                primaryStage.centerOnScreen();
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "Failed to load match_selection.fxml", e);
             }
         });
     }
@@ -119,6 +142,8 @@ public class GuiView extends View {
                 ctrl.setGuiView(this);
                 loader.setController(ctrl);
                 primaryStage.setScene(new Scene(loader.load()));
+                primaryStage.sizeToScene();
+                primaryStage.centerOnScreen();
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Failed to load lobby_screen.fxml", e);
             }
@@ -136,6 +161,8 @@ public class GuiView extends View {
                 ctrl.setGuiView(this);
                 loader.setController(ctrl);
                 primaryStage.setScene(new Scene(loader.load()));
+                primaryStage.sizeToScene();
+                primaryStage.centerOnScreen();
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Failed to load game_screen.fxml", e);
             }

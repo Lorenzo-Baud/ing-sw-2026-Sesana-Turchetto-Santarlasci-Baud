@@ -4,421 +4,220 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
-<?import javafx.scene.text.*?>
 
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="544.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
+<StackPane fx:id="rootPane" prefHeight="800.0" prefWidth="1280.0" styleClass="game-root"
+           stylesheets="@css/theme.css, @css/game_screen.css"
+           xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <VBox minWidth="386.0" prefHeight="179.0" prefWidth="386.0">
+      <Region mouseTransparent="true" styleClass="game-overlay" />
+      <VBox>
          <children>
-            <ToolBar prefHeight="40.0" prefWidth="600.0">
-               <items>
-                  <Label text="MESOS" textFill="#5c5c54">
-                      <font>
-                          <Font name="System Bold" size="12.0" />
-                      </font>
-                  </Label>
-                  <Separator orientation="VERTICAL" prefHeight="30.0" prefWidth="0.0" />
-                  <Label fx:id="topBarEraLabel" layoutX="10.0" layoutY="16.0" text="ERA 1" textFill="#5c5c54">
-                      <font>
-                          <Font name="System Bold" size="12.0" />
-                      </font>
-                  </Label>
-                  <Label fx:id="topBarRoundLabel" layoutX="64.0" layoutY="16.0" text="Round 1/10" textFill="#5c5c54">
-                     <padding>
-                        <Insets left="5.0" />
-                     </padding>
-                      <font>
-                          <Font name="System Bold" size="12.0" />
-                      </font>
-                  </Label>
-                  <Pane prefHeight="30.0" prefWidth="71.0">
-                     <children>
-                        <Separator orientation="VERTICAL" prefHeight="30.0" prefWidth="0.0">
-                           <opaqueInsets>
-                              <Insets />
-                           </opaqueInsets>
-                        </Separator>
-                        <Circle fx:id="topBarP1Marker" fill="DODGERBLUE" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
-                         <Label fx:id="topBarP1PrestigeLabel" layoutX="25.0" layoutY="7.0" text="P1: 0PP" textFill="#5c5c54">
-                             <font>
-                                 <Font name="System Bold" size="12.0" />
-                             </font></Label>                     </children>
-                     <opaqueInsets>
-                        <Insets />
-                     </opaqueInsets>
-                     <padding>
-                        <Insets left="9.0" />
-                     </padding>
-                  </Pane>
-                  <Pane layoutX="170.0" layoutY="10.0" prefHeight="30.0" prefWidth="71.0">
-                     <children>
-                        <Separator orientation="VERTICAL" prefHeight="30.0" prefWidth="0.0">
-                           <opaqueInsets>
-                              <Insets />
-                           </opaqueInsets>
-                        </Separator>
-                        <Circle fx:id="topBarP2Marker" fill="#50ff1f" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
-                        <Label fx:id="topBarP2PrestigeLabel" layoutX="25.0" layoutY="7.0" text="P2: 0PP" textFill="#5c5c54">
-                           <font>
-                              <Font name="System Bold" size="12.0" />
-                           </font></Label>
-                     </children>
-                     <opaqueInsets>
-                        <Insets />
-                     </opaqueInsets>
-                     <padding>
-                        <Insets left="9.0" />
-                     </padding>
-                  </Pane>
-                  <Pane fx:id="topBarP3Box" layoutX="170.0" layoutY="10.0" prefHeight="30.0" prefWidth="71.0">
-                     <children>
-                        <Separator orientation="VERTICAL" prefHeight="30.0" prefWidth="0.0">
-                           <opaqueInsets>
-                              <Insets />
-                           </opaqueInsets>
-                        </Separator>
-                        <Circle fx:id="topBarP3Marker" fill="#ff1fad" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
-                        <Label fx:id="topBarP3PrestigeLabel" layoutX="25.0" layoutY="7.0" text="P3: 0PP" textFill="#5c5c54">
-                         <font>
-                             <Font name="System Bold" size="12.0" />
-                         </font></Label>
-                     </children>
-                     <opaqueInsets>
-                        <Insets />
-                     </opaqueInsets>
-                     <padding>
-                        <Insets left="9.0" />
-                     </padding>
-                  </Pane>
-                  <Pane fx:id="topBarP4Box" layoutX="320.0" layoutY="10.0" prefHeight="30.0" prefWidth="71.0">
-                     <children>
-                        <Separator orientation="VERTICAL" prefHeight="30.0" prefWidth="0.0">
-                           <opaqueInsets>
-                              <Insets />
-                           </opaqueInsets>
-                        </Separator>
-                        <Circle fx:id="topBarP4Marker" fill="#ff1f1f" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
-                         <Label fx:id="topBarP4PrestigeLabel" layoutX="25.0" layoutY="7.0" text="P4: 0PP" textFill="#5c5c54">
-                             <font>
-                                 <Font name="System Bold" size="12.0" />
-                             </font></Label>
-                     </children>
-                     <opaqueInsets>
-                        <Insets />
-                     </opaqueInsets>
-                     <padding>
-                        <Insets left="9.0" />
-                     </padding>
-                  </Pane>
-                  <Pane fx:id="topBarP5Box" layoutX="396.0" layoutY="10.0" prefHeight="30.0" prefWidth="71.0">
-                     <children>
-                        <Separator orientation="VERTICAL" prefHeight="30.0" prefWidth="0.0">
-                           <opaqueInsets>
-                              <Insets />
-                           </opaqueInsets>
-                        </Separator>
-                        <Circle fx:id="topBarP5Marker" fill="#ffcb1f" layoutX="15.0" layoutY="15.0" radius="6.0" stroke="BLACK" strokeType="INSIDE" />
-                         <Label fx:id="topBarP5PrestigeLabel" layoutX="25.0" layoutY="7.0" text="P5: 0PP" textFill="#5c5c54">
-                             <font>
-                                 <Font name="System Bold" size="12.0" />
-                             </font></Label>
-                     </children>
-                     <opaqueInsets>
-                        <Insets />
-                     </opaqueInsets>
-                     <padding>
-                        <Insets left="9.0" />
-                     </padding>
-                  </Pane>
-                  <Label fx:id="yourTurnLabel" alignment="CENTER_RIGHT" prefHeight="18.0" text="È il tuo turno!" textFill="#ff4c4c">
-                     <padding>
-                        <Insets left="100.0" />
-                     </padding>
-                     <font>
-                        <Font name="System Bold" size="12.0" />
-                     </font></Label>
-               </items>
-            </ToolBar>
-            <HBox prefHeight="501.0" prefWidth="800.0" VBox.vgrow="ALWAYS">
+
+            <!-- ============ HUD ============ -->
+            <StackPane styleClass="hud-bar">
+               <padding>
+                  <Insets bottom="12.0" left="22.0" right="22.0" top="12.0" />
+               </padding>
                <children>
-                   <VBox alignment="TOP_CENTER" prefHeight="500.0" prefWidth="140.0" spacing="10.0" style="-fx-background-color: #f7f7f4;">
-                       <padding>
-                           <Insets bottom="15.0" left="12.0" right="12.0" top="15.0" />
-                       </padding>
-                       <children>
-                           <Label text="ORDINE DI TURNO" textFill="#5c5c54">
-                               <font>
-                                   <Font name="System Bold" size="12.0" />
-                               </font>
-                               <VBox.margin>
-                                   <Insets bottom="5.0" />
-                               </VBox.margin>
-                           </Label>
-
-                           <AnchorPane fx:id="leftBarTurnOrderTile1" maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
-                               <children>
-                                   <Label text="1" textFill="#9e9e96" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="8.0">
-                                       <font>
-                                           <Font name="System Bold" size="11.0" />
-                                       </font>
-                                   </Label>
-
-                                   <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                       <children>
-                                           <Circle fx:id="leftBarTurnOrderCircle1" fill="#e74c3c" radius="14.0" stroke="TRANSPARENT" />
-                                       </children>
-                                   </StackPane>
-
-                                   <HBox alignment="CENTER" spacing="3.0" AnchorPane.bottomAnchor="6.0" AnchorPane.rightAnchor="12.0">
-                                       <children>
-                                           <Label fx:id="turnOrderTrackLabel1" text="+1" textFill="#d35400" visible="false">
-                                               <font>
-                                                   <Font name="System Bold" size="10.0" />
-                                               </font>
-                                           </Label>
-                                       </children>
-                                   </HBox>
-                               </children>
-                           </AnchorPane>
-
-                           <AnchorPane fx:id="leftBarTurnOrderTile2" maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
-                               <children>
-                                   <Label text="2" textFill="#9e9e96" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="8.0">
-                                       <font>
-                                           <Font name="System Bold" size="11.0" />
-                                       </font>
-                                   </Label>
-
-                                   <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                       <children>
-                                           <Circle fx:id="leftBarTurnOrderCircle2" fill="#d700d3" radius="14.0" stroke="TRANSPARENT" />
-                                       </children>
-                                   </StackPane>
-
-                                   <HBox alignment="CENTER" spacing="3.0" AnchorPane.bottomAnchor="6.0" AnchorPane.rightAnchor="12.0">
-                                       <children>
-                                           <Label fx:id="turnOrderTrackLabel2" text="+1" textFill="#d35400" visible="false">
-                                               <font>
-                                                   <Font name="System Bold" size="10.0" />
-                                               </font>
-                                           </Label>
-                                       </children>
-                                   </HBox>
-
-                               </children>
-                           </AnchorPane>
-
-                           <AnchorPane fx:id="leftBarTurnOrderTile3" maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
-                               <children>
-                                   <Label text="3" textFill="#9e9e96" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="8.0">
-                                       <font>
-                                           <Font name="System Bold" size="11.0" />
-                                       </font>
-                                   </Label>
-                                   <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                       <children>
-                                           <Circle fx:id="leftBarTurnOrderCircle3" fill="#3c5ee5" radius="14.0" stroke="TRANSPARENT" />
-                                       </children>
-                                   </StackPane>
-                                   <HBox alignment="CENTER" spacing="3.0" AnchorPane.bottomAnchor="6.0" AnchorPane.rightAnchor="12.0">
-                                       <children>
-                                           <Label fx:id="turnOrderTrackLabel3" text="+1" textFill="#d35400" visible="false">
-                                               <font>
-                                                   <Font name="System Bold" size="10.0" />
-                                               </font>
-                                           </Label>
-                                       </children>
-                                   </HBox>
-                               </children>
-                           </AnchorPane>
-                        <AnchorPane fx:id="leftBarTurnOrderTile4" layoutX="22.0" layoutY="210.0" maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
+                  <HBox alignment="CENTER_LEFT" spacing="16.0" StackPane.alignment="CENTER_LEFT">
+                     <children>
+                        <Label styleClass="title-lg" text="MESOS" />
+                        <HBox alignment="CENTER_LEFT" spacing="9.0" styleClass="pill">
                            <children>
-                              <Label text="4" textFill="#9e9e96" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="8.0">
-                                 <font>
-                                    <Font name="System Bold" size="11.0" />
-                                 </font>
-                              </Label>
-                               <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                   <children>
-                                       <Circle fx:id="leftBarTurnOrderCircle4" fill="#3ce53f" radius="14.0" stroke="TRANSPARENT" />
-                                   </children>
-                               </StackPane>
-                               <HBox alignment="CENTER" spacing="3.0" AnchorPane.bottomAnchor="6.0" AnchorPane.rightAnchor="12.0">
-                                   <children>
-                                       <Label fx:id="turnOrderTrackLabel4" text="+1" textFill="#d35400" visible="false">
-                                           <font>
-                                               <Font name="System Bold" size="10.0" />
-                                           </font>
-                                       </Label>
-                                   </children>
-                               </HBox>
+                              <Label fx:id="eraLabel" styleClass="era-chip" text="ERA I" />
+                              <Separator orientation="VERTICAL" prefHeight="14.0" />
+                              <Label fx:id="roundLabel" styleClass="round-chip" text="Round 1 / 10" />
                            </children>
-                        </AnchorPane>
-                        <AnchorPane fx:id="leftBarTurnOrderTile5" layoutX="22.0" layoutY="58.0" maxHeight="65.0" minHeight="65.0" prefHeight="65.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-background-radius: 18px; -fx-border-color: #e6e6e2; -fx-border-radius: 18px; -fx-border-width: 1px;">
+                        </HBox>
+                     </children>
+                  </HBox>
+                  <HBox fx:id="turnPill" alignment="CENTER" spacing="10.0" maxWidth="-Infinity" maxHeight="-Infinity" styleClass="pill-accent" StackPane.alignment="CENTER">
+                     <children>
+                        <Circle fx:id="turnDot" radius="4.0" fill="#E2592B" />
+                        <Label fx:id="yourTurnLabel" styleClass="turn-text" text="In attesa…" />
+                     </children>
+                  </HBox>
+                  <Button mnemonicParsing="false" onAction="#handleShowRules" styleClass="btn-ghost" text="Regole" StackPane.alignment="CENTER_RIGHT" />
+               </children>
+            </StackPane>
+
+            <!-- ============ PLAYERS STRIP ============ -->
+            <HBox fx:id="playersStrip" alignment="CENTER_LEFT" spacing="12.0" styleClass="players-strip">
+               <padding>
+                  <Insets bottom="11.0" left="22.0" right="22.0" top="11.0" />
+               </padding>
+            </HBox>
+
+            <!-- ============ MAIN ROW ============ -->
+            <HBox VBox.vgrow="ALWAYS">
+               <children>
+
+                  <!-- LEFT RAIL: turn order -->
+                  <VBox prefWidth="190.0" spacing="12.0" styleClass="left-rail">
+                     <padding>
+                        <Insets bottom="18.0" left="14.0" right="14.0" top="18.0" />
+                     </padding>
+                     <children>
+                        <Label styleClass="eyebrow" text="ORDINE DI TURNO" />
+                        <VBox fx:id="turnOrderList" spacing="8.0" />
+                     </children>
+                  </VBox>
+
+                  <!-- CENTER: market -->
+                  <VBox fx:id="marketBox" spacing="10.0" styleClass="market" HBox.hgrow="ALWAYS">
+                     <padding>
+                        <Insets bottom="16.0" left="22.0" right="22.0" top="16.0" />
+                     </padding>
+                     <children>
+                        <VBox spacing="7.0" VBox.vgrow="ALWAYS">
                            <children>
-                              <Label text="5" textFill="#9e9e96" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="8.0">
-                                 <font>
-                                    <Font name="System Bold" size="11.0" />
-                                 </font>
-                              </Label>
-                              <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                              <Label styleClass="eyebrow" text="FILA SUPERIORE ↑" />
+                              <HBox fx:id="topCardsRow" alignment="CENTER_LEFT" spacing="13.0" VBox.vgrow="ALWAYS" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="7.0" VBox.vgrow="ALWAYS">
+                           <children>
+                              <Label styleClass="eyebrow" text="PISTA DELLE OFFERTE" />
+                              <HBox fx:id="middleCardsRow" alignment="CENTER_LEFT" spacing="13.0" VBox.vgrow="ALWAYS" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="7.0" VBox.vgrow="ALWAYS">
+                           <children>
+                              <Label styleClass="eyebrow" text="FILA INFERIORE ↓" />
+                              <HBox fx:id="bottomCardsRow" alignment="CENTER_LEFT" spacing="13.0" VBox.vgrow="ALWAYS" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+
+                  <!-- RIGHT RAIL: tribe (parchment) -->
+                  <VBox prefWidth="272.0" styleClass="right-rail">
+                     <padding>
+                        <Insets bottom="16.0" left="0.0" right="16.0" top="16.0" />
+                     </padding>
+                     <children>
+                        <VBox spacing="13.0" styleClass="parchment" VBox.vgrow="ALWAYS">
+                           <padding>
+                              <Insets bottom="17.0" left="17.0" right="17.0" top="17.0" />
+                           </padding>
+                           <children>
+                              <Label styleClass="parchment-title" text="La mia tribù" />
+                              <HBox spacing="10.0">
                                  <children>
-                                    <Circle fx:id="leftBarTurnOrderCircle5" fill="#ff8f17" radius="14.0" stroke="TRANSPARENT" />
-                                 </children>
-                              </StackPane>
-                              <HBox alignment="CENTER" spacing="3.0" AnchorPane.bottomAnchor="6.0" AnchorPane.rightAnchor="12.0">
-                                 <children>
-                                    <Label fx:id="turnOrderTrackLabel5" text="-1" textFill="#d35400" visible="false">
-                                       <font>
-                                          <Font name="System Bold" size="10.0" />
-                                       </font>
-                                    </Label>
+                                    <VBox spacing="2.0" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                                       <padding>
+                                          <Insets bottom="11.0" left="13.0" right="13.0" top="11.0" />
+                                       </padding>
+                                       <children>
+                                          <Label styleClass="stat-cap" text="CIBO" />
+                                          <Label fx:id="foodLabel" styleClass="stat-food" text="0" />
+                                       </children>
+                                    </VBox>
+                                    <VBox spacing="2.0" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                                       <padding>
+                                          <Insets bottom="11.0" left="13.0" right="13.0" top="11.0" />
+                                       </padding>
+                                       <children>
+                                          <Label styleClass="stat-cap" text="PRESTIGIO" />
+                                          <Label fx:id="prestigeLabel" styleClass="stat-prestige" text="0" />
+                                       </children>
+                                    </VBox>
                                  </children>
                               </HBox>
+
+                              <Label styleClass="stat-cap" text="PERSONAGGI &amp; EDIFICI">
+                                 <VBox.margin>
+                                    <Insets top="2.0" />
+                                 </VBox.margin>
+                              </Label>
+
+                              <VBox spacing="7.0">
+                                 <children>
+                                    <HBox alignment="CENTER_LEFT" spacing="9.0">
+                                       <children>
+                                          <Circle radius="5.5" fill="#2C8B8C" />
+                                          <Label styleClass="tribe-row" text="Artisti" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
+                                          <Label fx:id="artistNumberLabel" styleClass="tribe-count" text="0" />
+                                       </children>
+                                    </HBox>
+                                    <HBox alignment="CENTER_LEFT" spacing="9.0">
+                                       <children>
+                                          <Circle radius="5.5" fill="#B5793A" />
+                                          <Label styleClass="tribe-row" text="Costruttori" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
+                                          <Label fx:id="constructorNumberLabel" styleClass="tribe-count" text="0" />
+                                       </children>
+                                    </HBox>
+                                    <HBox alignment="CENTER_LEFT" spacing="9.0">
+                                       <children>
+                                          <Circle radius="5.5" fill="#7A3B5E" />
+                                          <Label styleClass="tribe-row" text="Sciamani" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
+                                          <Label fx:id="shamanNumberLabel" styleClass="tribe-count" text="0" />
+                                       </children>
+                                    </HBox>
+                                    <HBox alignment="CENTER_LEFT" spacing="9.0">
+                                       <children>
+                                          <Circle radius="5.5" fill="#E0432B" />
+                                          <Label styleClass="tribe-row" text="Cacciatori" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
+                                          <Label fx:id="hunterNumberLabel" styleClass="tribe-count" text="0" />
+                                       </children>
+                                    </HBox>
+                                    <HBox alignment="CENTER_LEFT" spacing="9.0">
+                                       <children>
+                                          <Circle radius="5.5" fill="#4E7A3C" />
+                                          <Label styleClass="tribe-row" text="Raccoglitori" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
+                                          <Label fx:id="collectorNumberLabel" styleClass="tribe-count" text="0" />
+                                       </children>
+                                    </HBox>
+                                    <HBox alignment="CENTER_LEFT" spacing="9.0">
+                                       <children>
+                                          <Circle radius="5.5" fill="#3B6FD4" />
+                                          <Label styleClass="tribe-row" text="Inventori" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
+                                          <Label fx:id="inventorNumberLabel" styleClass="tribe-count" text="0" />
+                                       </children>
+                                    </HBox>
+                                    <HBox alignment="CENTER_LEFT" spacing="9.0" styleClass="tribe-divider">
+                                       <padding>
+                                          <Insets top="7.0" />
+                                       </padding>
+                                       <children>
+                                          <Circle radius="5.5" fill="#EAB14A" />
+                                          <Label styleClass="tribe-row" text="Edifici" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
+                                          <Label fx:id="buildingNumberLabel" styleClass="tribe-count" text="0" />
+                                       </children>
+                                    </HBox>
+                                 </children>
+                              </VBox>
+
+                              <Region VBox.vgrow="ALWAYS" />
+                              <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false"
+                                      onAction="#handleShowTribePopupDirectly" styleClass="btn-dark"
+                                      text="Vedi tutta la tribù" />
                            </children>
-                        </AnchorPane>
-                       </children>
-                   </VBox>
-                  <AnchorPane prefHeight="508.0" HBox.hgrow="ALWAYS">
-                     <children>
-                      <VBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minWidth="-Infinity" prefHeight="419.0" prefWidth="636.0" spacing="20.0" style="-fx-background-color: #f7f7f4;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                          <padding>
-                              <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-                          </padding>
-                          <children>
-
-                              <ScrollPane fitToHeight="true" fitToWidth="true" maxWidth="1.7976931348623157E308" prefHeight="146.0" style="-fx-background: transparent; -fx-background-color: transparent;" vbarPolicy="NEVER" VBox.vgrow="ALWAYS">
-                                  <content>
-                                      <HBox fx:id="topCardsRow" alignment="CENTER_LEFT" prefHeight="130.0" spacing="10.0" />
-                                  </content>
-                              </ScrollPane>
-
-                              <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="AS_NEEDED" maxWidth="1.7976931348623157E308" style="-fx-background: transparent; -fx-background-color: transparent;" vbarPolicy="NEVER" VBox.vgrow="ALWAYS">
-                                  <content>
-                                      <HBox fx:id="middleCardsRow" alignment="CENTER_LEFT" prefHeight="130.0" spacing="10.0" />
-                                  </content>
-                              </ScrollPane>
-
-                              <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="AS_NEEDED" maxWidth="1.7976931348623157E308" style="-fx-background: transparent; -fx-background-color: transparent;" vbarPolicy="NEVER" VBox.vgrow="ALWAYS">
-                                  <content>
-                                      <HBox fx:id="bottomCardsRow" alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" prefHeight="130.0" spacing="10.0" />
-                                  </content>
-                              </ScrollPane>
-
-                          </children>
-                      </VBox>
+                        </VBox>
                      </children>
-                  </AnchorPane>
+                  </VBox>
 
-                   <VBox alignment="TOP_CENTER" prefHeight="650.0" prefWidth="160.0" spacing="12.0" style="-fx-background-color: #f7f7f4;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://fxml.com/fxml/1">
-                       <padding>
-                           <Insets bottom="15.0" left="12.0" right="12.0" top="15.0" />
-                       </padding>
-                       <children>
-                           <Label text="LA MIA TRIBÙ" textFill="#5c5c54">
-                               <font>
-                                   <Font name="System Bold" size="12.0" />
-                               </font>
-                               <VBox.margin>
-                                   <Insets bottom="5.0" />
-                               </VBox.margin>
-                           </Label>
+               </children>
+            </HBox>
 
-                           <HBox alignment="CENTER" spacing="8.0">
-                               <children>
-                                   <AnchorPane prefHeight="55.0" style="-fx-background-color: #ffffff; -fx-background-radius: 12px; -fx-border-color: #e6e6e2; -fx-border-radius: 12px;" HBox.hgrow="ALWAYS">
-                                       <children>
-                                           <HBox alignment="CENTER" spacing="3.0" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="4.0">
-                                               <children>
-                                                   <Circle fill="#d35400" radius="4.0" stroke="TRANSPARENT" />
-                                                   <Label style="-fx-font-size: 9px; -fx-font-weight: bold;" text="CIBO" textFill="#9e9e96" />
-                                               </children>
-                                           </HBox>
-                                           <Label fx:id="sideBarFoodLabel" layoutX="29.0" layoutY="14.0" text="3" textFill="#7e51a1" AnchorPane.bottomAnchor="0.3999999999999986" AnchorPane.leftAnchor="29.0">
-                                               <font>
-                                                   <Font name="System Bold" size="18.0" />
-                                               </font>
-                                           </Label>
-                                       </children>
-                                   </AnchorPane>
+            <!-- ============ ACTION BAR ============ -->
+            <HBox alignment="CENTER_LEFT" spacing="18.0" styleClass="action-bar">
+               <padding>
+                  <Insets bottom="16.0" left="22.0" right="22.0" top="16.0" />
+               </padding>
+               <children>
+                  <VBox spacing="6.0">
+                     <children>
+                        <Label styleClass="eyebrow" text="LA TUA PESCATA" />
+                        <Label fx:id="quotaLabel" styleClass="quota-text" text="In attesa del tuo turno" />
+                     </children>
+                  </VBox>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Button fx:id="endTurnButton" mnemonicParsing="false" onAction="#handleEndTurn"
+                          styleClass="btn-accent" text="Termina turno · riprendi il totem" />
+               </children>
+            </HBox>
 
-                                   <AnchorPane prefHeight="55.0" style="-fx-background-color: #ffffff; -fx-background-radius: 12px; -fx-border-color: #e6e6e2; -fx-border-radius: 12px;" HBox.hgrow="ALWAYS">
-                                       <children>
-                                           <HBox alignment="CENTER" spacing="3.0" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="4.0">
-                                               <children>
-                                                   <Label style="-fx-font-size: 9px;" text="★" textFill="#9e9e96" />
-                                                   <Label style="-fx-font-size: 9px; -fx-font-weight: bold;" text="PP" textFill="#9e9e96" />
-                                               </children>
-                                           </HBox>
-                                           <Label fx:id="sideBarPrestigeLabel" layoutX="19.0" layoutY="14.0" text="12" textFill="#27ae60" AnchorPane.bottomAnchor="0.3999999999999986" AnchorPane.leftAnchor="19.0">
-                                               <font>
-                                                   <Font name="System Bold" size="18.0" />
-                                               </font>
-                                           </Label>
-                                       </children>
-                                   </AnchorPane>
-                               </children>
-                               <VBox.margin>
-                                   <Insets bottom="10.0" />
-                               </VBox.margin>
-                           </HBox>
-
-                           <HBox alignment="CENTER_LEFT" prefWidth="100.0">
-                               <children>
-                                   <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Artisti" textFill="#5c5c54" />
-                                   <Region HBox.hgrow="ALWAYS" />
-                                   <Label fx:id="artistNumberLabel" style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="2" textFill="#9e9e96" />
-                               </children>
-                           </HBox>
-
-                           <HBox alignment="CENTER_LEFT" prefWidth="100.0">
-                               <children>
-                                   <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Costruttori" textFill="#5c5c54" />
-                                   <Region HBox.hgrow="ALWAYS" />
-                                   <Label fx:id="constructorNumberLabel" style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="1" textFill="#9e9e96" />
-                               </children>
-                           </HBox>
-
-                           <HBox alignment="CENTER_LEFT" prefWidth="100.0">
-                               <children>
-                                   <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Sciamani" textFill="#5c5c54" />
-                                   <Region HBox.hgrow="ALWAYS" />
-                                   <Label fx:id="shamanNumberLabel" style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="1" textFill="#9e9e96" />
-                               </children>
-                           </HBox>
-
-                           <HBox alignment="CENTER_LEFT" prefWidth="100.0">
-                               <children>
-                                   <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Cacciatori" textFill="#5c5c54" />
-                                   <Region HBox.hgrow="ALWAYS" />
-                                   <Label fx:id="hunterNumberLabel" style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="1" textFill="#9e9e96" />
-                               </children>
-                           </HBox>
-                        <HBox alignment="CENTER_LEFT" layoutX="22.0" layoutY="238.0" prefWidth="100.0">
-                           <children>
-                              <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Raccoglitori" textFill="#5c5c54" />
-                              <Region HBox.hgrow="ALWAYS" />
-                              <Label fx:id="collectorNumberLabel" style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="1" textFill="#9e9e96" />
-                           </children>
-                        </HBox>
-                        <HBox alignment="CENTER_LEFT" layoutX="22.0" layoutY="272.0" prefWidth="100.0">
-                           <children>
-                              <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Inventori" textFill="#5c5c54" />
-                              <Region HBox.hgrow="ALWAYS" />
-                              <Label fx:id="inventorNumberLabel" style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="1" textFill="#9e9e96" />
-                           </children>
-                        </HBox>
-                        <HBox alignment="CENTER_LEFT" layoutX="22.0" layoutY="305.0" prefWidth="100.0">
-                           <children>
-                              <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Edifici" textFill="#5c5c54" />
-                              <Region HBox.hgrow="ALWAYS" />
-                              <Label fx:id="buildingNumberLabel" style="-fx-background-color: #ffffff; -fx-background-radius: 10px; -fx-padding: 2 6 2 6; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #e6e6e2; -fx-border-radius: 10px;" text="1" textFill="#9e9e96" />
-                           </children>
-                        </HBox>
-                        <Button mnemonicParsing="false" onAction="#handleShowTribePopupDirectly" text="Visualizza tribu" />
-                       </children>
-                   </VBox>
-               </children></HBox>
          </children>
       </VBox>
    </children>

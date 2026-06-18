@@ -4,39 +4,55 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<StackPane xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
+<StackPane prefHeight="640.0" prefWidth="560.0" styleClass="dusk-root" stylesheets="@css/theme.css"
+           xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <VBox alignment="CENTER" prefHeight="300.0" prefWidth="500.0" stylesheets="@css/start_screen.css">
+      <VBox alignment="CENTER_LEFT" maxWidth="430.0" spacing="14.0">
+         <padding>
+            <Insets bottom="46.0" left="46.0" right="46.0" top="46.0" />
+         </padding>
          <children>
-            <Label layoutX="202.0" layoutY="58.0" text="Username" />
-            <TextField fx:id="usernameField" layoutX="160.0" layoutY="86.0" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="26.0" prefWidth="200.0" promptText="Username" />
-            <Label text="Indirizzo del server">
+            <Label styleClass="title-xl" text="MESOS" />
+            <Label styleClass="subtitle" text="Guida la tua tribù attraverso le ere">
                <VBox.margin>
-                  <Insets top="5.0" />
-               </VBox.margin></Label>
-            <TextField fx:id="serverAddressField" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="26.0" prefWidth="200.0" text="127.0.0.1">
-               <VBox.margin>
-                  <Insets top="1.0" />
-               </VBox.margin>
-            </TextField>
-            <Label text="Porta del server">
-               <VBox.margin>
-                  <Insets top="5.0" />
+                  <Insets bottom="16.0" top="-4.0" />
                </VBox.margin>
             </Label>
-            <TextField fx:id="serverPortField" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="26.0" prefWidth="200.0" text="1100">
+
+            <Label styleClass="field-label" text="USERNAME" />
+            <TextField fx:id="usernameField" promptText="Il tuo nome" />
+
+            <HBox spacing="12.0">
                <VBox.margin>
-                  <Insets left="20.0" right="20.0" top="1.0" />
+                  <Insets top="6.0" />
                </VBox.margin>
-            </TextField>
-            <ChoiceBox fx:id="connectionTypeChoice" prefHeight="23.0" prefWidth="152.0">
+               <children>
+                  <VBox spacing="6.0" HBox.hgrow="ALWAYS">
+                     <children>
+                        <Label styleClass="field-label" text="INDIRIZZO SERVER" />
+                        <TextField fx:id="serverAddressField" text="127.0.0.1" />
+                     </children>
+                  </VBox>
+                  <VBox prefWidth="110.0" spacing="6.0">
+                     <children>
+                        <Label styleClass="field-label" text="PORTA" />
+                        <TextField fx:id="serverPortField" text="1100" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+
+            <Label styleClass="field-label" text="CONNESSIONE">
                <VBox.margin>
                   <Insets top="10.0" />
                </VBox.margin>
-            </ChoiceBox>
-            <Button mnemonicParsing="false" onAction="#handleStartGame" text="Avvia gioco">
+            </Label>
+            <ChoiceBox fx:id="connectionTypeChoice" maxWidth="1.7976931348623157E308" prefHeight="40.0" />
+
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleStartGame"
+                    styleClass="btn-accent" text="Avvia il gioco">
                <VBox.margin>
-                  <Insets top="10.0" />
+                  <Insets top="20.0" />
                </VBox.margin>
             </Button>
          </children>

@@ -3,32 +3,46 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
+<?import javafx.scene.shape.*?>
 
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" stylesheets="@css/lobby_screen.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
+<StackPane prefHeight="610.0" prefWidth="470.0" styleClass="dusk-root" stylesheets="@css/theme.css"
+           xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
+      <VBox spacing="0.0">
+         <padding>
+            <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
+         </padding>
          <children>
-            <ProgressIndicator />
-            <Label text="In attesa degli altri giocatori">
-               <opaqueInsets>
-                  <Insets />
-               </opaqueInsets>
+            <Label styleClass="title-lg" text="MESOS" />
+
+            <VBox alignment="CENTER" spacing="18.0" VBox.vgrow="ALWAYS">
+               <children>
+                  <HBox alignment="CENTER" spacing="9.0">
+                     <children>
+                        <Circle fx:id="lobbyDot1" radius="6.5" fill="#E2592B" />
+                        <Circle fx:id="lobbyDot2" radius="6.5" fill="#EAB14A" />
+                        <Circle fx:id="lobbyDot3" radius="6.5" fill="#2C8B8C" />
+                     </children>
+                  </HBox>
+                  <Label styleClass="title-lg" text="In attesa degli esploratori" />
+                  <Label styleClass="subtitle" text="La partita inizia quando tutti sono pronti">
+                     <VBox.margin>
+                        <Insets top="-10.0" />
+                     </VBox.margin>
+                  </Label>
+               </children>
+            </VBox>
+
+            <VBox spacing="13.0" styleClass="panel-dark">
                <padding>
-                  <Insets top="10.0" />
+                  <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
                </padding>
-            </Label>
-            <Label fx:id="connectedPlayersLabel" layoutX="212.0" layoutY="222.0" text="Giocatori correnti: ">
-               <opaqueInsets>
-                  <Insets />
-               </opaqueInsets>
-               <padding>
-                  <Insets top="10.0" />
-               </padding>
-               <font>
-                  <Font size="8.0" />
-               </font>
-            </Label>
+               <children>
+                  <Label fx:id="connectedPlayersLabel" styleClass="field-label" text="GIOCATORI CONNESSI" />
+                  <ProgressBar maxWidth="1.7976931348623157E308" progress="-1.0"
+                               style="-fx-accent: #E2592B;" />
+               </children>
+            </VBox>
          </children>
       </VBox>
    </children>

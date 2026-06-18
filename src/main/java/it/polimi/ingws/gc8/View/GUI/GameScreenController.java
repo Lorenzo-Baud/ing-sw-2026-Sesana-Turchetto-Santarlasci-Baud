@@ -6,6 +6,7 @@ import it.polimi.ingws.gc8.Model.Enum.*;
 import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 import it.polimi.ingws.gc8.Network.DTO.GameDTO;
 import it.polimi.ingws.gc8.Network.DTO.OfferTileDTO;
+import it.polimi.ingws.gc8.Network.DTO.PlayerDTO;
 import it.polimi.ingws.gc8.Network.Messages.ConnectionUpdateMessage;
 import it.polimi.ingws.gc8.Network.Messages.ErrorMessage;
 import it.polimi.ingws.gc8.Network.Messages.EventResolvedMessage;
@@ -14,9 +15,13 @@ import it.polimi.ingws.gc8.Network.Messages.ModelUpdateMessage;
 import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
 import it.polimi.ingws.gc8.View.View;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
 import javafx.fxml.FXML;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
@@ -25,17 +30,19 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 
-import java.io.InputStream;
 import java.util.List;
 import java.util.logging.Logger;
 
 /**
- * JavaFX controller for the main game screen.
+ * JavaFX controller for the redesigned game screen.
  *
  * <p>Owns the per-game dispatcher thread that drains {@code View.messages} and
  * re-renders the scene on the FX thread when a {@code ModelUpdateMessage}
@@ -47,6 +54,7 @@ import java.util.logging.Logger;
 public class GameScreenController {
 
     private static final Logger LOGGER = Logger.getLogger(GameScreenController.class.getName());
+    private static final double CARD_CORNER_RADIUS = 10.0;
 
     /** Variables to track how many cards have been taken from each row during the current turn, to enforce quotas. */
     int turnUpperTaken = 0;
@@ -56,80 +64,44 @@ public class GameScreenController {
     /** Reference to the owning GuiView, injected before {@code load()}. */
     private GuiView guiView;
 
-    /** Tracks whether the previous render saw "my turn", to fire the
-     * notification popup only on transition (false → true). */
-    private boolean previousMyTurn = false;
+    // ---- Root & layout ----
+    @FXML private StackPane rootPane;
+    @FXML private VBox marketBox;
+    /** Card artwork height, derived from the available market height so cards
+     *  scale with the window and never need per-card scrolling. */
+    private DoubleBinding cardHeight;
 
-    /** Label displaying if it's player's turn */
+    // ---- HUD ----
+    @FXML private Label eraLabel;
+    @FXML private Label roundLabel;
+    @FXML private HBox turnPill;
+    @FXML private Circle turnDot;
+    /** Center turn pill text ("Tocca a te" / "Turno di …"). */
     @FXML private Label yourTurnLabel;
 
-    /** HBox container for the top row of card image nodes. */
+    // ---- Players strip & turn-order rail (built dynamically) ----
+    @FXML private HBox playersStrip;
+    @FXML private VBox turnOrderList;
+
+    // ---- Market rows ----
     @FXML private HBox topCardsRow;
-    /** HBox container for the middle row of card image nodes. */
     @FXML private HBox middleCardsRow;
-    /** HBox container for the bottom row of card image nodes. */
     @FXML private HBox bottomCardsRow;
 
-    /** Label used in lobby updates to show current/expected players. */
-    @FXML private Label connectedPlayersLabel;
+    // ---- Right rail (parchment) ----
+    @FXML private Label foodLabel;
+    @FXML private Label prestigeLabel;
+    @FXML private Label artistNumberLabel;
+    @FXML private Label shamanNumberLabel;
+    @FXML private Label constructorNumberLabel;
+    @FXML private Label hunterNumberLabel;
+    @FXML private Label collectorNumberLabel;
+    @FXML private Label inventorNumberLabel;
+    @FXML private Label buildingNumberLabel;
 
-    /** Panes used on top bar to display players stats. */
-    @FXML Pane topBarP3Box;
-    @FXML Pane topBarP4Box;
-    @FXML Pane topBarP5Box;
-
-    /** Player markers on top bar. */
-    @FXML Circle topBarP1Marker;
-    @FXML Circle topBarP2Marker;
-    @FXML Circle topBarP3Marker;
-    @FXML Circle topBarP4Marker;
-    @FXML Circle topBarP5Marker;
-    private List<Circle> topBarPlayerMarkers;
-
-    /** Labels for food in turn order track */
-    @FXML Label turnOrderTrackLabel1;
-    @FXML Label turnOrderTrackLabel2;
-    @FXML Label turnOrderTrackLabel3;
-    @FXML Label turnOrderTrackLabel4;
-    @FXML Label turnOrderTrackLabel5;
-
-    /** Player markers on sidebar. */
-    @FXML Circle leftBarTurnOrderCircle1;
-    @FXML Circle leftBarTurnOrderCircle2;
-    @FXML Circle leftBarTurnOrderCircle3;
-    @FXML Circle leftBarTurnOrderCircle4;
-    @FXML Circle leftBarTurnOrderCircle5;
-    private List<Circle> leftBarTurnOrderCircles;
-
-    @FXML AnchorPane leftBarTurnOrderTile1;
-    @FXML AnchorPane leftBarTurnOrderTile2;
-    @FXML AnchorPane leftBarTurnOrderTile3;
-    @FXML AnchorPane leftBarTurnOrderTile4;
-    @FXML AnchorPane leftBarTurnOrderTile5;
-    private List<AnchorPane> leftBarTurnOrderTiles;
-
-    /** Other labels on top bar. */
-    @FXML Label topBarP1PrestigeLabel;
-    @FXML Label topBarP2PrestigeLabel;
-    @FXML Label topBarP3PrestigeLabel;
-    @FXML Label topBarP4PrestigeLabel;
-    @FXML Label topBarP5PrestigeLabel;
-    private List<Label> topBarPlayerPrestigeLabels;
-
-    @FXML Label topBarEraLabel;
-    @FXML Label topBarRoundLabel;
-
-    @FXML Label sideBarFoodLabel;
-    @FXML Label sideBarPrestigeLabel;
-
-    /** Right bar labels */
-    @FXML Label artistNumberLabel;
-    @FXML Label shamanNumberLabel;
-    @FXML Label constructorNumberLabel;
-    @FXML Label hunterNumberLabel;
-    @FXML Label collectorNumberLabel;
-    @FXML Label inventorNumberLabel;
-    @FXML Label buildingNumberLabel;
+    // ---- Action bar ----
+    @FXML private Label quotaLabel;
+    @FXML private javafx.scene.control.Button endTurnButton;
 
     /** Injects the owning {@link GuiView} instance. */
     public void setGuiView(GuiView guiView) {
@@ -145,16 +117,14 @@ public class GameScreenController {
     public void initialize() {
         guiView.getPrimaryStage().setTitle("Mesos Game - Gioco");
 
-        // Bind list-of-FXML-nodes views once: they don't change after load().
-        topBarPlayerMarkers = List.of(topBarP1Marker, topBarP2Marker, topBarP3Marker, topBarP4Marker, topBarP5Marker);
-        topBarPlayerPrestigeLabels = List.of(topBarP1PrestigeLabel, topBarP2PrestigeLabel, topBarP3PrestigeLabel, topBarP4PrestigeLabel, topBarP5PrestigeLabel);
-        leftBarTurnOrderCircles = List.of(leftBarTurnOrderCircle1, leftBarTurnOrderCircle2, leftBarTurnOrderCircle3, leftBarTurnOrderCircle4, leftBarTurnOrderCircle5);
-        leftBarTurnOrderTiles = List.of(leftBarTurnOrderTile1, leftBarTurnOrderTile2, leftBarTurnOrderTile3,  leftBarTurnOrderTile4,  leftBarTurnOrderTile5);
+        // Cards size to the available market height (split across the three rows)
+        // so they scale with the window and never overflow into a scrollbar.
+        cardHeight = Bindings.createDoubleBinding(
+                () -> Math.max(90.0, marketBox.getHeight() / 3.0 - 46.0),
+                marketBox.heightProperty());
 
         // First render from the existing snapshot (we're already on the FX thread).
-        GameDTO snap = guiView.getGameView();
-        initializeStaticInterface(snap);
-        renderFromSnapshot(snap);
+        renderFromSnapshot(guiView.getGameView());
 
         // Start the per-game dispatcher: the lobby dispatcher returned right
         // after calling showGame(), so the queue would otherwise have no consumer.
@@ -164,210 +134,298 @@ public class GameScreenController {
     }
 
     /**
-     * One-shot setup that depends on data that does not change during the game
-     * (number of players, totem colors). Reads the snapshot exactly once.
-     */
-    private void initializeStaticInterface(GameDTO snap) {
-        if (snap == null) return;
-        final int n = snap.numberOfPlayers();
-
-        yourTurnLabel.setVisible(guiView.isMyTurn());
-
-        // Hide top bar panes for non-existing players.
-        if (n == 2) {
-            topBarP3Box.setVisible(false);
-            topBarP4Box.setVisible(false);
-            topBarP5Box.setVisible(false);
-        } else if (n == 3) {
-            topBarP4Box.setVisible(false);
-            topBarP5Box.setVisible(false);
-        } else if (n == 4) {
-            topBarP5Box.setVisible(false);
-        }
-
-        // Initial top-bar marker colors (mirror of player totem colors).
-        for (int i = 0; i < n; i++) {
-            applyTotemFill(topBarPlayerMarkers.get(i), snap.players().get(i).totemColor());
-        }
-
-        // Initial prestige labels (zeroed at game start).
-        for (int i = 0; i < n; i++) {
-            topBarPlayerPrestigeLabels.get(i).setText("P" + (i + 1) + ": 0PP");
-        }
-
-        // Turn order track initialization
-        for (int i = guiView.getGameView().numberOfPlayers(); i < 5; i++) {
-            leftBarTurnOrderCircles.get(i).setVisible(false);
-            leftBarTurnOrderTiles.get(i).setVisible(false);
-        }
-
-        // Turn order left bar initialization
-        switch(guiView.getGameView().players().size()) {
-            case 2:
-                turnOrderTrackLabel1.setText("+1\uD83C\uDF56");
-                turnOrderTrackLabel2.setText("-1\uD83C\uDF56/-2PP");
-                turnOrderTrackLabel1.setVisible(true);
-                turnOrderTrackLabel2.setVisible(true);
-                break;
-            case 3:
-                turnOrderTrackLabel1.setText("+2\uD83C\uDF56");
-                turnOrderTrackLabel3.setText("-1\uD83C\uDF56/-2PP");
-                turnOrderTrackLabel1.setVisible(true);
-                turnOrderTrackLabel3.setVisible(true);
-                break;
-            case 4:
-                turnOrderTrackLabel1.setText("+2\uD83C\uDF56");
-                turnOrderTrackLabel2.setText("+1\uD83C\uDF56");
-                turnOrderTrackLabel4.setText("-1\uD83C\uDF56/-2PP");
-                turnOrderTrackLabel1.setVisible(true);
-                turnOrderTrackLabel2.setVisible(true);
-                turnOrderTrackLabel4.setVisible(true);
-                break;
-            case 5:
-                turnOrderTrackLabel1.setText("+3\uD83C\uDF56");
-                turnOrderTrackLabel2.setText("+1\uD83C\uDF56");
-                turnOrderTrackLabel5.setText("-1\uD83C\uDF56/-2PP");
-                turnOrderTrackLabel1.setVisible(true);
-                turnOrderTrackLabel2.setVisible(true);
-                turnOrderTrackLabel5.setVisible(true);
-                break;
-        }
-
-    }
-
-    /**
      * Per-frame render. Reads {@code guiView.getGameView()} once and uses the
-     * same snapshot for the whole frame.
-     * Must be called on the FX thread.
+     * same snapshot for the whole frame. Must be called on the FX thread.
      */
     private void renderFromSnapshot(GameDTO snap) {
         if (snap == null) return;
         final int n = snap.numberOfPlayers();
+        final int me = guiView.getPlayerId();
+        final boolean myTurn = guiView.isMyTurn();
 
-        // ---------- Turn-change notification ----------
-        boolean myTurn = guiView.isMyTurn();
-        // Only fire when we transition from "not my turn" to "my turn",
-        // not every update.
-        yourTurnLabel.setVisible(guiView.isMyTurn());
+        // ---------- HUD ----------
+        eraLabel.setText("ERA " + roman(snap.currentEra().ordinal() + 1));
+        roundLabel.setText("Round " + snap.currentRound() + " / 10");
+        renderTurnPill(snap, myTurn);
 
-        OfferTileDTO myTile = guiView.getGameView().offerTrack().stream()
-                .filter(tile -> tile.playerIndexOccupant() == guiView.getPlayerId())
-                .findFirst()
-                .orElse(null);
-
-        if(myTile != null) {
-            int maxUpper = View.maxUpperPicks(myTile.id());
-            int maxLower = View.maxLowerPicks(myTile.id());
-
-            yourTurnLabel.setText("È il tuo turno! ↓" + turnLowerTaken + "/" + maxLower + " ↑" + turnUpperTaken + "/" + maxUpper);
-
-        } else {
-            yourTurnLabel.setText("È il tuo turno!");
-        }
-
-        previousMyTurn = myTurn;
-
-
-        // ---------- TOP BAR ----------
+        // ---------- PLAYERS STRIP ----------
+        playersStrip.getChildren().clear();
         for (int i = 0; i < n; i++) {
-            topBarPlayerPrestigeLabels.get(i).setText(
-                    "P" + (i + 1) + ": " + snap.players().get(i).prestigePoints() + "PP");
-        }
-        topBarEraLabel.setText("Era " + snap.currentEra());
-        topBarRoundLabel.setText("Round " + snap.currentRound() + "/10");
-
-        // ---------- LEFT BAR (turn order track) ----------
-        for (int i = 0; i < n; i++) {
-            if(snap.turnOrderTrack().get(i) != null) {
-                applyTotemFill(leftBarTurnOrderCircles.get(i),
-                        snap.turnOrderTrack().get(i).totemColor());
-            } else {
-                // Sets the filling color to transparent so the circle becomes completely invisible
-                leftBarTurnOrderCircles.get(i).setStyle("-fx-fill: transparent;");
-            }
-
+            PlayerDTO p = snap.players().get(i);
+            boolean active = snap.currentPlayer() != null
+                    && snap.currentPlayer().nickname() != null
+                    && snap.currentPlayer().nickname().equals(p.nickname());
+            boolean isYou = p.playerId() == me;
+            playersStrip.getChildren().add(buildPlayerCard(snap, p, active, isYou));
         }
 
-        // ---------- RIGHT BAR ----------
-        artistNumberLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).tribe().stream()
-            .filter(c -> c.type() == CardType.CHARACTER && c.characterType() == CharacterType.ARTIST)
-            .count()));
-        shamanNumberLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).tribe().stream()
-            .filter(c -> c.type() == CardType.CHARACTER && c.characterType() == CharacterType.SHAMAN)
-            .count()));
-        constructorNumberLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).tribe().stream()
-            .filter(c -> c.type() == CardType.CHARACTER && c.characterType() == CharacterType.BUILDER)
-            .count()));
-        hunterNumberLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).tribe().stream()
-            .filter(c -> c.type() == CardType.CHARACTER && c.characterType() == CharacterType.HUNTER)
-            .count()));
-        collectorNumberLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).tribe().stream()
-            .filter(c -> c.type() == CardType.CHARACTER && c.characterType() == CharacterType.COLLECTOR)
-            .count()));
-        inventorNumberLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).tribe().stream()
-            .filter(c -> c.type() == CardType.CHARACTER && c.characterType() == CharacterType.INVENTOR)
-            .count()));
-        buildingNumberLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).tribe().stream()
-            .filter(c -> c.type() == CardType.BUILDING)
-            .count()));
+        // ---------- LEFT RAIL (turn order) ----------
+        renderTurnOrder(snap, n);
 
-        // ---------- CARDS ROWS ----------
-        // Clear and rebuild: avoids appending duplicates at every update.
+        // ---------- RIGHT RAIL (tribe counts) ----------
+        List<CardDTO> tribe = snap.players().get(me - 1).tribe();
+        artistNumberLabel.setText(countChar(tribe, CharacterType.ARTIST));
+        shamanNumberLabel.setText(countChar(tribe, CharacterType.SHAMAN));
+        constructorNumberLabel.setText(countChar(tribe, CharacterType.BUILDER));
+        hunterNumberLabel.setText(countChar(tribe, CharacterType.HUNTER));
+        collectorNumberLabel.setText(countChar(tribe, CharacterType.COLLECTOR));
+        inventorNumberLabel.setText(countChar(tribe, CharacterType.INVENTOR));
+        buildingNumberLabel.setText(String.valueOf(
+                tribe.stream().filter(c -> c.type() == CardType.BUILDING).count()));
+        foodLabel.setText(String.valueOf(snap.players().get(me - 1).foodPoints()));
+        prestigeLabel.setText(String.valueOf(snap.players().get(me - 1).prestigePoints()));
+
+        // ---------- MARKET ROWS ----------
         topCardsRow.getChildren().clear();
         middleCardsRow.getChildren().clear();
         bottomCardsRow.getChildren().clear();
 
-        // Upper row cards
         for (int i = 0; i < snap.upperRowCards().size(); i++) {
             addCardToRow(CardRow.UPPER, snap.upperRowCards().get(i), i);
         }
-
-        // Offer track cards
-        for(int i = 0; i < snap.offerTrack().size(); i++) {
-            String circleStyle = "-fx-fill: transparent; -fx-stroke: transparent;";
-            if(snap.offerTrack().get(i).playerIndexOccupant() != -1) {
-                // Determine the CSS styling injection based on the player's totem color
-                switch (snap.players().get(snap.offerTrack().get(i).playerIndexOccupant()-1).totemColor()) {
-                    case RED -> circleStyle = "-fx-fill: red;";
-                    case BLUE -> circleStyle = "-fx-fill: blue;";
-                    case WHITE -> circleStyle = "-fx-fill: #f7f7f7; -fx-stroke: #d0d0d0; -fx-stroke-type: inside; -fx-stroke-width: 1px;";
-                    case YELLOW -> circleStyle = "-fx-fill: yellow;";
-                    case BLACK -> circleStyle = "-fx-fill: black;";
-                }
+        for (int i = 0; i < snap.offerTrack().size(); i++) {
+            OfferTileDTO tile = snap.offerTrack().get(i);
+            TotemColor occupantColor = null;
+            if (tile.playerIndexOccupant() != -1) {
+                occupantColor = snap.players().get(tile.playerIndexOccupant() - 1).totemColor();
             }
-            addCardToOfferTrack(snap.offerTrack().get(i), circleStyle);
+            addCardToOfferTrack(tile, occupantColor);
         }
-
-        // Lower row cards
         for (int i = 0; i < snap.lowerRowCards().size(); i++) {
             addCardToRow(CardRow.LOWER, snap.lowerRowCards().get(i), i);
         }
 
-        // ---------- SIDE BAR ----------
-        sideBarPrestigeLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).prestigePoints()));
-        sideBarFoodLabel.setText(String.valueOf(snap.players().get(guiView.getPlayerId()-1).foodPoints()));
+        // ---------- ACTION BAR ----------
+        renderActionBar(snap, myTurn);
     }
 
-    /** Hard cap on how long we wait for the server to acknowledge an action. */
-    private static final long SEND_TIMEOUT_MS = 3000;
+    /** Updates the central HUD pill describing whose turn it is. */
+    private void renderTurnPill(GameDTO snap, boolean myTurn) {
+        if (myTurn) {
+            yourTurnLabel.setText("Tocca a te · pesca dalle file o termina il turno");
+            turnDot.setStyle("-fx-fill: #E2592B;");
+            setStyleClass(turnPill, "pill-accent");
+        } else {
+            String who = snap.currentPlayer() != null ? snap.currentPlayer().nickname() : "—";
+            yourTurnLabel.setText("Turno di " + who);
+            turnDot.setStyle("-fx-fill: #B7A892;");
+            setStyleClass(turnPill, "pill");
+        }
+    }
+
+    /** Builds one card of the players strip. */
+    private HBox buildPlayerCard(GameDTO snap, PlayerDTO p, boolean active, boolean isYou) {
+        HBox card = new HBox(12);
+        card.setAlignment(Pos.CENTER_LEFT);
+        card.getStyleClass().add(active ? "player-card-active" : "player-card");
+        HBox.setHgrow(card, Priority.ALWAYS);
+        card.setMaxWidth(Double.MAX_VALUE);
+
+        ImageView totem = new ImageView(GuiAssets.totem3D(p.totemColor()));
+        totem.setFitHeight(42);
+        totem.setPreserveRatio(true);
+
+        VBox info = new VBox(3);
+        HBox nameRow = new HBox(7);
+        nameRow.setAlignment(Pos.CENTER_LEFT);
+        Label name = new Label(isYou ? "Tu" : p.nickname());
+        name.getStyleClass().add("player-name");
+        nameRow.getChildren().add(name);
+        if (active) {
+            Label badge = new Label("IN GIOCO");
+            badge.getStyleClass().add("badge-active");
+            nameRow.getChildren().add(badge);
+        }
+
+        Label meta = new Label();
+        meta.getStyleClass().add("player-meta");
+        Label pp = new Label(String.valueOf(p.prestigePoints()));
+        pp.getStyleClass().addAll("player-meta", "player-pp");
+        // meta text: "<pp> PP · <state>"
+        meta.setText(" PP · " + playerStateText(snap, p, active));
+        HBox metaRow = new HBox(0, pp, meta);
+        metaRow.setAlignment(Pos.CENTER_LEFT);
+
+        info.getChildren().addAll(nameRow, metaRow);
+        card.getChildren().addAll(totem, info);
+        return card;
+    }
+
+    /** Short status fragment shown under a player's name in the strip. */
+    private String playerStateText(GameDTO snap, PlayerDTO p, boolean active) {
+        if (active) return "in azione";
+        List<PlayerDTO> track = snap.turnOrderTrack();
+        for (int i = 0; i < track.size(); i++) {
+            PlayerDTO t = track.get(i);
+            if (t != null && t.nickname() != null && t.nickname().equals(p.nickname())) {
+                return "ordine " + (i + 1) + "°";
+            }
+        }
+        return "in attesa";
+    }
+
+    /** Renders the left turn-order rail: one slot per board position. */
+    private void renderTurnOrder(GameDTO snap, int n) {
+        turnOrderList.getChildren().clear();
+        String[] bonuses = turnOrderBonuses(n);
+        List<PlayerDTO> track = snap.turnOrderTrack();
+
+        Image trackImage = GuiAssets.image("/cards/" + n + "player.png");
+        if (trackImage != null) {
+            StackPane trackCard = buildTurnOrderCard(trackImage, track, n);
+            turnOrderList.getChildren().add(trackCard);
+            addTurnOrderLegend(track, bonuses);
+            return;
+        }
+
+        for (int i = 0; i < n; i++) {
+            PlayerDTO occupant = (track != null && i < track.size()) ? track.get(i) : null;
+
+            HBox slot = new HBox(9);
+            slot.setAlignment(Pos.CENTER_LEFT);
+            slot.getStyleClass().add(occupant != null ? "turn-slot" : "turn-slot-empty");
+
+            Label idx = new Label(String.valueOf(i + 1));
+            idx.getStyleClass().add("turn-slot-index");
+            idx.setMinWidth(12);
+
+            VBox text = new VBox(1);
+            HBox.setHgrow(text, Priority.ALWAYS);
+            Label nameOrBonus = new Label(occupant != null ? occupant.nickname() : "—");
+            nameOrBonus.getStyleClass().add("turn-slot-name");
+            text.getChildren().add(nameOrBonus);
+            if (bonuses[i] != null) {
+                Label bonus = new Label(bonuses[i]);
+                bonus.getStyleClass().add("turn-slot-bonus");
+                text.getChildren().add(bonus);
+            }
+
+            slot.getChildren().add(idx);
+            if (occupant != null) {
+                ImageView totem = new ImageView(GuiAssets.totemFlat(occupant.totemColor()));
+                totem.setFitHeight(26);
+                totem.setPreserveRatio(true);
+                slot.getChildren().add(totem);
+            }
+            slot.getChildren().add(text);
+            turnOrderList.getChildren().add(slot);
+        }
+    }
+
+    /** Builds the graphic turn-order card and overlays player totems on its slots. */
+    private StackPane buildTurnOrderCard(Image trackImage, List<PlayerDTO> track, int n) {
+        ImageView trackView = new ImageView(trackImage);
+        trackView.fitWidthProperty().bind(Bindings.createDoubleBinding(
+                () -> Math.max(120.0, turnOrderList.getWidth()),
+                turnOrderList.widthProperty()));
+        trackView.setPreserveRatio(true);
+        trackView.setSmooth(true);
+        clipRoundedToFitWidth(trackView);
+
+        Pane markerLayer = new Pane();
+        markerLayer.setMouseTransparent(true);
+        markerLayer.prefWidthProperty().bind(trackView.fitWidthProperty());
+        DoubleBinding trackHeight = trackView.fitWidthProperty().multiply(trackImage.getHeight() / trackImage.getWidth());
+        markerLayer.prefHeightProperty().bind(trackHeight);
+
+        double[] centersY = turnOrderSlotCenters(n);
+        for (int i = 0; i < Math.min(n, centersY.length); i++) {
+            PlayerDTO occupant = (track != null && i < track.size()) ? track.get(i) : null;
+            if (occupant == null) continue;
+
+            ImageView totem = new ImageView(GuiAssets.totemFlat(occupant.totemColor()));
+            DoubleBinding totemHeight = trackView.fitWidthProperty().multiply(0.30);
+            totem.fitHeightProperty().bind(totemHeight);
+            totem.setPreserveRatio(true);
+            totem.setSmooth(true);
+            totem.layoutXProperty().bind(trackView.fitWidthProperty().multiply(0.50).subtract(totemHeight.multiply(0.45)));
+            totem.layoutYProperty().bind(trackHeight.multiply(centersY[i]).subtract(totemHeight.multiply(0.55)));
+            markerLayer.getChildren().add(totem);
+        }
+
+        StackPane card = new StackPane(trackView, markerLayer);
+        card.getStyleClass().add("turn-order-card");
+        card.setMaxWidth(Double.MAX_VALUE);
+        return card;
+    }
+
+    /** Adds the compact textual legend below the graphic turn-order card. */
+    private void addTurnOrderLegend(List<PlayerDTO> track, String[] bonuses) {
+        if (track == null) return;
+        for (int i = 0; i < track.size(); i++) {
+            PlayerDTO p = track.get(i);
+            if (p == null) continue;
+
+            HBox row = new HBox(6);
+            row.setAlignment(Pos.CENTER_LEFT);
+            row.getStyleClass().add("turn-order-legend");
+
+            ImageView totem = new ImageView(GuiAssets.totemFlat(p.totemColor()));
+            totem.setFitHeight(15);
+            totem.setPreserveRatio(true);
+
+            String bonus = (i < bonuses.length && bonuses[i] != null) ? " · " + bonuses[i] : "";
+            Label text = new Label(p.nickname() + " · " + (i + 1) + "°" + bonus);
+            text.getStyleClass().add("turn-order-legend-text");
+
+            row.getChildren().addAll(totem, text);
+            turnOrderList.getChildren().add(row);
+        }
+    }
+
+    /** Slot centers on the turn-order artwork, expressed as fractions of image height. */
+    private static double[] turnOrderSlotCenters(int n) {
+        return switch (n) {
+            case 2 -> new double[] {0.33, 0.51};
+            case 3 -> new double[] {0.27, 0.46, 0.65};
+            case 4 -> new double[] {0.21, 0.40, 0.59, 0.78};
+            case 5 -> new double[] {0.14, 0.33, 0.52, 0.71, 0.90};
+            default -> new double[0];
+        };
+    }
+
+    /** Per-position turn-order bonus labels, indexed by slot, for {@code n} players. */
+    private String[] turnOrderBonuses(int n) {
+        String[] b = new String[n];
+        switch (n) {
+            case 2 -> { b[0] = "+1 cibo"; b[1] = "-1 cibo / -2 PP"; }
+            case 3 -> { b[0] = "+2 cibo"; b[2] = "-1 cibo / -2 PP"; }
+            case 4 -> { b[0] = "+2 cibo"; b[1] = "+1 cibo"; b[3] = "-1 cibo / -2 PP"; }
+            case 5 -> { b[0] = "+3 cibo"; b[1] = "+1 cibo"; b[4] = "-1 cibo / -2 PP"; }
+            default -> { /* no bonuses */ }
+        }
+        return b;
+    }
+
+    /** Updates the action bar quota text and the end-turn button availability. */
+    private void renderActionBar(GameDTO snap, boolean myTurn) {
+        OfferTileDTO myTile = myOfferTile(snap);
+        if (myTurn && myTile != null) {
+            int maxUpper = View.maxUpperPicks(myTile.id());
+            int maxLower = View.maxLowerPicks(myTile.id());
+            quotaLabel.setText("↑ Superiore " + turnUpperTaken + "/" + maxUpper
+                    + "   ·   ↓ Inferiore " + turnLowerTaken + "/" + maxLower);
+            endTurnButton.setDisable(false);
+        } else if (myTurn) {
+            quotaLabel.setText("Posiziona il tuo totem su una tessera offerta");
+            endTurnButton.setDisable(true);
+        } else {
+            quotaLabel.setText("In attesa del tuo turno");
+            endTurnButton.setDisable(true);
+        }
+    }
 
     /** Convenience overload that reads the current snapshot. */
     private void updateInterface() {
         renderFromSnapshot(guiView.getGameView());
 
-        if(guiView.isMyTurn()) {
+        if (guiView.isMyTurn()) {
+            OfferTileDTO myTile = myOfferTile(guiView.getGameView());
+            if (myTile != null) {
 
-            OfferTileDTO myTile = guiView.getGameView().offerTrack().stream()
-                    .filter(tile -> tile.playerIndexOccupant() == guiView.getPlayerId())
-                    .findFirst()
-                    .orElse(null);
-            if(myTile != null) {
-
-                /*
-                    If the player placed his totem on the food tile takes food and
-                    returns to turn order track
-                 */
-                if(myTile.id() == OffertileId.A && !turnFoodTaken) {
+                // If the player placed their totem on the food tile, take food and
+                // return to the turn order track.
+                if (myTile.id() == OffertileId.A && !turnFoodTaken) {
                     turnFoodTaken = true;
                     if (guiView.sendAndAwaitUpdate(new TakeFoodAction(guiView.getPlayerId())) == View.SendResult.OK) {
                         endTurnAndReturnTotem();
@@ -376,68 +434,48 @@ public class GameScreenController {
                     }
                 }
 
-                /*
-                    If the player cannot take any more cards from the rows
-                    automatically end turn
-                 */
+                // If the player cannot take any more cards from the rows, end the turn.
                 boolean canPickFromUpper = false;
                 boolean canPickFromLower = false;
 
-                for(int i = 0; i < guiView.getGameView().upperRowCards().size(); i++) {
-                    if(guiView.getGameView().upperRowCards().get(i).type() == CardType.CHARACTER) {
+                for (int i = 0; i < guiView.getGameView().upperRowCards().size(); i++) {
+                    if (guiView.getGameView().upperRowCards().get(i).type() == CardType.CHARACTER) {
                         canPickFromUpper = true;
                         break;
                     }
-                    if(guiView.getGameView().upperRowCards().get(i).type() == CardType.BUILDING
+                    if (guiView.getGameView().upperRowCards().get(i).type() == CardType.BUILDING
                             && guiView.getGameView().upperRowCards().get(i).buildingFoodCost() <=
-                            guiView.getGameView().players().get(guiView.getPlayerId()-1).foodPoints()) {
+                            guiView.getGameView().players().get(guiView.getPlayerId() - 1).foodPoints()) {
                         canPickFromLower = true;
                         break;
                     }
                 }
 
-                for(int i = 0; i < guiView.getGameView().lowerRowCards().size(); i++) {
-                    if(guiView.getGameView().lowerRowCards().get(i).type() == CardType.CHARACTER) {
+                for (int i = 0; i < guiView.getGameView().lowerRowCards().size(); i++) {
+                    if (guiView.getGameView().lowerRowCards().get(i).type() == CardType.CHARACTER) {
                         canPickFromLower = true;
                         break;
                     }
-                    if(guiView.getGameView().lowerRowCards().get(i).type() == CardType.BUILDING
-                    && guiView.getGameView().lowerRowCards().get(i).buildingFoodCost() <=
-                        guiView.getGameView().players().get(guiView.getPlayerId()-1).foodPoints()) {
+                    if (guiView.getGameView().lowerRowCards().get(i).type() == CardType.BUILDING
+                            && guiView.getGameView().lowerRowCards().get(i).buildingFoodCost() <=
+                            guiView.getGameView().players().get(guiView.getPlayerId() - 1).foodPoints()) {
                         canPickFromLower = true;
                         break;
                     }
                 }
-
-                System.out.println("CAN pick from upper: " + canPickFromUpper);
-                System.out.println("CAN pick from lower: " + canPickFromLower);
 
                 int remainingUpper = View.maxUpperPicks(myTile.id()) - turnUpperTaken;
                 int remainingLower = View.maxLowerPicks(myTile.id()) - turnLowerTaken;
-                if(!canPickFromUpper && !canPickFromLower) {
+                if (!canPickFromUpper && !canPickFromLower) {
                     endTurnAndReturnTotem();
                 }
-                if(!canPickFromUpper && remainingUpper > 0 && remainingLower == 0) {
+                if (!canPickFromUpper && remainingUpper > 0 && remainingLower == 0) {
                     endTurnAndReturnTotem();
                 }
-                if(!canPickFromLower && remainingLower > 0 && remainingUpper == 0) {
+                if (!canPickFromLower && remainingLower > 0 && remainingUpper == 0) {
                     endTurnAndReturnTotem();
                 }
-
             }
-
-        }
-
-    }
-
-    /** Maps a TotemColor to a JavaFX fill style and applies it to the given circle. */
-    private void applyTotemFill(Circle circle, TotemColor color) {
-        switch (color) {
-            case RED -> circle.setStyle("-fx-fill: red;");
-            case BLUE -> circle.setStyle("-fx-fill: blue;");
-            case WHITE -> circle.setStyle("-fx-fill: #f7f7f7; -fx-stroke: #d0d0d0; -fx-stroke-type: inside; -fx-stroke-width: 1px;");
-            case YELLOW -> circle.setStyle("-fx-fill: yellow;");
-            case BLACK -> circle.setStyle("-fx-fill: black;");
         }
     }
 
@@ -458,14 +496,12 @@ public class GameScreenController {
                     guiView.setGameView(m.getGameModelDTO());
                     Platform.runLater(this::updateInterface);
                 }
-                case GameOverMessage m -> {
-                    // TODO: show game over screen
-                }
+                case GameOverMessage m -> Platform.runLater(() -> showGameOver(m));
                 case EventResolvedMessage m -> guiView.showInfo("Eventi risolti", formatResolvedEvents(m));
                 case ErrorMessage m -> {
                     LOGGER.fine(() -> "Received error message from server: " + m.getError());
                     guiView.lastErrorMessageAt = System.currentTimeMillis();
-                    if(m.getError().equals("CANNOT_AFFORD")) {
+                    if (m.getError().equals("CANNOT_AFFORD")) {
                         guiView.showError("Errore", "Non puoi permetterti questa carta");
                     } else if (m.getError().equals("INVALID_CARD")) {
                         guiView.showError("Errore", "Carta non valida");
@@ -474,7 +510,8 @@ public class GameScreenController {
                     }
                 }
                 case ConnectionUpdateMessage m -> {
-                    // TODO: handle this
+                    String who = m.getNickname() == null ? "?" : m.getNickname();
+                    LOGGER.fine(() -> who + (m.isConnected() ? " reconnected." : " disconnected."));
                 }
                 default -> {
                     // Ignore other message types here.
@@ -510,132 +547,118 @@ public class GameScreenController {
     }
 
     /**
-     * Adds card on specific row
-     * @param row row where to add the card
-     * @param card card to add
-     * @param index index where to add the card
+     * Adds a card to the upper/lower market row.
+     *
+     * @param row   row where to add the card
+     * @param card  card to add
+     * @param index index of the card inside the row
      */
     private void addCardToRow(CardRow row, CardDTO card, int index) {
-        try {
-            InputStream imageStream = getClass().getResourceAsStream(card.front());
-            if (imageStream == null) {
-                LOGGER.warning(() -> "Card image not found: " + card.front());
-                return;
+        Image cardImage = GuiAssets.image(card.front());
+        if (cardImage == null) return;
+
+        ImageView cardView = new ImageView(cardImage);
+        cardView.fitHeightProperty().bind(cardHeight);
+        cardView.setPreserveRatio(true);
+
+        StackPane slot = hoverSlot(cardFrame(cardView));
+        slot.setOnMouseClicked(event -> {
+            if (event.getButton() == MouseButton.PRIMARY) {
+                handleCardClick(row, index);
+            } else if (event.getButton() == MouseButton.SECONDARY) {
+                displayCardInfo(row, index);
             }
-            Image cardImage = new Image(imageStream);
-            ImageView cardView = new ImageView(cardImage);
-            cardView.setFitHeight(120.0);
-            cardView.setPreserveRatio(true);
+        });
+        installCardTip(slot, card, row);
 
-            cardView.setOnMouseClicked(event -> {
-                if (event.getButton() == MouseButton.PRIMARY) {
-                    handleCardClick(row, index);
-                } else if (event.getButton() == MouseButton.SECONDARY) {
-                    displayCardInfo(row, index);
-                }
-            });
-
-            switch (row) {
-                case CardRow.UPPER -> topCardsRow.getChildren().add(cardView);
-                case CardRow.LOWER -> bottomCardsRow.getChildren().add(cardView);
-            }
-
-        } catch (Exception e) {
-            guiView.showError("Errore", e.getMessage());
+        switch (row) {
+            case UPPER -> topCardsRow.getChildren().add(slot);
+            case LOWER -> bottomCardsRow.getChildren().add(slot);
         }
     }
 
     /**
-     * Adds card to offer track
-     * @param tile card to add
-     * @param circleStyle CSS style for the token circle, determined by the occupant player's totem color
+     * Adds an offer tile to the middle row, overlaying the occupant's totem
+     * (if any) on top of the tile artwork.
+     *
+     * @param tile          the offer tile
+     * @param occupantColor totem color of the occupying player, or {@code null} if empty
      */
-    private void addCardToOfferTrack(OfferTileDTO tile, String circleStyle) {
-        try {
-            InputStream imageStream = getClass().getResourceAsStream(tile.image());
-            if (imageStream == null) {
-                LOGGER.warning(() -> "Card image not found: " + tile.image());
-                return;
-            }
+    private void addCardToOfferTrack(OfferTileDTO tile, TotemColor occupantColor) {
+        Image tileImage = GuiAssets.image(tile.image());
+        if (tileImage == null) return;
 
-            StackPane cardContainer = new StackPane();
+        StackPane content = new StackPane();
+        content.getStyleClass().add("card-frame");
 
-            Image cardImage = new Image(imageStream);
-            ImageView cardView = new ImageView(cardImage);
-            cardView.setFitHeight(120.0);
-            cardView.setPreserveRatio(true);
+        ImageView cardView = new ImageView(tileImage);
+        cardView.fitHeightProperty().bind(cardHeight);
+        cardView.setPreserveRatio(true);
+        clipRounded(cardView);
+        content.getChildren().add(cardView);
 
-            Circle tokenCircle = new Circle();
-            tokenCircle.setRadius(8.0);
-            tokenCircle.setStyle(circleStyle);
-
-            StackPane.setAlignment(tokenCircle, Pos.TOP_CENTER);
-            StackPane.setMargin(tokenCircle, new Insets(30.0, 0.0, 0.0, 0.0));
-
-            cardContainer.getChildren().addAll(cardView, tokenCircle);
-
-            cardContainer.setOnMouseClicked(event ->
-                    handleOfferTrackPlacement(tile));
-
-            middleCardsRow.getChildren().add(cardContainer);
-
-        } catch (Exception e) {
-            guiView.showError("Errore", e.getMessage());
+        if (occupantColor != null) {
+            ImageView totem = new ImageView(GuiAssets.totemFlat(occupantColor));
+            totem.fitHeightProperty().bind(cardHeight.multiply(0.30));
+            totem.setPreserveRatio(true);
+            StackPane.setAlignment(totem, Pos.TOP_CENTER);
+            totem.translateYProperty().bind(cardHeight.multiply(0.18));
+            content.getChildren().add(totem);
         }
+
+        StackPane slot = plainSlot(content);
+        if (tile.playerIndexOccupant() == guiView.getPlayerId()) {
+            Label ownedBadge = new Label("LA TUA TESSERA");
+            ownedBadge.getStyleClass().add("offer-owned-badge");
+            ownedBadge.setMouseTransparent(true);
+            ownedBadge.visibleProperty().bind(slot.hoverProperty());
+            StackPane.setAlignment(ownedBadge, Pos.TOP_CENTER);
+            ownedBadge.setTranslateY(-7.0);
+            content.getChildren().add(ownedBadge);
+        }
+        slot.setOnMouseClicked(event -> handleOfferTrackPlacement(tile));
+        middleCardsRow.getChildren().add(slot);
     }
 
     /**
-     * Handles player totem placement on turn order track
+     * Handles player totem placement on the offer track.
      */
     private void handleOfferTrackPlacement(OfferTileDTO tile) {
-        if(guiView.isMyTurn()) {
-
-            // Create the concrete network action payload
+        if (guiView.isMyTurn()) {
             PlayerAction action = new PlaceTotemAction(guiView.getPlayerId(), tile.id().name());
-
-            // Dispatch the action over the network and await the server response snapshot
             View.SendResult result = guiView.sendAndAwaitUpdate(action);
-
             if (result == View.SendResult.ERROR) {
-                System.out.println("Placement rejected by the server rulebook.");
+                LOGGER.fine("Placement rejected by the server rulebook.");
             }
-
         }
     }
 
     /**
-     * Handles clicks on cards in the upper/lower rows. The index is needed to identify the card in the snapshot,
-     * and the row is needed to determine which row of the snapshot to look at.
-     * @param row row of the clicked card
+     * Handles clicks on cards in the upper/lower rows.
+     *
+     * @param row   row of the clicked card
      * @param index index of the clicked card inside the row
      */
     private void handleCardClick(CardRow row, int index) {
-
         GameDTO g = guiView.getGameView();
 
-        // Ensure that is currently my turn
         if (!guiView.isMyTurn()) {
             return;
         }
 
-        // Identify the specific row dataset based on the enum parameter
         List<CardDTO> targetRowCards = (row == CardRow.UPPER) ? g.upperRowCards() : g.lowerRowCards();
         if (targetRowCards == null || index < 0 || index >= targetRowCards.size()) {
             guiView.showError("Errore", "Impossibile trovare la carta.");
             return;
         }
 
-        // Quota Validation: Fetch the player's offer tile configuration to check quotas
-        OfferTileDTO myTile = guiView.getGameView().offerTrack().stream()
-                .filter(tile -> tile.playerIndexOccupant() == guiView.getPlayerId())
-                .findFirst()
-                .orElse(null);
+        OfferTileDTO myTile = myOfferTile(g);
         if (myTile == null) {
             guiView.showError("Errore", "Impossibile recuperare la tua posizione attuale sulla pista delle offerte.");
             return;
         }
 
-        // Enforce quota limitations based on current in-flight turn counters
+        // Enforce quota limitations based on current in-flight turn counters.
         if (row == CardRow.UPPER) {
             int maxUpper = View.maxUpperPicks(myTile.id());
             if (turnUpperTaken >= maxUpper) {
@@ -658,57 +681,62 @@ public class GameScreenController {
         View.SendResult result = guiView.sendAndAwaitUpdate(new TakeCardAction(guiView.getPlayerId(), index, row));
 
         if (result == View.SendResult.OK) {
-            // Internally update local resolution counters upon successful server verification
             if (row == CardRow.UPPER) {
                 turnUpperTaken++;
             } else {
                 turnLowerTaken++;
             }
-            System.out.println("GUI: Card draw applied successfully. Upper: " + turnUpperTaken + ", Lower: " + turnLowerTaken);
         }
 
         int maxUpper = View.maxUpperPicks(myTile.id());
         int maxLower = View.maxLowerPicks(myTile.id());
 
-        // Automatically return the totem when all possible action quotas are completely exhausted
+        // Automatically return the totem when all possible action quotas are exhausted.
         if (((turnLowerTaken <= maxLower && guiView.getGameView().lowerRowCards().isEmpty()) && turnUpperTaken == maxUpper) ||
-            ((turnUpperTaken <= maxUpper && guiView.getGameView().upperRowCards().isEmpty()) && turnLowerTaken == maxLower) ||
-            (guiView.getGameView().upperRowCards().isEmpty() && guiView.getGameView().lowerRowCards().isEmpty()) ||
-            (turnUpperTaken == maxUpper && turnLowerTaken == maxLower) ) {
-            System.out.println("GUI: All picks completed. Triggering automatic totem return.");
+                ((turnUpperTaken <= maxUpper && guiView.getGameView().upperRowCards().isEmpty()) && turnLowerTaken == maxLower) ||
+                (guiView.getGameView().upperRowCards().isEmpty() && guiView.getGameView().lowerRowCards().isEmpty()) ||
+                (turnUpperTaken == maxUpper && turnLowerTaken == maxLower)) {
             endTurnAndReturnTotem();
         }
-
-
     }
 
+    /** Action-bar button: ends the turn and returns the totem. */
+    @FXML
+    private void handleEndTurn() {
+        if (!guiView.isMyTurn()) return;
+        endTurnAndReturnTotem();
+    }
+
+    /** HUD button: shows a short rules reminder. */
+    @FXML
+    private void handleShowRules() {
+        guiView.showInfo("Come si gioca",
+                "Nel tuo turno posiziona il totem su una tessera offerta, poi pesca carte dalla "
+                        + "fila superiore e/o inferiore rispettando le quote della tessera. "
+                        + "Click sinistro su una carta per prenderla, click destro per vederne i dettagli. "
+                        + "Quando hai finito, premi \"Termina turno\" per riprendere il totem.");
+    }
 
     /**
      * Checks if all actions are completed or can be invoked manually
      * to return the totem and finalize the player's turn.
      */
     private void endTurnAndReturnTotem() {
-
         GameDTO g = guiView.getGameView();
-
         if (g == null) {
             guiView.showError("Errore", "Stato inconsistente.");
             return;
         }
 
-        OfferTileDTO myTile = g.offerTrack().stream()
-                .filter(tile -> tile.playerIndexOccupant() == guiView.getPlayerId())
-                .findFirst()
-                .orElse(null);
+        OfferTileDTO myTile = myOfferTile(g);
         if (myTile == null) {
             guiView.showError("Errore", "Impossibile recuperare la tua posizione attuale sulla pista delle offerte.");
             return;
         }
 
-        // Fire the ReturnTotemAction over the network pump
         View.SendResult result = guiView.sendAndAwaitUpdate(new ReturnTotemAction(guiView.getPlayerId()));
 
-        if (result ==View. SendResult.OK) {
+        if (result == View.SendResult.OK) {
             turnUpperTaken = 0;
             turnLowerTaken = 0;
             turnFoodTaken = false;
@@ -717,177 +745,259 @@ public class GameScreenController {
         }
     }
 
+    /**
+     * Shows the player's full tribe in a parchment-styled modal, grouped into
+     * characters and buildings (matching the redesign).
+     */
     @FXML
     private void handleShowTribePopupDirectly() {
+        GameDTO snap = guiView.getGameView();
+        List<CardDTO> tribe = snap.players().get(guiView.getPlayerId() - 1).tribe();
 
-        // Creates new container
-        FlowPane tribeCardsContainer = new FlowPane();
-        tribeCardsContainer.setHgap(12.0);
-        tribeCardsContainer.setVgap(12.0);
-        tribeCardsContainer.setPadding(new Insets(15.0));
-        tribeCardsContainer.setPrefWrapLength(520.0);
+        VBox root = new VBox(16);
+        root.getStyleClass().addAll("parchment-strong");
+        root.setPadding(new Insets(22, 24, 24, 24));
 
-        tribeCardsContainer.setStyle("-fx-background-color: #34495e;");
+        // header
+        HBox header = new HBox(12);
+        header.setAlignment(Pos.CENTER_LEFT);
+        Label title = new Label("La mia tribù");
+        title.getStyleClass().add("parchment-title");
+        Label count = new Label(tribe.size() + " carte");
+        count.getStyleClass().add("tribe-count");
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        Label era = new Label("ERA " + roman(snap.currentEra().ordinal() + 1) + " · Round " + snap.currentRound());
+        era.getStyleClass().add("tribe-row");
+        header.getChildren().addAll(title, count, spacer, era);
+        root.getChildren().add(header);
 
-        // Populate the container with the player's current tribe card list
-        for (CardDTO card : guiView.getGameView().players().get(guiView.getPlayerId()-1).tribe()) {
-
-            InputStream imageStream = getClass().getResourceAsStream(card.front());
-
-            if (imageStream != null) {
-                StackPane cardHolder = new StackPane();
-
-                Image cardImage = new Image(imageStream);
-                ImageView cardView = new ImageView(cardImage);
-                cardView.setFitHeight(140.0);
-                cardView.setPreserveRatio(true);
-                cardView.setSmooth(true);
-
-                cardHolder.getChildren().add(cardView);
-                tribeCardsContainer.getChildren().add(cardHolder);
-            }
+        // characters section
+        List<CardDTO> chars = tribe.stream().filter(c -> c.type() == CardType.CHARACTER).toList();
+        if (!chars.isEmpty()) {
+            root.getChildren().add(sectionLabel("PERSONAGGI"));
+            root.getChildren().add(cardFlow(chars));
+        }
+        // buildings section
+        List<CardDTO> buildings = tribe.stream().filter(c -> c.type() == CardType.BUILDING).toList();
+        if (!buildings.isEmpty()) {
+            root.getChildren().add(sectionLabel("EDIFICI"));
+            root.getChildren().add(cardFlow(buildings));
         }
 
-        // Wrap the FlowPane inside a ScrollPane to support infinite cards vertical scrolling
-        ScrollPane scrollPane = new ScrollPane(tribeCardsContainer);
+        ScrollPane scrollPane = new ScrollPane(root);
         scrollPane.setFitToWidth(true);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        scrollPane.setPrefSize(550.0, 400.0);
-        scrollPane.setStyle("-fx-background: #34495e; -fx-background-color: #34495e; -fx-padding: 0; -fx-background-insets: 0;");
+        scrollPane.setPrefSize(720.0, 520.0);
+        scrollPane.getStyleClass().add("transparent-scroll");
+        scrollPane.setStyle("-fx-background: #EBDCC0; -fx-background-color: #EBDCC0;");
 
-        // Set up the secondary Stage object structure acting as a modal window
         Stage popupStage = new Stage();
         popupStage.setTitle("La mia tribù");
-
-        // Enforce modal layer over the primary game screen layout
         popupStage.initModality(Modality.APPLICATION_MODAL);
         popupStage.initOwner(middleCardsRow.getScene().getWindow());
 
-        // Set the scene and display the dynamic frame to the client user
         Scene scene = new Scene(scrollPane);
+        scene.getStylesheets().addAll(
+                getClass().getResource("/javafx_gui/css/theme.css").toExternalForm(),
+                getClass().getResource("/javafx_gui/css/game_screen.css").toExternalForm());
         popupStage.setScene(scene);
         popupStage.setResizable(false);
         popupStage.showAndWait();
     }
 
-    /**
-     * Displays infos for a card
-     * @param row card row
-     * @param index card index
-     */
-    void displayCardInfo(CardRow row, int index) {
+    /** A small uppercase section label used inside the tribe popup. */
+    private Label sectionLabel(String text) {
+        Label l = new Label(text);
+        l.getStyleClass().add("stat-cap");
+        return l;
+    }
 
-        // Retrieve card data
-        CardDTO card;
-        if(row == CardRow.UPPER) {
-            card = guiView.getGameView().upperRowCards().get(index);
-        } else {
-            card = guiView.getGameView().lowerRowCards().get(index);
+    /** A wrapping flow of card images. */
+    private FlowPane cardFlow(List<CardDTO> cards) {
+        FlowPane flow = new FlowPane();
+        flow.setHgap(11);
+        flow.setVgap(11);
+        flow.setPrefWrapLength(660);
+        for (CardDTO card : cards) {
+            Image img = GuiAssets.image(card.front());
+            if (img == null) continue;
+            ImageView v = new ImageView(img);
+            v.setFitHeight(138);
+            v.setPreserveRatio(true);
+            v.setSmooth(true);
+            flow.getChildren().add(cardFrame(v));
         }
-
-
-        String title = "";
-        String description = "";
-
-        switch (card.type()) {
-            case EVENT:
-                switch (card.eventType()) {
-                    case sustenance:
-                        title = "Evento sostentamento";
-                        description = "Pagate 1 cibo per ogni carta personaggio nella vostra tribù (gli edifici non contano). " +
-                                "Se una volta pagato tutto il cibo che avete non siete riusciti a sfamare tutti i " +
-                                "vostri personaggi , perdete i punti prestigio indicati dalla carta evento per ogni personaggio che" +
-                                " non avete sfamato ";
-                        break;
-                    case ritual:
-                        title = "Evento rituale sciamanico";
-                        description = "Il giocatore con più icone nella propria tribù, guadagna i punti prestigio indicati." +
-                                " Il giocatore con meno icone nella propria tribù, perde i punti prestigio indicati. " +
-                                "In caso di parità, tutti i giocatori in parità ottengono o perdono i punti prestigio indicati ";
-                        break;
-                    case cavePaintings:
-                        title = "Evento pitture rupestri";
-                        description = "Per ottenere punti con questo evento dovete avere un numero minimo di artisti," +
-                                " come indicato sulla carta evento. Se avete il numero di artisti indicato nella riga " +
-                                "superiore della carta evento, perdete i punti prestigio indicati. Se invece avete il " +
-                                "numero di artisti indicato nella riga inferiore della carta evento guadagnate i punti prestigio " +
-                                "indicati per ogni vostro artista ";
-                        break;
-                    case hunt:
-                        title = "Evento caccia";
-                        description = "Prendete un cibo e guadagnate i punti prestigio indicati sulla carta " +
-                                "evento per ogni cacciatore nella vostra tribù";
-                        break;
-                }
-                break;
-            case CHARACTER:
-                switch (card.characterType()) {
-                    case BUILDER:
-                        title = "Costruttore";
-                        description = "Durante la partita ogni costruttore riduce di quanto indicato " +
-                                "in alto a destra il costo in cibo di ogni edificio che prendete. A fine partita ogni " +
-                                "costruttore fornisce i punti prestigio indicati in basso a sinistra sulla carta ";
-                        break;
-
-                    case HUNTER:
-                        title = "Cacciatore";
-                        description = "Ogni volta che aggiungete la vostra tribù un cacciatore senza icona, non ottenete niente." +
-                                " Ogni volta che aggiungete un cacciatore con un'icona, prendete immediatamente un cibo " +
-                                "per ogni cacciatore nella vostra tribù (con o senza icona). Durante l'evento caccia prendete " +
-                                "cibo e guadagnate punti prestigio in base al numero di cacciatori nella vostra tribù. ";
-                        break;
-
-                    case SHAMAN:
-                        title = "Sciamano";
-                        description = "Possono mostrare da una a tre icone. Durante l'evento rituale sciamanico, avere la" +
-                                " maggioranza di queste icone fornisce punti prestigio. Averne invece la minoranza fa perdere punti prestigio.";
-                        break;
-
-                    case COLLECTOR:
-                        title = "Raccoglitore";
-                        description = "Durante l'evento sostentamento forniscono uno sconto di tre cibi sul totale che dovreste pagare." +
-                                " Nota: non ottenete mai cibo direttamente dai raccoglitori";
-                        break;
-
-                    case INVENTOR:
-                        title = "Inventore";
-                        description = "A fine partita forniscono un numero di punti prestigio pari al numero di inventori " +
-                                "nella vostra tribù moltiplicato per il numero di icone e invenzioni diverse che avete. " +
-                                "Ci sono 10 diverse icone invenzione";
-                        break;
-
-                    case ARTIST:
-                        title = "Artista";
-                        description = "Durante l'evento pittura rupestri potete ottenere o perdere punti prestigio in" +
-                                " base al numero di artisti che avete nella vostra tribù. A fine partita ottenete 10 " +
-                                "punti prestigio per ogni due pittori nella vostra tribù.";
-                        break;
-                }
-                break;
-            case BUILDING:
-                title = "Edificio";
-                description = "Questa carta edificio ha un costo di " + card.buildingFoodCost().toString() + " cibo e " +
-                        "permette di ottenere " + card.buildingPrestigeBonus() + " punti prestigio a fine partita. " +
-                        "L'effetto è riportato nell'immagine";
-                break;
-        }
-
-        showCardDialog(card, title, description);
-
+        return flow;
     }
 
     /**
-     * Displays a dialog containing an image and a description
-     * @param card card DTO
+     * Shows the end-of-game ranking in a styled modal, ordered by prestige.
+     */
+    private void showGameOver(GameOverMessage m) {
+        GameDTO snap = m.getFinalState();
+
+        VBox root = new VBox(10);
+        root.getStyleClass().add("dusk-root");
+        root.setPadding(new Insets(28));
+        root.setPrefWidth(560);
+
+        Label eyebrow = new Label("Fine partita");
+        eyebrow.getStyleClass().add("eyebrow");
+        Label heading = new Label("Fine della partita");
+        heading.getStyleClass().add("title-lg");
+        VBox.setMargin(heading, new Insets(0, 0, 14, 0));
+        root.getChildren().addAll(eyebrow, heading);
+
+        if (m.getEndMessage() != null && !m.getEndMessage().isBlank()) {
+            Label sub = new Label(m.getEndMessage());
+            sub.getStyleClass().add("subtitle");
+            sub.setWrapText(true);
+            VBox.setMargin(sub, new Insets(-8, 0, 10, 0));
+            root.getChildren().add(sub);
+        }
+
+        List<PlayerDTO> ranking = snap.players().stream()
+                .sorted((a, b) -> Integer.compare(b.prestigePoints(), a.prestigePoints()))
+                .toList();
+
+        for (int i = 0; i < ranking.size(); i++) {
+            PlayerDTO p = ranking.get(i);
+            boolean winner = i == 0;
+
+            HBox row = new HBox(14);
+            row.setAlignment(Pos.CENTER_LEFT);
+            row.getStyleClass().add(winner ? "player-card-active" : "player-card");
+            row.setMaxWidth(Double.MAX_VALUE);
+
+            Label rank = new Label(String.valueOf(i + 1));
+            rank.getStyleClass().add(winner ? "stat-prestige" : "player-name");
+            rank.setMinWidth(24);
+
+            ImageView totem = new ImageView(GuiAssets.totem3D(p.totemColor()));
+            totem.setFitHeight(40);
+            totem.setPreserveRatio(true);
+
+            Label name = new Label(p.nickname());
+            name.getStyleClass().add("player-name");
+            HBox.setHgrow(name, Priority.ALWAYS);
+            name.setMaxWidth(Double.MAX_VALUE);
+
+            Label pp = new Label(p.prestigePoints() + " PP");
+            pp.getStyleClass().addAll("player-meta", "player-pp");
+
+            row.getChildren().addAll(rank, totem, name, pp);
+            root.getChildren().add(row);
+        }
+
+        Stage stage = new Stage();
+        stage.setTitle("Mesos — Fine partita");
+        stage.initModality(Modality.APPLICATION_MODAL);
+        if (playersStrip.getScene() != null) {
+            stage.initOwner(playersStrip.getScene().getWindow());
+        }
+        Scene scene = new Scene(root);
+        scene.getStylesheets().addAll(
+                getClass().getResource("/javafx_gui/css/theme.css").toExternalForm(),
+                getClass().getResource("/javafx_gui/css/game_screen.css").toExternalForm());
+        stage.setScene(scene);
+        stage.setResizable(false);
+        stage.show();
+    }
+
+    /**
+     * Displays info for a card (right-click on a market card).
+     *
+     * @param row   card row
+     * @param index card index
+     */
+    void displayCardInfo(CardRow row, int index) {
+        CardDTO card = (row == CardRow.UPPER)
+                ? guiView.getGameView().upperRowCards().get(index)
+                : guiView.getGameView().lowerRowCards().get(index);
+        showCardDialog(card, cardTitle(card), cardDescription(card));
+    }
+
+    /** Human-readable title for a card, by type/subtype. */
+    private static String cardTitle(CardDTO card) {
+        return switch (card.type()) {
+            case BUILDING -> "Edificio";
+            case EVENT -> switch (card.eventType()) {
+                case sustenance -> "Evento sostentamento";
+                case ritual -> "Evento rituale sciamanico";
+                case cavePaintings -> "Evento pitture rupestri";
+                case hunt -> "Evento caccia";
+            };
+            case CHARACTER -> switch (card.characterType()) {
+                case BUILDER -> "Costruttore";
+                case HUNTER -> "Cacciatore";
+                case SHAMAN -> "Sciamano";
+                case COLLECTOR -> "Raccoglitore";
+                case INVENTOR -> "Inventore";
+                case ARTIST -> "Artista";
+            };
+        };
+    }
+
+    /** Rules description for a card, by type/subtype. */
+    private static String cardDescription(CardDTO card) {
+        return switch (card.type()) {
+            case EVENT -> switch (card.eventType()) {
+                case sustenance -> "Pagate 1 cibo per ogni carta personaggio nella vostra tribù (gli edifici non contano). " +
+                        "Se una volta pagato tutto il cibo che avete non siete riusciti a sfamare tutti i " +
+                        "vostri personaggi , perdete i punti prestigio indicati dalla carta evento per ogni personaggio che" +
+                        " non avete sfamato ";
+                case ritual -> "Il giocatore con più icone nella propria tribù, guadagna i punti prestigio indicati." +
+                        " Il giocatore con meno icone nella propria tribù, perde i punti prestigio indicati. " +
+                        "In caso di parità, tutti i giocatori in parità ottengono o perdono i punti prestigio indicati ";
+                case cavePaintings -> "Per ottenere punti con questo evento dovete avere un numero minimo di artisti," +
+                        " come indicato sulla carta evento. Se avete il numero di artisti indicato nella riga " +
+                        "superiore della carta evento, perdete i punti prestigio indicati. Se invece avete il " +
+                        "numero di artisti indicato nella riga inferiore della carta evento guadagnate i punti prestigio " +
+                        "indicati per ogni vostro artista ";
+                case hunt -> "Prendete un cibo e guadagnate i punti prestigio indicati sulla carta " +
+                        "evento per ogni cacciatore nella vostra tribù";
+            };
+            case CHARACTER -> switch (card.characterType()) {
+                case BUILDER -> "Durante la partita ogni costruttore riduce di quanto indicato " +
+                        "in alto a destra il costo in cibo di ogni edificio che prendete. A fine partita ogni " +
+                        "costruttore fornisce i punti prestigio indicati in basso a sinistra sulla carta ";
+                case HUNTER -> "Ogni volta che aggiungete la vostra tribù un cacciatore senza icona, non ottenete niente." +
+                        " Ogni volta che aggiungete un cacciatore con un'icona, prendete immediatamente un cibo " +
+                        "per ogni cacciatore nella vostra tribù (con o senza icona). Durante l'evento caccia prendete " +
+                        "cibo e guadagnate punti prestigio in base al numero di cacciatori nella vostra tribù. ";
+                case SHAMAN -> "Possono mostrare da una a tre icone. Durante l'evento rituale sciamanico, avere la" +
+                        " maggioranza di queste icone fornisce punti prestigio. Averne invece la minoranza fa perdere punti prestigio.";
+                case COLLECTOR -> "Durante l'evento sostentamento forniscono uno sconto di tre cibi sul totale che dovreste pagare." +
+                        " Nota: non ottenete mai cibo direttamente dai raccoglitori";
+                case INVENTOR -> "A fine partita forniscono un numero di punti prestigio pari al numero di inventori " +
+                        "nella vostra tribù moltiplicato per il numero di icone e invenzioni diverse che avete. " +
+                        "Ci sono 10 diverse icone invenzione";
+                case ARTIST -> "Durante l'evento pittura rupestri potete ottenere o perdere punti prestigio in" +
+                        " base al numero di artisti che avete nella vostra tribù. A fine partita ottenete 10 " +
+                        "punti prestigio per ogni due pittori nella vostra tribù.";
+            };
+            case BUILDING -> "Questa carta edificio ha un costo di " + card.buildingFoodCost() + " cibo e " +
+                    "permette di ottenere " + card.buildingPrestigeBonus() + " punti prestigio a fine partita. " +
+                    "L'effetto è riportato nell'immagine";
+        };
+    }
+
+    /**
+     * Displays a dialog containing a card image and a description.
+     *
+     * @param card            card DTO
      * @param cardDescription card description
-     * @param dialogTitle title of the dialog
+     * @param dialogTitle     title of the dialog
      */
     public void showCardDialog(CardDTO card, String dialogTitle, String cardDescription) {
-
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle(dialogTitle);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+        dialog.getDialogPane().getStylesheets().addAll(
+                getClass().getResource("/javafx_gui/css/theme.css").toExternalForm(),
+                getClass().getResource("/javafx_gui/css/game_screen.css").toExternalForm());
 
         Label descriptionLabel = new Label(cardDescription);
         descriptionLabel.setWrapText(true);
@@ -896,22 +1006,209 @@ public class GameScreenController {
         VBox dialogContainer = new VBox(15);
         dialogContainer.setAlignment(Pos.CENTER);
 
-        InputStream imageStream = getClass().getResourceAsStream(card.front());
-        if (imageStream == null) {
-            LOGGER.warning(() -> "Card image not found: " + card.front());
+        Image cardImage = GuiAssets.image(card.front());
+        if (cardImage == null) {
             descriptionLabel.setText("Immagine non trovata! " + cardDescription);
         } else {
-            Image cardImage = new Image(imageStream);
             ImageView cardView = new ImageView(cardImage);
             cardView.setFitHeight(150.0);
             cardView.setPreserveRatio(true);
-            dialogContainer.getChildren().add(cardView);
+            dialogContainer.getChildren().add(cardFrame(cardView));
         }
 
         dialogContainer.getChildren().add(descriptionLabel);
         dialog.getDialogPane().setContent(dialogContainer);
         dialog.showAndWait();
-
     }
 
+    // ------------------------------------------------------------------
+    // Visual helpers (background, hover zoom, hover tooltip)
+    // ------------------------------------------------------------------
+
+    /**
+     * Wraps a card in a fixed-size hover slot. The slot's pickable bounds never
+     * change, so the hovered card can enlarge/lift without the cursor leaving it
+     * (no flicker). Z-ordering uses {@code viewOrder} so siblings are not
+     * reordered/relaid-out (unlike {@code toFront()} inside an HBox).
+     */
+    private StackPane hoverSlot(Node content) {
+        StackPane slot = new StackPane(content);
+        slot.setPickOnBounds(true);
+        slot.setOnMouseEntered(e -> {
+            content.setScaleX(1.04);
+            content.setScaleY(1.04);
+            content.setTranslateY(0.0);
+            slot.setViewOrder(-1);
+        });
+        slot.setOnMouseExited(e -> {
+            content.setScaleX(1.0);
+            content.setScaleY(1.0);
+            content.setTranslateY(0.0);
+            slot.setViewOrder(0);
+        });
+        return slot;
+    }
+
+    /** Fixed slot without hover zoom, used where overlays must stay stable. */
+    private StackPane plainSlot(Node content) {
+        StackPane slot = new StackPane(content);
+        slot.setPickOnBounds(true);
+        return slot;
+    }
+
+    /** Wraps a card image in the common rounded border frame. */
+    private StackPane cardFrame(ImageView cardView) {
+        clipRounded(cardView);
+        StackPane frame = new StackPane(cardView);
+        frame.getStyleClass().add("card-frame");
+        return frame;
+    }
+
+    /** Clips the image itself so its corners match the rounded frame. */
+    private void clipRounded(ImageView imageView) {
+        Image image = imageView.getImage();
+        double imageHeight = image == null ? 0.0 : image.getHeight();
+        double imageWidth = image == null ? 0.0 : image.getWidth();
+        double ratio = imageHeight > 0.0 ? imageWidth / imageHeight : 1.0;
+
+        Rectangle clip = new Rectangle();
+        clip.setArcWidth(CARD_CORNER_RADIUS);
+        clip.setArcHeight(CARD_CORNER_RADIUS);
+        clip.widthProperty().bind(imageView.fitHeightProperty().multiply(ratio));
+        clip.heightProperty().bind(imageView.fitHeightProperty());
+        imageView.setClip(clip);
+    }
+
+    /** Clips images whose size is driven by fitWidth instead of fitHeight. */
+    private void clipRoundedToFitWidth(ImageView imageView) {
+        Image image = imageView.getImage();
+        double imageHeight = image == null ? 0.0 : image.getHeight();
+        double imageWidth = image == null ? 0.0 : image.getWidth();
+        double ratio = imageWidth > 0.0 ? imageHeight / imageWidth : 1.0;
+
+        Rectangle clip = new Rectangle();
+        clip.setArcWidth(CARD_CORNER_RADIUS);
+        clip.setArcHeight(CARD_CORNER_RADIUS);
+        clip.widthProperty().bind(imageView.fitWidthProperty());
+        clip.heightProperty().bind(imageView.fitWidthProperty().multiply(ratio));
+        imageView.setClip(clip);
+    }
+
+    /** Installs a rich, themed description popup on a card node. */
+    private void installCardTip(Node node, CardDTO card, CardRow row) {
+        Popup popup = new Popup();
+        popup.setAutoFix(true);
+        popup.setAutoHide(false);
+        popup.setHideOnEscape(true);
+
+        VBox tip = buildCardTip(card);
+        tip.getStylesheets().addAll(
+                getClass().getResource("/javafx_gui/css/theme.css").toExternalForm(),
+                getClass().getResource("/javafx_gui/css/game_screen.css").toExternalForm());
+        popup.getContent().add(tip);
+
+        node.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> showCardTip(node, popup, row));
+        node.addEventHandler(MouseEvent.MOUSE_MOVED, e -> {
+            if (!popup.isShowing()) {
+                showCardTip(node, popup, row);
+            }
+        });
+        node.addEventHandler(MouseEvent.MOUSE_EXITED, e -> popup.hide());
+    }
+
+    private void showCardTip(Node node, Popup popup, CardRow row) {
+        if (node.getScene() == null || node.getScene().getWindow() == null) return;
+        Bounds bounds = node.localToScreen(node.getBoundsInLocal());
+        if (bounds == null) return;
+        if (popup.isShowing()) return;
+
+        Node content = popup.getContent().get(0);
+        content.applyCss();
+        content.autosize();
+        double popupWidth = Math.max(content.prefWidth(-1), content.getLayoutBounds().getWidth());
+        double popupHeight = Math.max(content.prefHeight(popupWidth), content.getLayoutBounds().getHeight());
+        double x = bounds.getMinX() + (bounds.getWidth() - popupWidth) / 2.0;
+        double y = row == CardRow.UPPER
+                ? bounds.getMaxY() + 10.0
+                : bounds.getMinY() - popupHeight - 10.0;
+        popup.show(node, x, y);
+    }
+
+    /** Builds the dark popup body (title, chips, description) for a card. */
+    private VBox buildCardTip(CardDTO card) {
+        VBox box = new VBox(8);
+        box.getStyleClass().add("card-tip");
+        box.setMaxWidth(232);
+
+        Label title = new Label(cardTitle(card));
+        title.getStyleClass().add("card-tip-title");
+        box.getChildren().add(title);
+
+        HBox chips = new HBox(6);
+        chips.setAlignment(Pos.CENTER_LEFT);
+        switch (card.type()) {
+            case CHARACTER -> chips.getChildren().add(chip("Personaggio", "card-chip-type"));
+            case EVENT -> chips.getChildren().add(chip("Evento", "card-chip-type"));
+            case BUILDING -> {
+                chips.getChildren().add(chip("Edificio", "card-chip-type"));
+                if (card.buildingFoodCost() != null) {
+                    chips.getChildren().add(chip(card.buildingFoodCost() + " cibo", "card-chip-food"));
+                }
+                if (card.buildingPrestigeBonus() != null) {
+                    chips.getChildren().add(chip(card.buildingPrestigeBonus() + " PP", "card-chip-pp"));
+                }
+            }
+        }
+        if (!chips.getChildren().isEmpty()) box.getChildren().add(chips);
+
+        Label desc = new Label(cardDescription(card));
+        desc.getStyleClass().add("card-tip-desc");
+        desc.setWrapText(true);
+        desc.setMaxWidth(210);
+        box.getChildren().add(desc);
+        return box;
+    }
+
+    /** A small rounded tag used inside the hover tooltip. */
+    private Label chip(String text, String modifierClass) {
+        Label l = new Label(text);
+        l.getStyleClass().addAll("card-chip", modifierClass);
+        return l;
+    }
+
+    // ------------------------------------------------------------------
+    // Small helpers
+    // ------------------------------------------------------------------
+
+    /** Returns this player's occupied offer tile, or {@code null}. */
+    private OfferTileDTO myOfferTile(GameDTO g) {
+        if (g == null) return null;
+        return g.offerTrack().stream()
+                .filter(tile -> tile.playerIndexOccupant() == guiView.getPlayerId())
+                .findFirst()
+                .orElse(null);
+    }
+
+    /** Count of a given character type in a tribe, as a String. */
+    private static String countChar(List<CardDTO> tribe, CharacterType type) {
+        return String.valueOf(tribe.stream()
+                .filter(c -> c.type() == CardType.CHARACTER && c.characterType() == type)
+                .count());
+    }
+
+    /** Replaces the single layout style class on a node (pill ⇄ pill-accent). */
+    private static void setStyleClass(HBox node, String styleClass) {
+        node.getStyleClass().removeAll("pill", "pill-accent");
+        node.getStyleClass().add(styleClass);
+    }
+
+    /** Tiny roman-numeral helper for era display (1..3 expected). */
+    private static String roman(int n) {
+        return switch (n) {
+            case 1 -> "I";
+            case 2 -> "II";
+            case 3 -> "III";
+            default -> String.valueOf(n);
+        };
+    }
 }

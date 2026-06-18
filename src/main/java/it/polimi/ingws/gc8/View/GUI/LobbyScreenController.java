@@ -5,9 +5,13 @@ import it.polimi.ingws.gc8.Network.Messages.ErrorMessage;
 import it.polimi.ingws.gc8.Network.Messages.LobbyUpdateMessage;
 import it.polimi.ingws.gc8.Network.Messages.ModelUpdateMessage;
 import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
+import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.shape.Circle;
+import javafx.util.Duration;
 
 import java.util.logging.Logger;
 
@@ -27,6 +31,11 @@ public class LobbyScreenController {
     @FXML
     private Label connectedPlayersLabel;
 
+    /** Pulsing dots shown while waiting for the other players. */
+    @FXML private Circle lobbyDot1;
+    @FXML private Circle lobbyDot2;
+    @FXML private Circle lobbyDot3;
+
     /** Reference to the main view manager to coordinate scene switches. */
     private GuiView guiView;
 
@@ -38,7 +47,22 @@ public class LobbyScreenController {
     @FXML
     public void initialize() {
         guiView.getPrimaryStage().setTitle("Mesos Game - Attesa giocatori");
+        animateDot(lobbyDot1, 0);
+        animateDot(lobbyDot2, 200);
+        animateDot(lobbyDot3, 400);
         startDispatcher();
+    }
+
+    /** Starts a looping fade pulse on a loading dot, offset by {@code delayMs}. */
+    private void animateDot(Node dot, int delayMs) {
+        if (dot == null) return;
+        FadeTransition pulse = new FadeTransition(Duration.millis(700), dot);
+        pulse.setFromValue(0.35);
+        pulse.setToValue(1.0);
+        pulse.setAutoReverse(true);
+        pulse.setCycleCount(FadeTransition.INDEFINITE);
+        pulse.setDelay(Duration.millis(delayMs));
+        pulse.play();
     }
 
     /**
@@ -69,8 +93,8 @@ public class LobbyScreenController {
                 }
                 case LobbyUpdateMessage m -> Platform.runLater(() ->
                         connectedPlayersLabel.setText(
-                                "Giocatori correnti: " + m.getCurrentPlayers()
-                                        + "/" + m.getExpectedPlayers()));
+                                "GIOCATORI CONNESSI · " + m.getCurrentPlayers()
+                                        + " / " + m.getExpectedPlayers()));
                 case ErrorMessage m -> {
                     guiView.showError("Errore", m.getError());
                     return;
