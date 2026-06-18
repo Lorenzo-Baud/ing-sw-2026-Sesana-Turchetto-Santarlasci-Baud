@@ -1,5 +1,7 @@
 package it.polimi.ingws.gc8.Model.Board;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.polimi.ingws.gc8.Model.Player;
@@ -14,7 +16,9 @@ import java.util.List;
 /**
  * Manager for player turn order and associated track rewards or penalties
  */
-public class TurnOrderTrack {
+public class TurnOrderTrack implements Serializable {
+    private static final long serialVersionUID = 1L;
+
 
     /**
      * Number of players in current game

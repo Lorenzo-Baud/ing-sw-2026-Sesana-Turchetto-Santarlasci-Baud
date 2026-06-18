@@ -10,6 +10,8 @@ import it.polimi.ingws.gc8.Model.Enum.Era;
  */
 public class Collector extends CharacterCard {
 
+    private static final long serialVersionUID = 1L;
+
     /** The reduction in food cost granted by this collector. */
     private final int foodDiscount;
 

@@ -16,6 +16,8 @@ import java.util.List;
  */
 public class HuntEventCard extends EventCard {
 
+    private static final long serialVersionUID = 1L;
+
     /** The amount of prestige points awarded for each Hunter in the tribe. */
     private final int prestigeBonus;
 

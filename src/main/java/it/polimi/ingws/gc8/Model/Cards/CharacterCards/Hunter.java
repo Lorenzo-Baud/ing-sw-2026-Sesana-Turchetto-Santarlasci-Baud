@@ -10,6 +10,8 @@ import it.polimi.ingws.gc8.Model.Enum.Era;
  */
 public class Hunter extends CharacterCard {
 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Indicates whether this specific hunter card grants an additional
      * hunting bonus or special capability.

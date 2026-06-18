@@ -10,6 +10,8 @@ import it.polimi.ingws.gc8.Model.Enum.Era;
  */
 public class Shaman extends CharacterCard {
 
+    private static final long serialVersionUID = 1L;
+
     /** The number of shamanic icons provided by this card. */
     private final int nIcons;
 

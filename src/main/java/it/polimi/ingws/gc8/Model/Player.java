@@ -1,5 +1,7 @@
 package it.polimi.ingws.gc8.Model;
 
+import java.io.Serializable;
+
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Enum.TotemColor;
@@ -7,7 +9,9 @@ import it.polimi.ingws.gc8.Model.Enum.TotemColor;
 /**
  * Represents a player in the game with identity, resources, and tribe components
  */
-public class Player {
+public class Player implements Serializable {
+    private static final long serialVersionUID = 1L;
+
 
     /** Unique identifier for player */
     private final int playerId;

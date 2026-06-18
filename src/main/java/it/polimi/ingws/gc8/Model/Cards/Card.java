@@ -3,10 +3,13 @@ package it.polimi.ingws.gc8.Model.Cards;
 import it.polimi.ingws.gc8.Model.Enum.CardType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 
+import java.io.Serializable;
+
 /**
  * Interface representing a card
  */
-public abstract class Card {
+public abstract class Card implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /** Era this card belongs to */
     protected final Era era;

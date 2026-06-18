@@ -1,5 +1,7 @@
 package it.polimi.ingws.gc8.Model.Board;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
@@ -7,7 +9,9 @@ import java.util.List;
 /**
  * Configuration settings for turn order track based on player count
  */
-public class TurnOrderConfig {
+public class TurnOrderConfig implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Number of players for this configuration
      */

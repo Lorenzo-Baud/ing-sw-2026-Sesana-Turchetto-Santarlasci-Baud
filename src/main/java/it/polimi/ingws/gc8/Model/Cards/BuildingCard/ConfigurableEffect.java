@@ -12,6 +12,8 @@ import it.polimi.ingws.gc8.Model.Player;
  */
 public class ConfigurableEffect implements BuildingEffect {
 
+    private static final long serialVersionUID = 1L;
+
     // Sustenance reduction
     private final CharacterType sustenanceType;
     private final int sustenanceReductionPerUnit;

@@ -10,6 +10,8 @@ import it.polimi.ingws.gc8.Model.Player;
  */
 public class InventorPairEffect implements BuildingEffect {
 
+    private static final long serialVersionUID = 1L;
+
     private final int foodReward;
 
     /**

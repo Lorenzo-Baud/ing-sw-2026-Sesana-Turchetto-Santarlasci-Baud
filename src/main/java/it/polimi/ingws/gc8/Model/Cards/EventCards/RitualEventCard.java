@@ -15,6 +15,8 @@ import java.util.List;
  */
 public class RitualEventCard extends EventCard {
 
+    private static final long serialVersionUID = 1L;
+
     /** Prestige points deducted from the player(s) with the fewest Shaman icons. */
     private final int prestigeMalus;
 

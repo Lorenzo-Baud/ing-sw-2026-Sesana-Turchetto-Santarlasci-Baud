@@ -12,6 +12,8 @@ import it.polimi.ingws.gc8.Model.Enum.Era;
  */
 public abstract class CharacterCard extends Card {
 
+    private static final long serialVersionUID = 1L;
+
     /** The minimum number of players required for this card to be included in the deck. */
     private final int numberOfPlayers;
 

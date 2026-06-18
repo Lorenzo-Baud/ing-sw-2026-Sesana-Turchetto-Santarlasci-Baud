@@ -1,5 +1,7 @@
 package it.polimi.ingws.gc8.Model.Board;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.polimi.ingws.gc8.Model.Player;
@@ -7,7 +9,9 @@ import it.polimi.ingws.gc8.Model.Player;
 /**
  * Represents single tile on offer track providing specific rewards and bonuses
  */
-public class OfferTile {
+public class OfferTile implements Serializable {
+    private static final long serialVersionUID = 1L;
+
 
     /**
      * Unique identifier for offer tile

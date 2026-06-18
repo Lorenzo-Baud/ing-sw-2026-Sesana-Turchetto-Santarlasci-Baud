@@ -1,5 +1,7 @@
 package it.polimi.ingws.gc8.Model;
 
+import java.io.Serializable;
+
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Artist;
@@ -20,7 +22,9 @@ import java.util.Set;
  * and Building cards they have acquired during the game.
  * Acts as the central hub for building effect triggers.
  */
-public class Tribe {
+public class Tribe implements Serializable {
+    private static final long serialVersionUID = 1L;
+
 
     private final List<CharacterCard> characters;
     private final List<BuildingCard> buildings;

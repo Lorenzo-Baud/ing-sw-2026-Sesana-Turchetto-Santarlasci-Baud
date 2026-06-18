@@ -16,6 +16,8 @@ import java.util.logging.Logger;
 
 public class BuildingCard extends Card {
 
+    private static final long serialVersionUID = 1L;
+
     private static final Logger LOGGER = Logger.getLogger(BuildingCard.class.getName());
 
     private String id;

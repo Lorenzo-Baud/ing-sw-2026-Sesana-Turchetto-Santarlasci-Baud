@@ -17,6 +17,9 @@ import java.util.List;
  */
 public abstract class EventCard extends Card {
 
+    /** Persistence: explicit serialVersionUID for stable deserialization. */
+    private static final long serialVersionUID = 1L;
+
     /** Indicates if this event triggers only during the final scoring phase of an Era. */
     private final boolean isFinal;
 

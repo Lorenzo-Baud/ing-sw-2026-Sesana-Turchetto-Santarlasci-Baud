@@ -10,6 +10,7 @@ import it.polimi.ingws.gc8.Model.Enum.CardRow;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -17,7 +18,7 @@ import java.util.List;
  * Exposes all operations that the controller/view can invoke,
  * organized by game phase.
  */
-public interface GameModel {
+public interface GameModel extends Serializable {
 
     // SETUP
 
@@ -77,6 +78,14 @@ public interface GameModel {
 
 
     public void setCurrentPlayer(Player player);
+
+    /**
+     * FA2: re-injects the live view updater after the model has been restored
+     * from a snapshot (the updater is {@code transient} and therefore null on a
+     * freshly deserialized model).
+     * @param viewUpdater the rebuilt updater for the reattached match
+     */
+    void reattachViewUpdater(it.polimi.ingws.gc8.Network.ViewUpdater viewUpdater);
 
     // PHASE 1: TOTEM PLACEMENT
 

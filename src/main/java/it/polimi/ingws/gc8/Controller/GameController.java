@@ -11,6 +11,7 @@ import it.polimi.ingws.gc8.Network.ViewUpdater;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.IntPredicate;
+import java.util.function.Supplier;
 
 /**
  * Main game controller. Owns a single game instance and uses the State pattern
@@ -43,9 +44,29 @@ public class GameController {
      *  Set by {@link MainController}; defaults to "nobody disconnected". */
     private IntPredicate disconnectedCheck = id -> false;
 
+    /** Persistence: invoked once when the game reaches {@link GamePhase#GAME_OVER}, so
+     *  the owning {@link MainController} can release resources and delete the
+     *  on-disk snapshot. Defaults to a no-op. */
+    private Runnable onGameOver = () -> {};
+
     public GameController(ViewUpdater viewUpdater) {
-        this.model = new MesosGame(viewUpdater);
+        this(viewUpdater, new MesosGame(viewUpdater));
+    }
+
+    /**
+     * Persistence restore constructor: wraps an already-initialized model deserialized
+     * from a snapshot instead of creating a fresh one. Re-injects the live
+     * {@code viewUpdater} into the model and rebuilds the in-memory lookups the
+     * controller keeps outside the model (playerMap, and the offer order when
+     * the game was suspended mid action-resolution).
+     *
+     * @param viewUpdater   the rebuilt updater for the reattached match
+     * @param restoredModel the model graph loaded from disk
+     */
+    public GameController(ViewUpdater viewUpdater, GameModel restoredModel) {
+        this.model = restoredModel;
         this.viewUpdater = viewUpdater;
+        this.model.reattachViewUpdater(viewUpdater);
         this.gameLock = new ReentrantLock();
         this.states = new EnumMap<>(GamePhase.class);
         this.playerMap = new HashMap<>();
@@ -56,6 +77,19 @@ public class GameController {
         states.put(GamePhase.ACTION_RESOLUTION, new ActionResolutionState());
         states.put(GamePhase.END_ROUND, new EndRoundState());
         states.put(GamePhase.GAME_OVER, new GameOverState());
+
+        // Rebuild controller-side state that is not part of the model graph.
+        for (Player p : model.getPlayers()) {
+            playerMap.put(p.getPlayerId(), p);
+        }
+        if (model.getPhase() == GamePhase.ACTION_RESOLUTION) {
+            // ActionResolutionState normally derives this on phase entry; on
+            // restore we re-derive it so the resumed turn lands on the right player.
+            List<Player> order = model.getPlayersInOfferOrder();
+            this.offerOrder = order;
+            int idx = order.indexOf(model.getCurrentPlayer());
+            this.offerOrderIndex = Math.max(idx, 0);
+        }
     }
 
     /**
@@ -94,6 +128,11 @@ public class GameController {
         GameState newState = states.get(newPhase);
         if (newState != null) {
             newState.onEnter(this);
+        }
+
+        // FA2: notify the owner so it can stop persisting and delete the snapshot.
+        if (newPhase == GamePhase.GAME_OVER) {
+            onGameOver.run();
         }
     }
 
@@ -139,6 +178,29 @@ public class GameController {
 
     public GameModel getModel() {
         return model;
+    }
+
+    /**
+     * FA2: runs {@code action} while holding the game lock, so the caller can
+     * read a consistent snapshot of the model graph (no mutation in flight).
+     * Used by {@link MainController} to serialize the model for persistence.
+     *
+     * @param action the work to run under the lock
+     * @param <T>    the result type
+     * @return the result of {@code action}
+     */
+    public <T> T withGameLock(Supplier<T> action) {
+        gameLock.lock();
+        try {
+            return action.get();
+        } finally {
+            gameLock.unlock();
+        }
+    }
+
+    /** FA2: registers the game-over callback (snapshot cleanup). */
+    public void setOnGameOver(Runnable callback) {
+        this.onGameOver = (callback == null) ? () -> {} : callback;
     }
 
     public ViewUpdater getViewUpdater() {

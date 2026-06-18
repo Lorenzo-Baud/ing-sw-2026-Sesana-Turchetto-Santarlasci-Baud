@@ -15,6 +15,8 @@ import java.util.List;
  */
 public class SustenanceEventCard extends EventCard {
 
+    private static final long serialVersionUID = 1L;
+
     /** The penalty multiplier applied to prestige points for each unit of missing food. */
     private final int prestigeMalus;
 

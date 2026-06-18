@@ -6,6 +6,8 @@ import it.polimi.ingws.gc8.Model.Cards.CharacterCards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.EventCard;
 import it.polimi.ingws.gc8.Model.Player;
 
+import java.io.Serializable;
+
 /**
  * Interface for Building card effects.
  * All methods have default no-op implementations, so each concrete class
@@ -17,7 +19,7 @@ import it.polimi.ingws.gc8.Model.Player;
  * - Queries: called by the game loop to check if a building modifies a rule.
  *   These return values that the game loop uses to make decisions.
  */
-public interface BuildingEffect {
+public interface BuildingEffect extends Serializable {
 
     //TRIGGERS
 

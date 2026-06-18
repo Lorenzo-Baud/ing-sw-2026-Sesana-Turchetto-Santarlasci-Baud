@@ -10,6 +10,8 @@ import it.polimi.ingws.gc8.Model.Enum.Era;
  */
 public class Inventor extends CharacterCard {
 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Icon associated with the inventor
      */

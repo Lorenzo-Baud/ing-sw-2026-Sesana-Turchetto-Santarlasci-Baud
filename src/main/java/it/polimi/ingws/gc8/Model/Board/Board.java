@@ -1,5 +1,7 @@
 package it.polimi.ingws.gc8.Model.Board;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.polimi.ingws.gc8.Model.Cards.BuildingCard.BuildingCard;
@@ -23,7 +25,9 @@ import java.util.logging.Logger;
  * The Board manages the card decks for different eras, the rows of cards
  * available for purchase, and the tracks for turn order and offers.
  */
-public class Board {
+public class Board implements Serializable {
+    private static final long serialVersionUID = 1L;
+
 
     private static final Logger LOGGER = Logger.getLogger(Board.class.getName());
 

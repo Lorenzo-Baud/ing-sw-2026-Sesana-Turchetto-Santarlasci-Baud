@@ -23,6 +23,8 @@ import java.util.*;
  */
 public class MesosGame implements GameModel {
 
+    private static final long serialVersionUID = 1L;
+
     private List<Player> players;
     private Board board;
     private int numPlayers;
@@ -30,7 +32,19 @@ public class MesosGame implements GameModel {
     private Era currentEra;
     private GamePhase phase;
     private int currentPlayerIndex;
-    ViewUpdater viewUpdater;
+    /** Persistence: the view side is "live" — it is rebuilt on restore, never persisted. */
+    private transient ViewUpdater viewUpdater;
+
+    /**
+     * Persistence: re-injects the live {@link ViewUpdater} after the model has been
+     * deserialized from a snapshot. The field is {@code transient}, so a freshly
+     * restored model has a {@code null} updater until the controller calls this.
+     *
+     * @param viewUpdater the rebuilt updater for the reattached match
+     */
+    public void reattachViewUpdater(ViewUpdater viewUpdater) {
+        this.viewUpdater = viewUpdater;
+    }
 
     @Override
     public void notifyUpdate(GameModel model){

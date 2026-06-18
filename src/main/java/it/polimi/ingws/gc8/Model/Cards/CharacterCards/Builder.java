@@ -10,6 +10,8 @@ import it.polimi.ingws.gc8.Model.Enum.Era;
  */
 public class Builder extends CharacterCard {
 
+    private static final long serialVersionUID = 1L;
+
     /** Immediate food bonus granted upon acquiring or activating this card. */
     private final int foodBonus;
 

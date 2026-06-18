@@ -1,5 +1,7 @@
 package it.polimi.ingws.gc8.Model.Board;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -14,7 +16,9 @@ import java.util.stream.Collectors;
 /**
  * Manager for offer tiles available on board
  */
-public class OfferTrack {
+public class OfferTrack implements Serializable {
+    private static final long serialVersionUID = 1L;
+
 
     /**
      * List of offer tiles on track

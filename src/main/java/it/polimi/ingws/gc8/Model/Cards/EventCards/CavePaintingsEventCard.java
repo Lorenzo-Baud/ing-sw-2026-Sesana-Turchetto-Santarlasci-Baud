@@ -16,6 +16,8 @@ import java.util.List;
  */
 public class CavePaintingsEventCard extends EventCard {
 
+    private static final long serialVersionUID = 1L;
+
     /** The minimum threshold of Artist cards required to receive the prestige bonus. */
     private final int bonusArtists;
 

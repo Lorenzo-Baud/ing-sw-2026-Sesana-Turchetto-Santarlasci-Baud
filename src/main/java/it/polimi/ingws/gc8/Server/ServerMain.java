@@ -1,9 +1,12 @@
 package it.polimi.ingws.gc8.Server;
 
+import it.polimi.ingws.gc8.Controller.MainController;
 import it.polimi.ingws.gc8.Controller.MatchRegistry;
 import it.polimi.ingws.gc8.Network.Connection.RMI.RMIServer;
 import it.polimi.ingws.gc8.Network.Connection.RMI.RMIServerConnection;
 import it.polimi.ingws.gc8.Network.Connection.Socket.SocketServer;
+import it.polimi.ingws.gc8.Persistence.MatchSnapshot;
+import it.polimi.ingws.gc8.Persistence.PersistenceManager;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -39,7 +42,28 @@ public class ServerMain {
         System.setProperty("java.rmi.server.hostname", hostname);
 
         try {
-            MatchRegistry matchRegistry = new MatchRegistry();
+            // load persisted matches before accepting any connection, so a
+            // reconnecting client can immediately rejoin a match that survived
+            // a server crash. Restored matches start suspended (IN_GAME) and
+            // resume once enough players reconnect by nickname.
+            PersistenceManager persistenceManager = PersistenceManager.fromEnvironment();
+            MatchRegistry matchRegistry = new MatchRegistry(persistenceManager);
+            int restored = 0;
+            for (MatchSnapshot snap : persistenceManager.loadAll()) {
+                try {
+                    MainController mc = MainController.restore(snap, matchRegistry, persistenceManager);
+                    matchRegistry.reattach(snap.matchId(), mc);
+                    restored++;
+                } catch (Exception e) {
+                    System.err.println("[Server] Could not restore match "
+                            + snap.matchId() + ": " + e.getMessage());
+                }
+            }
+            if (restored > 0) {
+                System.out.println("[Server] Restored " + restored
+                        + " match(es) from disk (awaiting reconnections).");
+            }
+
             RMIServer rmiServer = new RMIServer(matchRegistry);
 
             Registry registry = LocateRegistry.createRegistry(port);
@@ -62,6 +86,8 @@ public class ServerMain {
             // causing "Address already in use" on the next start.
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 System.out.println("[Server] Shutting down…");
+                // FA2: flush pending snapshot writes before the JVM dies.
+                matchRegistry.shutdownAll();
                 socketServer.stop();
                 try {
                     UnicastRemoteObject.unexportObject(rmiServer, true);
