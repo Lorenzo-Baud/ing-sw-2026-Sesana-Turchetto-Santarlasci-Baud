@@ -355,26 +355,77 @@ public class GameScreenController {
     private void updateInterface() {
         renderFromSnapshot(guiView.getGameView());
 
-        /*
-            If the player placed his totem on the food tile takes food and
-            returns to turn order track
-         */
         if(guiView.isMyTurn()) {
+
             OfferTileDTO myTile = guiView.getGameView().offerTrack().stream()
                     .filter(tile -> tile.playerIndexOccupant() == guiView.getPlayerId())
                     .findFirst()
                     .orElse(null);
             if(myTile != null) {
+
+                /*
+                    If the player placed his totem on the food tile takes food and
+                    returns to turn order track
+                 */
                 if(myTile.id() == OffertileId.A && !turnFoodTaken) {
                     turnFoodTaken = true;
                     if (guiView.sendAndAwaitUpdate(new TakeFoodAction(guiView.getPlayerId())) == View.SendResult.OK) {
                         endTurnAndReturnTotem();
-                        guiView.showInfo("Turno terminato", "Hai guadagnato 3 cibo e sei ritornato automaticamente in posizione");
                     } else {
                         turnFoodTaken = false;
                     }
                 }
+
+                /*
+                    If the player cannot take any more cards from the rows
+                    automatically end turn
+                 */
+                boolean canPickFromUpper = false;
+                boolean canPickFromLower = false;
+
+                for(int i = 0; i < guiView.getGameView().upperRowCards().size(); i++) {
+                    if(guiView.getGameView().upperRowCards().get(i).type() == CardType.CHARACTER) {
+                        canPickFromUpper = true;
+                        break;
+                    }
+                    if(guiView.getGameView().upperRowCards().get(i).type() == CardType.BUILDING
+                            && guiView.getGameView().upperRowCards().get(i).buildingFoodCost() <=
+                            guiView.getGameView().players().get(guiView.getPlayerId()-1).foodPoints()) {
+                        canPickFromLower = true;
+                        break;
+                    }
+                }
+
+                for(int i = 0; i < guiView.getGameView().lowerRowCards().size(); i++) {
+                    if(guiView.getGameView().lowerRowCards().get(i).type() == CardType.CHARACTER) {
+                        canPickFromLower = true;
+                        break;
+                    }
+                    if(guiView.getGameView().lowerRowCards().get(i).type() == CardType.BUILDING
+                    && guiView.getGameView().lowerRowCards().get(i).buildingFoodCost() <=
+                        guiView.getGameView().players().get(guiView.getPlayerId()-1).foodPoints()) {
+                        canPickFromLower = true;
+                        break;
+                    }
+                }
+
+                System.out.println("CAN pick from upper: " + canPickFromUpper);
+                System.out.println("CAN pick from lower: " + canPickFromLower);
+
+                int remainingUpper = View.maxUpperPicks(myTile.id()) - turnUpperTaken;
+                int remainingLower = View.maxLowerPicks(myTile.id()) - turnLowerTaken;
+                if(!canPickFromUpper && !canPickFromLower) {
+                    endTurnAndReturnTotem();
+                }
+                if(!canPickFromUpper && remainingUpper > 0 && remainingLower == 0) {
+                    endTurnAndReturnTotem();
+                }
+                if(!canPickFromLower && remainingLower > 0 && remainingUpper == 0) {
+                    endTurnAndReturnTotem();
+                }
+
             }
+
         }
 
     }
@@ -414,7 +465,13 @@ public class GameScreenController {
                 case ErrorMessage m -> {
                     LOGGER.fine(() -> "Received error message from server: " + m.getError());
                     guiView.lastErrorMessageAt = System.currentTimeMillis();
-                    guiView.showError("Errore", m.getError());
+                    if(m.getError().equals("CANNOT_AFFORD")) {
+                        guiView.showError("Errore", "Non puoi permetterti questa carta");
+                    } else if (m.getError().equals("INVALID_CARD")) {
+                        guiView.showError("Errore", "Carta non valida");
+                    } else {
+                        guiView.showError("Errore", m.getError());
+                    }
                 }
                 case ConnectionUpdateMessage m -> {
                     // TODO: handle this
