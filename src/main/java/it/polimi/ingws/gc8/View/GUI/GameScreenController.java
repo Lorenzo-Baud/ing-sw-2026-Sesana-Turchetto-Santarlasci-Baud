@@ -202,7 +202,13 @@ public class GameScreenController {
     /** Updates the central HUD pill describing whose turn it is. */
     private void renderTurnPill(GameDTO snap, boolean myTurn) {
         if (myTurn) {
-            yourTurnLabel.setText("Tocca a te · pesca dalle file o termina il turno");
+
+            if(myOfferTile(guiView.getGameView()) == null) {
+                yourTurnLabel.setText("Tocca a te · piazza il totem sul tracciato delle offerte");
+            } else {
+                yourTurnLabel.setText("Tocca a te · pesca le carte dalle file");
+            }
+
             turnDot.setStyle("-fx-fill: #E2592B;");
             setStyleClass(turnPill, "pill-accent");
         } else {
@@ -435,46 +441,46 @@ public class GameScreenController {
                 }
 
                 // If the player cannot take any more cards from the rows, end the turn.
-                boolean canPickFromUpper = false;
-                boolean canPickFromLower = false;
-
-                for (int i = 0; i < guiView.getGameView().upperRowCards().size(); i++) {
-                    if (guiView.getGameView().upperRowCards().get(i).type() == CardType.CHARACTER) {
-                        canPickFromUpper = true;
-                        break;
-                    }
-                    if (guiView.getGameView().upperRowCards().get(i).type() == CardType.BUILDING
-                            && guiView.getGameView().upperRowCards().get(i).buildingFoodCost() <=
-                            guiView.getGameView().players().get(guiView.getPlayerId() - 1).foodPoints()) {
-                        canPickFromLower = true;
-                        break;
-                    }
-                }
-
-                for (int i = 0; i < guiView.getGameView().lowerRowCards().size(); i++) {
-                    if (guiView.getGameView().lowerRowCards().get(i).type() == CardType.CHARACTER) {
-                        canPickFromLower = true;
-                        break;
-                    }
-                    if (guiView.getGameView().lowerRowCards().get(i).type() == CardType.BUILDING
-                            && guiView.getGameView().lowerRowCards().get(i).buildingFoodCost() <=
-                            guiView.getGameView().players().get(guiView.getPlayerId() - 1).foodPoints()) {
-                        canPickFromLower = true;
-                        break;
-                    }
-                }
+                boolean canPick = false;
 
                 int remainingUpper = View.maxUpperPicks(myTile.id()) - turnUpperTaken;
                 int remainingLower = View.maxLowerPicks(myTile.id()) - turnLowerTaken;
-                if (!canPickFromUpper && !canPickFromLower) {
+
+                if(remainingUpper > 0) {
+                    for (int i = 0; i < guiView.getGameView().upperRowCards().size(); i++) {
+                        System.out.println(i +": "+guiView.getGameView().upperRowCards().get(i).type());
+                        if (guiView.getGameView().upperRowCards().get(i).type() == CardType.CHARACTER) {
+                            canPick = true;
+                            break;
+                        }
+                        if (guiView.getGameView().upperRowCards().get(i).type() == CardType.BUILDING
+                                && guiView.getGameView().upperRowCards().get(i).buildingFoodCost() <=
+                                guiView.getGameView().players().get(guiView.getPlayerId() - 1).foodPoints()) {
+                            canPick = true;
+                            break;
+                        }
+                    }
+                }
+
+                if(remainingLower > 0) {
+                    for (int i = 0; i < guiView.getGameView().lowerRowCards().size(); i++) {
+                        if (guiView.getGameView().lowerRowCards().get(i).type() == CardType.CHARACTER) {
+                            canPick = true;
+                            break;
+                        }
+                        if (guiView.getGameView().lowerRowCards().get(i).type() == CardType.BUILDING
+                                && guiView.getGameView().lowerRowCards().get(i).buildingFoodCost() <=
+                                guiView.getGameView().players().get(guiView.getPlayerId() - 1).foodPoints()) {
+                            canPick = true;
+                            break;
+                        }
+                    }
+                }
+
+                if(!canPick) {
                     endTurnAndReturnTotem();
                 }
-                if (!canPickFromUpper && remainingUpper > 0 && remainingLower == 0) {
-                    endTurnAndReturnTotem();
-                }
-                if (!canPickFromLower && remainingLower > 0 && remainingUpper == 0) {
-                    endTurnAndReturnTotem();
-                }
+
             }
         }
     }
@@ -714,7 +720,7 @@ public class GameScreenController {
                 "Nel tuo turno posiziona il totem su una tessera offerta, poi pesca carte dalla "
                         + "fila superiore e/o inferiore rispettando le quote della tessera. "
                         + "Click sinistro su una carta per prenderla, click destro per vederne i dettagli. "
-                        + "Quando hai finito, premi \"Termina turno\" per riprendere il totem.");
+        );
     }
 
     /**
