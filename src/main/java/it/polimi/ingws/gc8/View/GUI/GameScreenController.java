@@ -54,7 +54,7 @@ import java.util.logging.Logger;
 public class GameScreenController {
 
     private static final Logger LOGGER = Logger.getLogger(GameScreenController.class.getName());
-    private static final double CARD_CORNER_RADIUS = 10.0;
+    private static final double CARD_CORNER_RADIUS = 16.0;
 
     /** Variables to track how many cards have been taken from each row during the current turn, to enforce quotas. */
     int turnUpperTaken = 0;
@@ -101,7 +101,6 @@ public class GameScreenController {
 
     // ---- Action bar ----
     @FXML private Label quotaLabel;
-    @FXML private javafx.scene.control.Button endTurnButton;
 
     /** Injects the owning {@link GuiView} instance. */
     public void setGuiView(GuiView guiView) {
@@ -339,13 +338,16 @@ public class GameScreenController {
             PlayerDTO occupant = (track != null && i < track.size()) ? track.get(i) : null;
             if (occupant == null) continue;
 
-            ImageView totem = new ImageView(GuiAssets.totemFlat(occupant.totemColor()));
-            DoubleBinding totemHeight = trackView.fitWidthProperty().multiply(0.30);
+            Image totemImage = GuiAssets.totemFlat(occupant.totemColor());
+            ImageView totem = new ImageView(totemImage);
+            DoubleBinding totemHeight = trackView.fitWidthProperty().multiply(0.20);
             totem.fitHeightProperty().bind(totemHeight);
             totem.setPreserveRatio(true);
             totem.setSmooth(true);
-            totem.layoutXProperty().bind(trackView.fitWidthProperty().multiply(0.50).subtract(totemHeight.multiply(0.45)));
-            totem.layoutYProperty().bind(trackHeight.multiply(centersY[i]).subtract(totemHeight.multiply(0.55)));
+            double aspect = totemImage.getWidth() / totemImage.getHeight();
+            DoubleBinding totemWidth = totemHeight.multiply(aspect);
+            totem.layoutXProperty().bind(trackView.fitWidthProperty().multiply(0.50).subtract(totemWidth.multiply(0.50)));
+            totem.layoutYProperty().bind(trackHeight.multiply(centersY[i]).subtract(totemHeight.multiply(0.73)));
             markerLayer.getChildren().add(totem);
         }
 
@@ -403,7 +405,7 @@ public class GameScreenController {
         return b;
     }
 
-    /** Updates the action bar quota text and the end-turn button availability. */
+    /** Updates the action bar quota text. */
     private void renderActionBar(GameDTO snap, boolean myTurn) {
         OfferTileDTO myTile = myOfferTile(snap);
         if (myTurn && myTile != null) {
@@ -411,13 +413,10 @@ public class GameScreenController {
             int maxLower = View.maxLowerPicks(myTile.id());
             quotaLabel.setText("↑ Superiore " + turnUpperTaken + "/" + maxUpper
                     + "   ·   ↓ Inferiore " + turnLowerTaken + "/" + maxLower);
-            endTurnButton.setDisable(false);
         } else if (myTurn) {
             quotaLabel.setText("Posiziona il tuo totem su una tessera offerta");
-            endTurnButton.setDisable(true);
         } else {
             quotaLabel.setText("In attesa del tuo turno");
-            endTurnButton.setDisable(true);
         }
     }
 
@@ -614,10 +613,11 @@ public class GameScreenController {
 
         StackPane slot = plainSlot(content);
         if (tile.playerIndexOccupant() == guiView.getPlayerId()) {
+            content.getStyleClass().add("offer-owned-frame");
+
             Label ownedBadge = new Label("LA TUA TESSERA");
             ownedBadge.getStyleClass().add("offer-owned-badge");
             ownedBadge.setMouseTransparent(true);
-            ownedBadge.visibleProperty().bind(slot.hoverProperty());
             StackPane.setAlignment(ownedBadge, Pos.TOP_CENTER);
             ownedBadge.setTranslateY(-7.0);
             content.getChildren().add(ownedBadge);
@@ -706,26 +706,20 @@ public class GameScreenController {
         }
     }
 
-    /** Action-bar button: ends the turn and returns the totem. */
-    @FXML
-    private void handleEndTurn() {
-        if (!guiView.isMyTurn()) return;
-        endTurnAndReturnTotem();
-    }
-
     /** HUD button: shows a short rules reminder. */
     @FXML
     private void handleShowRules() {
         guiView.showInfo("Come si gioca",
                 "Nel tuo turno posiziona il totem su una tessera offerta, poi pesca carte dalla "
-                        + "fila superiore e/o inferiore rispettando le quote della tessera. "
+                        + "fila superiore e/o inferiore rispettando le quote della tessera. Il turno si chiude "
+                        + "automaticamente quando hai completato le azioni richieste. "
                         + "Click sinistro su una carta per prenderla, click destro per vederne i dettagli. "
         );
     }
 
     /**
-     * Checks if all actions are completed or can be invoked manually
-     * to return the totem and finalize the player's turn.
+     * Returns the totem and finalizes the player's turn once all required
+     * actions are completed or no further legal picks are available.
      */
     private void endTurnAndReturnTotem() {
         GameDTO g = guiView.getGameView();

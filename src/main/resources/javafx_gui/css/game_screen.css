@@ -49,6 +49,12 @@
     -fx-padding: 0;
 }
 
+.offer-owned-frame {
+    -fx-border-color: #E2592B;
+    -fx-border-width: 3px;
+    -fx-border-radius: 10px;
+}
+
 .offer-owned-badge {
     -fx-background-color: #E2592B;
     -fx-background-radius: 6px 6px 0 0;
@@ -56,7 +62,7 @@
     -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;
     -fx-font-weight: 900;
     -fx-font-size: 9px;
-    -fx-padding: 3 8 3 8;
+    -fx-padding: 2 8 2 8;
 }
 
 /* ---- hover description tooltip ----------------------------------- */

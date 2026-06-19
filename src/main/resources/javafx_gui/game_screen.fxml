@@ -212,9 +212,6 @@
                         <Label fx:id="quotaLabel" styleClass="quota-text" text="In attesa del tuo turno" />
                      </children>
                   </VBox>
-                  <Region HBox.hgrow="ALWAYS" />
-                  <Button fx:id="endTurnButton" mnemonicParsing="false" onAction="#handleEndTurn"
-                          styleClass="btn-accent" text="Termina turno · riprendi il totem" />
                </children>
             </HBox>
 
