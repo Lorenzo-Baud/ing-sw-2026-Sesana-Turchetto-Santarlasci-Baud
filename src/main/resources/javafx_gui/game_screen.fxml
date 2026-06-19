@@ -71,127 +71,20 @@
                      <children>
                         <VBox spacing="7.0" VBox.vgrow="ALWAYS">
                            <children>
-                              <Label styleClass="eyebrow" text="FILA SUPERIORE ↑" />
-                              <HBox fx:id="topCardsRow" alignment="CENTER_LEFT" spacing="13.0" VBox.vgrow="ALWAYS" />
+                              <Label styleClass="eyebrow" text="FILA SUPERIORE ↑" maxWidth="1.7976931348623157E308" alignment="CENTER" />
+                              <HBox fx:id="topCardsRow" alignment="CENTER" spacing="13.0" VBox.vgrow="ALWAYS" />
                            </children>
                         </VBox>
                         <VBox spacing="7.0" VBox.vgrow="ALWAYS">
                            <children>
-                              <Label styleClass="eyebrow" text="PISTA DELLE OFFERTE" />
-                              <HBox fx:id="middleCardsRow" alignment="CENTER_LEFT" spacing="13.0" VBox.vgrow="ALWAYS" />
+                              <Label styleClass="eyebrow" text="PISTA DELLE OFFERTE" maxWidth="1.7976931348623157E308" alignment="CENTER" />
+                              <HBox fx:id="middleCardsRow" alignment="CENTER" spacing="13.0" VBox.vgrow="ALWAYS" />
                            </children>
                         </VBox>
                         <VBox spacing="7.0" VBox.vgrow="ALWAYS">
                            <children>
-                              <Label styleClass="eyebrow" text="FILA INFERIORE ↓" />
-                              <HBox fx:id="bottomCardsRow" alignment="CENTER_LEFT" spacing="13.0" VBox.vgrow="ALWAYS" />
-                           </children>
-                        </VBox>
-                     </children>
-                  </VBox>
-
-                  <!-- RIGHT RAIL: tribe (parchment) -->
-                  <VBox prefWidth="272.0" styleClass="right-rail">
-                     <padding>
-                        <Insets bottom="16.0" left="0.0" right="16.0" top="16.0" />
-                     </padding>
-                     <children>
-                        <VBox spacing="13.0" styleClass="parchment" VBox.vgrow="ALWAYS">
-                           <padding>
-                              <Insets bottom="17.0" left="17.0" right="17.0" top="17.0" />
-                           </padding>
-                           <children>
-                              <Label styleClass="parchment-title" text="La mia tribù" />
-                              <HBox spacing="10.0">
-                                 <children>
-                                    <VBox spacing="2.0" styleClass="stat-card" HBox.hgrow="ALWAYS">
-                                       <padding>
-                                          <Insets bottom="11.0" left="13.0" right="13.0" top="11.0" />
-                                       </padding>
-                                       <children>
-                                          <Label styleClass="stat-cap" text="CIBO" />
-                                          <Label fx:id="foodLabel" styleClass="stat-food" text="0" />
-                                       </children>
-                                    </VBox>
-                                    <VBox spacing="2.0" styleClass="stat-card" HBox.hgrow="ALWAYS">
-                                       <padding>
-                                          <Insets bottom="11.0" left="13.0" right="13.0" top="11.0" />
-                                       </padding>
-                                       <children>
-                                          <Label styleClass="stat-cap" text="PRESTIGIO" />
-                                          <Label fx:id="prestigeLabel" styleClass="stat-prestige" text="0" />
-                                       </children>
-                                    </VBox>
-                                 </children>
-                              </HBox>
-
-                              <Label styleClass="stat-cap" text="PERSONAGGI &amp; EDIFICI">
-                                 <VBox.margin>
-                                    <Insets top="2.0" />
-                                 </VBox.margin>
-                              </Label>
-
-                              <VBox spacing="7.0">
-                                 <children>
-                                    <HBox alignment="CENTER_LEFT" spacing="9.0">
-                                       <children>
-                                          <Circle radius="5.5" fill="#2C8B8C" />
-                                          <Label styleClass="tribe-row" text="Artisti" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
-                                          <Label fx:id="artistNumberLabel" styleClass="tribe-count" text="0" />
-                                       </children>
-                                    </HBox>
-                                    <HBox alignment="CENTER_LEFT" spacing="9.0">
-                                       <children>
-                                          <Circle radius="5.5" fill="#B5793A" />
-                                          <Label styleClass="tribe-row" text="Costruttori" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
-                                          <Label fx:id="constructorNumberLabel" styleClass="tribe-count" text="0" />
-                                       </children>
-                                    </HBox>
-                                    <HBox alignment="CENTER_LEFT" spacing="9.0">
-                                       <children>
-                                          <Circle radius="5.5" fill="#7A3B5E" />
-                                          <Label styleClass="tribe-row" text="Sciamani" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
-                                          <Label fx:id="shamanNumberLabel" styleClass="tribe-count" text="0" />
-                                       </children>
-                                    </HBox>
-                                    <HBox alignment="CENTER_LEFT" spacing="9.0">
-                                       <children>
-                                          <Circle radius="5.5" fill="#E0432B" />
-                                          <Label styleClass="tribe-row" text="Cacciatori" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
-                                          <Label fx:id="hunterNumberLabel" styleClass="tribe-count" text="0" />
-                                       </children>
-                                    </HBox>
-                                    <HBox alignment="CENTER_LEFT" spacing="9.0">
-                                       <children>
-                                          <Circle radius="5.5" fill="#4E7A3C" />
-                                          <Label styleClass="tribe-row" text="Raccoglitori" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
-                                          <Label fx:id="collectorNumberLabel" styleClass="tribe-count" text="0" />
-                                       </children>
-                                    </HBox>
-                                    <HBox alignment="CENTER_LEFT" spacing="9.0">
-                                       <children>
-                                          <Circle radius="5.5" fill="#3B6FD4" />
-                                          <Label styleClass="tribe-row" text="Inventori" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
-                                          <Label fx:id="inventorNumberLabel" styleClass="tribe-count" text="0" />
-                                       </children>
-                                    </HBox>
-                                    <HBox alignment="CENTER_LEFT" spacing="9.0" styleClass="tribe-divider">
-                                       <padding>
-                                          <Insets top="7.0" />
-                                       </padding>
-                                       <children>
-                                          <Circle radius="5.5" fill="#EAB14A" />
-                                          <Label styleClass="tribe-row" text="Edifici" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
-                                          <Label fx:id="buildingNumberLabel" styleClass="tribe-count" text="0" />
-                                       </children>
-                                    </HBox>
-                                 </children>
-                              </VBox>
-
-                              <Region VBox.vgrow="ALWAYS" />
-                              <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false"
-                                      onAction="#handleShowTribePopupDirectly" styleClass="btn-dark"
-                                      text="Vedi tutta la tribù" />
+                              <Label styleClass="eyebrow" text="FILA INFERIORE ↓" maxWidth="1.7976931348623157E308" alignment="CENTER" />
+                              <HBox fx:id="bottomCardsRow" alignment="CENTER" spacing="13.0" VBox.vgrow="ALWAYS" />
                            </children>
                         </VBox>
                      </children>
@@ -212,6 +105,21 @@
                         <Label fx:id="quotaLabel" styleClass="quota-text" text="In attesa del tuo turno" />
                      </children>
                   </VBox>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <HBox fx:id="tribeMiniBox" alignment="CENTER" spacing="13.0" styleClass="tribe-mini"
+                        onMouseClicked="#handleShowTribePopupDirectly">
+                     <padding>
+                        <Insets bottom="10.0" left="18.0" right="18.0" top="10.0" />
+                     </padding>
+                     <children>
+                        <Label styleClass="tribe-mini-title" text="LA MIA&#10;TRIBÙ" />
+                        <Label styleClass="stat-cap" text="CIBO" />
+                        <Label fx:id="foodLabel" styleClass="tribe-mini-food" text="0" />
+                        <Label styleClass="stat-cap" text="PP" />
+                        <Label fx:id="prestigeLabel" styleClass="tribe-mini-pp" text="0" />
+                        <Label styleClass="tribe-mini-arrow" text="›" />
+                     </children>
+                  </HBox>
                </children>
             </HBox>
 

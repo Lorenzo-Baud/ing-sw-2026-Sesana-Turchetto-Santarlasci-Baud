@@ -47,7 +47,14 @@
                   <Insets top="10.0" />
                </VBox.margin>
             </Label>
-            <ChoiceBox fx:id="connectionTypeChoice" maxWidth="1.7976931348623157E308" prefHeight="40.0" />
+            <HBox maxWidth="1.7976931348623157E308" spacing="0.0" styleClass="transport-switch">
+               <children>
+                  <ToggleButton fx:id="socketToggle" maxWidth="1.7976931348623157E308" mnemonicParsing="false"
+                                selected="true" styleClass="transport-option" text="Socket" HBox.hgrow="ALWAYS" />
+                  <ToggleButton fx:id="rmiToggle" maxWidth="1.7976931348623157E308" mnemonicParsing="false"
+                                styleClass="transport-option" text="RMI" HBox.hgrow="ALWAYS" />
+               </children>
+            </HBox>
 
             <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleStartGame"
                     styleClass="btn-accent" text="Avvia il gioco">

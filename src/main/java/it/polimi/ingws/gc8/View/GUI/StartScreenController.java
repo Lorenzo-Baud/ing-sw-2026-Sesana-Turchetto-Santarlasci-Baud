@@ -5,8 +5,9 @@ import it.polimi.ingws.gc8.Network.Connection.RMI.RMIServerConnection;
 import it.polimi.ingws.gc8.Network.Connection.ServerConnection;
 import it.polimi.ingws.gc8.Network.Connection.Socket.SocketServerConnection;
 import javafx.fxml.FXML;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 
 /**
  * JavaFX controller for the access (login) screen.
@@ -28,7 +29,9 @@ public class StartScreenController {
     @FXML
     private TextField serverPortField;
     @FXML
-    private ChoiceBox<String> connectionTypeChoice;
+    private ToggleButton socketToggle;
+    @FXML
+    private ToggleButton rmiToggle;
 
     // Setter used by GuiView to inject itself after loading the FXML
     public void setGuiView(GuiView guiView) {
@@ -38,22 +41,20 @@ public class StartScreenController {
     @FXML
     public void initialize() {
 
-        // Initializes connection choice box
-        connectionTypeChoice.getItems().addAll("Socket", "RMI");
-        connectionTypeChoice.setValue("Socket");
+        ToggleGroup transportGroup = new ToggleGroup();
+        socketToggle.setToggleGroup(transportGroup);
+        rmiToggle.setToggleGroup(transportGroup);
+        socketToggle.setSelected(true);
 
         // Changes primary stage title
         guiView.getPrimaryStage().setTitle("Mesos Game - Login");
 
-        // Listen for changes in the choice box selection to update the port automatically
-        connectionTypeChoice.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                if (newValue.equals("RMI")) {
-                    serverPortField.setText("1099");
-                } else if (newValue.equals("Socket")) {
-                    serverPortField.setText("1100");
-                }
+        transportGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue == null) {
+                oldValue.setSelected(true);
+                return;
             }
+            serverPortField.setText(newValue == rmiToggle ? "1099" : "1100");
         });
 
     }
@@ -63,7 +64,7 @@ public class StartScreenController {
 
         String address = serverAddressField.getText();
         String port = serverPortField.getText();
-        String selectedType = connectionTypeChoice.getValue();
+        String selectedType = rmiToggle.isSelected() ? "RMI" : "Socket";
         String username = usernameField.getText();
 
         if (username == null || username.isEmpty() || username.length() > 12) {

@@ -32,6 +32,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
@@ -88,16 +89,9 @@ public class GameScreenController {
     @FXML private HBox middleCardsRow;
     @FXML private HBox bottomCardsRow;
 
-    // ---- Right rail (parchment) ----
+    // ---- Tribe mini-box (action bar) ----
     @FXML private Label foodLabel;
     @FXML private Label prestigeLabel;
-    @FXML private Label artistNumberLabel;
-    @FXML private Label shamanNumberLabel;
-    @FXML private Label constructorNumberLabel;
-    @FXML private Label hunterNumberLabel;
-    @FXML private Label collectorNumberLabel;
-    @FXML private Label inventorNumberLabel;
-    @FXML private Label buildingNumberLabel;
 
     // ---- Action bar ----
     @FXML private Label quotaLabel;
@@ -161,16 +155,7 @@ public class GameScreenController {
         // ---------- LEFT RAIL (turn order) ----------
         renderTurnOrder(snap, n);
 
-        // ---------- RIGHT RAIL (tribe counts) ----------
-        List<CardDTO> tribe = snap.players().get(me - 1).tribe();
-        artistNumberLabel.setText(countChar(tribe, CharacterType.ARTIST));
-        shamanNumberLabel.setText(countChar(tribe, CharacterType.SHAMAN));
-        constructorNumberLabel.setText(countChar(tribe, CharacterType.BUILDER));
-        hunterNumberLabel.setText(countChar(tribe, CharacterType.HUNTER));
-        collectorNumberLabel.setText(countChar(tribe, CharacterType.COLLECTOR));
-        inventorNumberLabel.setText(countChar(tribe, CharacterType.INVENTOR));
-        buildingNumberLabel.setText(String.valueOf(
-                tribe.stream().filter(c -> c.type() == CardType.BUILDING).count()));
+        // ---------- TRIBE MINI-BOX (cibo + prestigio) ----------
         foodLabel.setText(String.valueOf(snap.players().get(me - 1).foodPoints()));
         prestigeLabel.setText(String.valueOf(snap.players().get(me - 1).prestigePoints()));
 
@@ -347,7 +332,7 @@ public class GameScreenController {
             double aspect = totemImage.getWidth() / totemImage.getHeight();
             DoubleBinding totemWidth = totemHeight.multiply(aspect);
             totem.layoutXProperty().bind(trackView.fitWidthProperty().multiply(0.50).subtract(totemWidth.multiply(0.50)));
-            totem.layoutYProperty().bind(trackHeight.multiply(centersY[i]).subtract(totemHeight.multiply(0.73)));
+            totem.layoutYProperty().bind(trackHeight.multiply(centersY[i]).subtract(totemHeight.multiply(0.75)));
             markerLayer.getChildren().add(totem);
         }
 
@@ -447,7 +432,6 @@ public class GameScreenController {
 
                 if(remainingUpper > 0) {
                     for (int i = 0; i < guiView.getGameView().upperRowCards().size(); i++) {
-                        System.out.println(i +": "+guiView.getGameView().upperRowCards().get(i).type());
                         if (guiView.getGameView().upperRowCards().get(i).type() == CardType.CHARACTER) {
                             canPick = true;
                             break;
@@ -613,7 +597,7 @@ public class GameScreenController {
 
         StackPane slot = plainSlot(content);
         if (tile.playerIndexOccupant() == guiView.getPlayerId()) {
-            content.getStyleClass().add("offer-owned-frame");
+            content.getChildren().add(cardOutline(cardView));
 
             Label ownedBadge = new Label("LA TUA TESSERA");
             ownedBadge.getStyleClass().add("offer-owned-badge");
@@ -1079,6 +1063,25 @@ public class GameScreenController {
         imageView.setClip(clip);
     }
 
+    /** Orange selection outline that exactly follows a fitHeight-driven card image. */
+    private Rectangle cardOutline(ImageView imageView) {
+        Image image = imageView.getImage();
+        double imageHeight = image == null ? 0.0 : image.getHeight();
+        double imageWidth = image == null ? 0.0 : image.getWidth();
+        double ratio = imageHeight > 0.0 ? imageWidth / imageHeight : 1.0;
+
+        Rectangle outline = new Rectangle();
+        outline.setFill(Color.TRANSPARENT);
+        outline.setStroke(Color.web("#E2592B"));
+        outline.setStrokeWidth(3.0);
+        outline.setArcWidth(CARD_CORNER_RADIUS);
+        outline.setArcHeight(CARD_CORNER_RADIUS);
+        outline.widthProperty().bind(imageView.fitHeightProperty().multiply(ratio));
+        outline.heightProperty().bind(imageView.fitHeightProperty());
+        outline.setMouseTransparent(true);
+        return outline;
+    }
+
     /** Clips images whose size is driven by fitWidth instead of fitHeight. */
     private void clipRoundedToFitWidth(ImageView imageView) {
         Image image = imageView.getImage();
@@ -1187,13 +1190,6 @@ public class GameScreenController {
                 .filter(tile -> tile.playerIndexOccupant() == guiView.getPlayerId())
                 .findFirst()
                 .orElse(null);
-    }
-
-    /** Count of a given character type in a tribe, as a String. */
-    private static String countChar(List<CardDTO> tribe, CharacterType type) {
-        return String.valueOf(tribe.stream()
-                .filter(c -> c.type() == CardType.CHARACTER && c.characterType() == type)
-                .count());
     }
 
     /** Replaces the single layout style class on a node (pill ⇄ pill-accent). */

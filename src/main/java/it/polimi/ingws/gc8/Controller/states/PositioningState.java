@@ -67,11 +67,22 @@ public class PositioningState implements GameState {
 
     @Override
     public void onEnter(GameController context) {
+        GameModel model = context.getModel();
+
+        // Rule (manual p.4): each positioning round starts from the TOP of the
+        // turn-order track, not from whoever acted last in the previous phase
+        // (after action resolution currentPlayer points at the last finisher,
+        // who is now in the bottom slot). Reset it before anything else so the
+        // disconnection-skip below also starts from the correct first player.
+        List<Player> turnOrder = model.getPlayersInTurnOrder();
+        if (!turnOrder.isEmpty()) {
+            model.setCurrentPlayer(turnOrder.get(0));
+        }
+
         // FA3: the first player(s) may already be disconnected; skip them.
         skipDisconnectedPlayers(context);
 
         // Notify whoever is up now (only if we are still positioning).
-        GameModel model = context.getModel();
         if (model.getPhase() == GamePhase.POSITIONING) {
             Player firstPlayer = model.getCurrentPlayer();
             if (firstPlayer != null) {

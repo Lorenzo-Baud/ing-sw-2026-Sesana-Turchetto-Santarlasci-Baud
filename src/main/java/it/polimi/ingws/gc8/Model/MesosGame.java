@@ -94,6 +94,9 @@ public class MesosGame implements GameModel {
         randomizeTurnOrder();
         distributeInitialFood();
         this.currentRound = 1;
+        // First positioner is the top of the randomized turn-order track, not
+        // players.get(0) (which is join order) — see placeTotem.
+        this.currentPlayerIndex = indexOfFirstTrackOccupant();
         this.phase = GamePhase.POSITIONING;
         notifyUpdate(this);
     }
@@ -207,12 +210,31 @@ public class MesosGame implements GameModel {
     public void placeTotem(Player player, OfferTile offerTile) {
         board.getOfferTrack().placeTotem(offerTile.getId(), player);
         board.getTurnOrderTrack().returnTotem(player);
-        currentPlayerIndex = (currentPlayerIndex + 1) % numPlayers;
         if (allTotemsPlaced()) {
             phase = GamePhase.ACTION_RESOLUTION;
             currentPlayerIndex = 0;
+        } else {
+            // Rule (manual p.4): positioning follows the turn-order track
+            // top→bottom. The placing player was just removed from the track,
+            // so the next positioner is the new top-most remaining occupant.
+            currentPlayerIndex = indexOfFirstTrackOccupant();
         }
         notifyUpdate(this);
+    }
+
+    /**
+     * Index in {@code players} of the top-most player still on the turn-order
+     * track — i.e. the next to position. Returns -1 if the track is empty.
+     * {@code players} keeps its join order (the GUI indexes it by playerId), so
+     * we map the track occupant back to its position in {@code players}.
+     */
+    private int indexOfFirstTrackOccupant() {
+        for (Player p : board.getTurnOrderTrack().getCurrentOrder()) {
+            if (p != null) {
+                return players.indexOf(p);
+            }
+        }
+        return -1;
     }
 
     @Override

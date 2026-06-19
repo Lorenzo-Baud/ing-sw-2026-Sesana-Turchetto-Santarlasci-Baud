@@ -196,10 +196,44 @@ public class ActionResolutionState implements GameState {
     }
 
     private void handleReturnTotem(GameController context, Player player) {
+        GameModel model = context.getModel();
+
+        // Rule (manual p.4): taking Character cards is mandatory while the player
+        // still has picks left on their offer tile and Characters are available
+        // in the relevant rows. Buildings remain optional (they cost food), so
+        // they never block the totem return. This guard makes the obligation
+        // authoritative server-side; the GUI only enforces it as UX.
+        if (hasMandatoryCharacterPick(model, player)) {
+            context.getViewUpdater().notifyError(player.getPlayerId(), "MUST_PICK_CHARACTER",
+                    "You must take the available Character card(s) before returning your totem.");
+            return;
+        }
+
         advanceToNextOfferPlayer(context, player);
 
         // FA3: skip any disconnected players who are next in the offer order.
         skipDisconnectedOfferPlayers(context);
+    }
+
+    /**
+     * Whether the player is still obliged to pick a Character: a row from which
+     * picks remain (per the offer tile quota) still contains a Character card.
+     */
+    private boolean hasMandatoryCharacterPick(GameModel model, Player player) {
+        OfferTile tile = model.getOfferTile(player);
+        if (tile == null) {
+            return false;
+        }
+        if (currentTurnUpperTaken < tile.getUpperRowPicks()
+                && rowHasCharacter(model.getBoard().getUpperRow())) {
+            return true;
+        }
+        return currentTurnLowerTaken < tile.getLowerRowPicks()
+                && rowHasCharacter(model.getBoard().getLowerRow());
+    }
+
+    private boolean rowHasCharacter(List<Card> row) {
+        return row != null && row.stream().anyMatch(c -> c instanceof CharacterCard);
     }
 
     /**
