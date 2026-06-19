@@ -245,7 +245,8 @@ public class ViewUpdater {
      */
     public void notifyMatchSuspended(String soleSurvivorNickname) {
         broadcast(new ErrorMessage("SUSPENDED",
-                "Partita sospesa: sei l'unico giocatore connesso. In attesa di altri..."));
+                "Partita sospesa: sei l'unico giocatore connesso. "
+                        + "Se nessuno si riconnette entro 60 secondi, vinci automaticamente."));
     }
 
     /**

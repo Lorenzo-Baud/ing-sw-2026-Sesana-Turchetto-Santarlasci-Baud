@@ -95,6 +95,7 @@ public class GameScreenController {
 
     // ---- Action bar ----
     @FXML private Label quotaLabel;
+    @FXML private javafx.scene.control.Button endTurnButton;
 
     /** Injects the owning {@link GuiView} instance. */
     public void setGuiView(GuiView guiView) {
@@ -390,7 +391,7 @@ public class GameScreenController {
         return b;
     }
 
-    /** Updates the action bar quota text. */
+    /** Updates the action bar quota text and the manual end-turn button. */
     private void renderActionBar(GameDTO snap, boolean myTurn) {
         OfferTileDTO myTile = myOfferTile(snap);
         if (myTurn && myTile != null) {
@@ -403,6 +404,21 @@ public class GameScreenController {
         } else {
             quotaLabel.setText("In attesa del tuo turno");
         }
+        // Manual safety net: the player can always end their turn while on the
+        // offer track. The server stays authoritative — it rejects the return
+        // (MUST_PICK_CHARACTER) if a mandatory Character pick is still available.
+        if (endTurnButton != null) {
+            endTurnButton.setDisable(!(myTurn && myTile != null));
+        }
+    }
+
+    /** Action-bar button: manually return the totem and end the turn. */
+    @FXML
+    private void handleEndTurnButton() {
+        if (!guiView.isMyTurn()) {
+            return;
+        }
+        endTurnAndReturnTotem();
     }
 
     /** Convenience overload that reads the current snapshot. */
@@ -494,13 +510,24 @@ public class GameScreenController {
                         guiView.showError("Errore", "Non puoi permetterti questa carta");
                     } else if (m.getError().equals("INVALID_CARD")) {
                         guiView.showError("Errore", "Carta non valida");
+                    } else if (m.getError().equals("MUST_PICK_CHARACTER")) {
+                        guiView.showError("Errore", "Devi prima prendere il Personaggio disponibile, poi potrai terminare il turno.");
+                    } else if (m.getError().equals("SUSPENDED")) {
+                        guiView.showInfo("Partita sospesa", m.getErrorDetail());
+                    } else if (m.getError().equals("RESUMED")) {
+                        guiView.showInfo("Partita ripresa", m.getErrorDetail());
                     } else {
-                        guiView.showError("Errore", m.getError());
+                        guiView.showError("Errore", m.getErrorDetail());
                     }
                 }
                 case ConnectionUpdateMessage m -> {
                     String who = m.getNickname() == null ? "?" : m.getNickname();
                     LOGGER.fine(() -> who + (m.isConnected() ? " reconnected." : " disconnected."));
+                    if (m.isConnected()) {
+                        guiView.showInfo("Connessione ripristinata", who + " si è riconnesso.");
+                    } else {
+                        guiView.showInfo("Giocatore disconnesso", who + " si è disconnesso.");
+                    }
                 }
                 default -> {
                     // Ignore other message types here.
@@ -724,9 +751,10 @@ public class GameScreenController {
             turnUpperTaken = 0;
             turnLowerTaken = 0;
             turnFoodTaken = false;
-        } else {
-            guiView.showError("Errore", "Impossibile restituire il totem.");
         }
+        // On ERROR the dispatcher already surfaced the server reason (e.g.
+        // MUST_PICK_CHARACTER); on TIMEOUT sendAndAwaitUpdate already showed a
+        // dialog — so no extra generic error here to avoid double pop-ups.
     }
 
     /**
