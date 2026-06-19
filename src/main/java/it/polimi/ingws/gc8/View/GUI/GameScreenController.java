@@ -23,6 +23,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
@@ -849,24 +850,23 @@ public class GameScreenController {
      */
     private void showGameOver(GameOverMessage m) {
         GameDTO snap = m.getFinalState();
+        Stage stage = new Stage();
 
-        VBox root = new VBox(10);
-        root.getStyleClass().add("dusk-root");
-        root.setPadding(new Insets(28));
-        root.setPrefWidth(560);
+        VBox root = new VBox(16);
+        root.getStyleClass().addAll("dusk-root", "game-over-root");
+        root.setPadding(new Insets(40, 44, 42, 44));
+        root.setPrefWidth(840);
 
-        Label eyebrow = new Label("Fine partita");
-        eyebrow.getStyleClass().add("eyebrow");
+        Label eyebrow = new Label("ERA " + roman(snap.currentEra().ordinal() + 1) + " COMPLETATA");
+        eyebrow.getStyleClass().add("game-over-eyebrow");
         Label heading = new Label("Fine della partita");
-        heading.getStyleClass().add("title-lg");
-        VBox.setMargin(heading, new Insets(0, 0, 14, 0));
+        heading.getStyleClass().add("game-over-title");
         root.getChildren().addAll(eyebrow, heading);
 
         if (m.getEndMessage() != null && !m.getEndMessage().isBlank()) {
             Label sub = new Label(m.getEndMessage());
-            sub.getStyleClass().add("subtitle");
+            sub.getStyleClass().add("game-over-subtitle");
             sub.setWrapText(true);
-            VBox.setMargin(sub, new Insets(-8, 0, 10, 0));
             root.getChildren().add(sub);
         }
 
@@ -875,35 +875,47 @@ public class GameScreenController {
                 .toList();
 
         for (int i = 0; i < ranking.size(); i++) {
-            PlayerDTO p = ranking.get(i);
-            boolean winner = i == 0;
-
-            HBox row = new HBox(14);
-            row.setAlignment(Pos.CENTER_LEFT);
-            row.getStyleClass().add(winner ? "player-card-active" : "player-card");
-            row.setMaxWidth(Double.MAX_VALUE);
-
-            Label rank = new Label(String.valueOf(i + 1));
-            rank.getStyleClass().add(winner ? "stat-prestige" : "player-name");
-            rank.setMinWidth(24);
-
-            ImageView totem = new ImageView(GuiAssets.totem3D(p.totemColor()));
-            totem.setFitHeight(40);
-            totem.setPreserveRatio(true);
-
-            Label name = new Label(p.nickname());
-            name.getStyleClass().add("player-name");
-            HBox.setHgrow(name, Priority.ALWAYS);
-            name.setMaxWidth(Double.MAX_VALUE);
-
-            Label pp = new Label(p.prestigePoints() + " PP");
-            pp.getStyleClass().addAll("player-meta", "player-pp");
-
-            row.getChildren().addAll(rank, totem, name, pp);
-            root.getChildren().add(row);
+            root.getChildren().add(buildGameOverRow(i + 1, ranking.get(i), i == 0));
         }
 
-        Stage stage = new Stage();
+        HBox actions = new HBox(18);
+        actions.setAlignment(Pos.CENTER);
+        VBox.setMargin(actions, new Insets(18, 0, 0, 0));
+
+        Button newGame = new Button("Nuova partita");
+        newGame.getStyleClass().add("game-over-primary");
+        newGame.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(newGame, Priority.ALWAYS);
+        newGame.setOnAction(e -> {
+            try {
+                if (guiView.getConnection() != null) {
+                    guiView.getConnection().disconnect();
+                }
+            } catch (Exception ignored) {
+                // The match is over; returning to the start screen is best effort.
+            }
+            stage.close();
+            guiView.showStartScreen();
+        });
+
+        Button exit = new Button("Esci");
+        exit.getStyleClass().add("game-over-secondary");
+        exit.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(exit, Priority.ALWAYS);
+        exit.setOnAction(e -> {
+            try {
+                if (guiView.getConnection() != null) {
+                    guiView.getConnection().disconnect();
+                }
+            } catch (Exception ignored) {
+                // Exit anyway.
+            }
+            stage.close();
+            Platform.exit();
+        });
+        actions.getChildren().addAll(newGame, exit);
+        root.getChildren().add(actions);
+
         stage.setTitle("Mesos — Fine partita");
         stage.initModality(Modality.APPLICATION_MODAL);
         if (playersStrip.getScene() != null) {
@@ -916,6 +928,57 @@ public class GameScreenController {
         stage.setScene(scene);
         stage.setResizable(false);
         stage.show();
+    }
+
+    /** Builds one leaderboard row for the end-game modal. */
+    private HBox buildGameOverRow(int rank, PlayerDTO p, boolean winner) {
+        HBox row = new HBox(20);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.getStyleClass().add(winner ? "game-over-row-winner" : "game-over-row");
+        row.setMinHeight(94);
+        row.setMaxWidth(Double.MAX_VALUE);
+
+        Label rankLabel = new Label(String.valueOf(rank));
+        rankLabel.getStyleClass().add("game-over-rank");
+        rankLabel.setMinWidth(34);
+
+        ImageView totem = new ImageView(GuiAssets.totem3D(p.totemColor()));
+        totem.setFitHeight(58);
+        totem.setPreserveRatio(true);
+
+        VBox info = new VBox(4);
+        HBox nameLine = new HBox(12);
+        nameLine.setAlignment(Pos.CENTER_LEFT);
+        Label name = new Label(p.playerId() == guiView.getPlayerId() ? "Tu" : p.nickname());
+        name.getStyleClass().add("game-over-name");
+        nameLine.getChildren().add(name);
+        if (winner) {
+            Label badge = new Label("VINCITORE");
+            badge.getStyleClass().add("game-over-winner-badge");
+            nameLine.getChildren().add(badge);
+        }
+
+        Label stats = new Label(gameOverStats(p));
+        stats.getStyleClass().add("game-over-stats");
+        info.getChildren().addAll(nameLine, stats);
+        HBox.setHgrow(info, Priority.ALWAYS);
+
+        Label score = new Label(String.valueOf(p.prestigePoints()));
+        score.getStyleClass().add(winner ? "game-over-score-winner" : "game-over-score");
+
+        Label pp = new Label("PP");
+        pp.getStyleClass().add("game-over-pp");
+        HBox scoreBox = new HBox(9, score, pp);
+        scoreBox.setAlignment(Pos.BASELINE_RIGHT);
+
+        row.getChildren().addAll(rankLabel, totem, info, scoreBox);
+        return row;
+    }
+
+    private String gameOverStats(PlayerDTO p) {
+        long buildings = p.tribe().stream().filter(c -> c.type() == CardType.BUILDING).count();
+        long events = p.tribe().stream().filter(c -> c.type() == CardType.EVENT).count();
+        return "tribù " + p.tribe().size() + " · edifici " + buildings + " · eventi " + events;
     }
 
     /**

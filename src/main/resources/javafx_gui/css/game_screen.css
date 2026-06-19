@@ -328,3 +328,109 @@
     -fx-border-color: rgba(242,231,208,0.18);
     -fx-border-width: 0 1 0 0;
 }
+
+/* ---- game over modal --------------------------------------------- */
+.game-over-root {
+    -fx-background-radius: 28px;
+}
+.game-over-eyebrow {
+    -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;
+    -fx-font-weight: 900;
+    -fx-font-size: 16px;
+    -fx-letter-spacing: 4px;
+    -fx-text-fill: #B7A892;
+}
+.game-over-title {
+    -fx-font-family: "Bricolage Grotesque", "Arial Black", "Segoe UI", sans-serif;
+    -fx-font-weight: 900;
+    -fx-font-size: 40px;
+    -fx-text-fill: #F2E7D0;
+}
+.game-over-subtitle {
+    -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: #B7A892;
+}
+.game-over-row,
+.game-over-row-winner {
+    -fx-background-color: rgba(242,231,208,0.035);
+    -fx-background-radius: 18px;
+    -fx-border-color: rgba(242,231,208,0.09);
+    -fx-border-radius: 18px;
+    -fx-border-width: 1px;
+    -fx-padding: 18 24 18 24;
+}
+.game-over-row-winner {
+    -fx-background-color: rgba(234,177,74,0.08);
+    -fx-border-color: rgba(234,177,74,0.62);
+}
+.game-over-rank {
+    -fx-font-family: "Bricolage Grotesque", "Arial Black", "Segoe UI", sans-serif;
+    -fx-font-weight: 900;
+    -fx-font-size: 28px;
+    -fx-text-fill: #A8957E;
+}
+.game-over-name {
+    -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;
+    -fx-font-weight: 900;
+    -fx-font-size: 22px;
+    -fx-text-fill: #F2E7D0;
+}
+.game-over-winner-badge {
+    -fx-background-color: #EAC079;
+    -fx-background-radius: 999px;
+    -fx-text-fill: #1C1520;
+    -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;
+    -fx-font-weight: 900;
+    -fx-font-size: 12px;
+    -fx-padding: 4 12 4 12;
+}
+.game-over-stats {
+    -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;
+    -fx-font-weight: 800;
+    -fx-font-size: 14px;
+    -fx-text-fill: #A8957E;
+}
+.game-over-score,
+.game-over-score-winner {
+    -fx-font-family: "Bricolage Grotesque", "Arial Black", "Segoe UI", sans-serif;
+    -fx-font-weight: 900;
+    -fx-font-size: 36px;
+    -fx-text-fill: #F2E7D0;
+}
+.game-over-score-winner {
+    -fx-font-size: 42px;
+    -fx-text-fill: #EAB14A;
+}
+.game-over-pp {
+    -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;
+    -fx-font-weight: 900;
+    -fx-font-size: 14px;
+    -fx-text-fill: #A8957E;
+}
+.game-over-primary,
+.game-over-secondary {
+    -fx-background-radius: 15px;
+    -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;
+    -fx-font-weight: 900;
+    -fx-font-size: 18px;
+    -fx-cursor: hand;
+    -fx-padding: 20 28 20 28;
+}
+.game-over-primary {
+    -fx-background-color: #E2592B;
+    -fx-text-fill: #1C1520;
+}
+.game-over-primary:hover {
+    -fx-background-color: #f0673a;
+}
+.game-over-secondary {
+    -fx-background-color: rgba(0,0,0,0.10);
+    -fx-border-color: rgba(242,231,208,0.18);
+    -fx-border-radius: 15px;
+    -fx-border-width: 1px;
+    -fx-text-fill: #C6B9A6;
+}
+.game-over-secondary:hover {
+    -fx-background-color: rgba(242,231,208,0.08);
+}
