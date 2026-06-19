@@ -60,6 +60,8 @@
                      <children>
                         <Label styleClass="eyebrow" text="ORDINE DI TURNO" />
                         <VBox fx:id="turnOrderList" spacing="8.0" />
+                        <Region VBox.vgrow="ALWAYS" />
+                        <VBox fx:id="eventLogBox" spacing="4.0" />
                      </children>
                   </VBox>
 

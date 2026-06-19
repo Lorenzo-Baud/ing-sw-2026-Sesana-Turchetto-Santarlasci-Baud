@@ -14,9 +14,12 @@ import it.polimi.ingws.gc8.Network.Messages.GameOverMessage;
 import it.polimi.ingws.gc8.Network.Messages.ModelUpdateMessage;
 import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
 import it.polimi.ingws.gc8.View.View;
+import javafx.animation.FadeTransition;
+import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
+import javafx.util.Duration;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -63,6 +66,11 @@ public class GameScreenController {
     int turnLowerTaken = 0;
     boolean turnFoodTaken = false;
 
+    /** Last card the player attempted to draw, so a server rejection can flash
+     *  the denied feedback on exactly that slot. {@code -1} when none pending. */
+    private CardRow lastAttemptedRow = null;
+    private int lastAttemptedIndex = -1;
+
     /** Reference to the owning GuiView, injected before {@code load()}. */
     private GuiView guiView;
 
@@ -84,6 +92,9 @@ public class GameScreenController {
     // ---- Players strip & turn-order rail (built dynamically) ----
     @FXML private HBox playersStrip;
     @FXML private VBox turnOrderList;
+
+    // ---- Resolved-events log (bottom of the left rail) ----
+    @FXML private VBox eventLogBox;
 
     // ---- Market rows ----
     @FXML private HBox topCardsRow;
@@ -503,14 +514,14 @@ public class GameScreenController {
                     Platform.runLater(this::updateInterface);
                 }
                 case GameOverMessage m -> Platform.runLater(() -> showGameOver(m));
-                case EventResolvedMessage m -> guiView.showInfo("Eventi risolti", formatResolvedEvents(m));
+                case EventResolvedMessage m -> Platform.runLater(() -> showResolvedEvents(m));
                 case ErrorMessage m -> {
                     LOGGER.fine(() -> "Received error message from server: " + m.getError());
                     guiView.lastErrorMessageAt = System.currentTimeMillis();
-                    if (m.getError().equals("CANNOT_AFFORD")) {
-                        guiView.showError("Errore", "Non puoi permetterti questa carta");
-                    } else if (m.getError().equals("INVALID_CARD")) {
-                        guiView.showError("Errore", "Carta non valida");
+                    if (m.getError().equals("CANNOT_AFFORD") || m.getError().equals("INVALID_CARD")) {
+                        // Draw rejected by the server: flash the denied feedback on the
+                        // exact card the player tried to take, instead of a dialog.
+                        Platform.runLater(this::flashLastAttemptedDenied);
                     } else if (m.getError().equals("MUST_PICK_CHARACTER")) {
                         guiView.showError("Errore", "Devi prima prendere il Personaggio disponibile, poi potrai terminare il turno.");
                     } else if (m.getError().equals("SUSPENDED")) {
@@ -538,16 +549,23 @@ public class GameScreenController {
     }
 
     /**
-     * Builds a human-readable summary of the events resolved at the end of a
-     * round / era, including the per-player prestige variation each produced.
+     * Renders the resolved-events log at the bottom of the left rail (in
+     * orange), replacing any previous entries. Events are listed bottom-to-top
+     * (first resolved at the bottom), so the latest sits highest. Stays visible
+     * until the player places a totem for the next turn (see
+     * {@link #clearEventLog()}). Must run on the FX thread.
      */
-    private static String formatResolvedEvents(EventResolvedMessage m) {
-        StringBuilder sb = new StringBuilder();
-        for (EventResolvedMessage.ResolvedEvent ev : m.getEvents()) {
-            sb.append("• ").append(ev.eventType());
+    private void showResolvedEvents(EventResolvedMessage m) {
+        if (eventLogBox == null) return;
+        eventLogBox.getChildren().clear();
+        List<EventResolvedMessage.ResolvedEvent> events = m.getEvents();
+        // Iterate in reverse so the resolution order reads from the bottom up.
+        for (int k = events.size() - 1; k >= 0; k--) {
+            EventResolvedMessage.ResolvedEvent ev = events.get(k);
+            StringBuilder sb = new StringBuilder("• ").append(ev.eventType());
             if (ev.isFinal()) sb.append(" [FINAL]");
             if (ev.deltas().isEmpty()) {
-                sb.append(": nessuna variazione di prestigio.");
+                sb.append(": nessuna variazione");
             } else {
                 sb.append(": ");
                 for (int i = 0; i < ev.deltas().size(); i++) {
@@ -558,9 +576,17 @@ public class GameScreenController {
                             .append(d.prestigeDelta()).append("PP");
                 }
             }
-            sb.append('\n');
+            Label line = new Label(sb.toString());
+            line.getStyleClass().add("event-log-entry");
+            line.setWrapText(true);
+            line.setMaxWidth(Double.MAX_VALUE);
+            eventLogBox.getChildren().add(line);
         }
-        return sb.toString().trim();
+    }
+
+    /** Clears the resolved-events log (called when a totem is placed for the next turn). */
+    private void clearEventLog() {
+        if (eventLogBox != null) eventLogBox.getChildren().clear();
     }
 
     /**
@@ -647,6 +673,9 @@ public class GameScreenController {
             View.SendResult result = guiView.sendAndAwaitUpdate(action);
             if (result == View.SendResult.ERROR) {
                 LOGGER.fine("Placement rejected by the server rulebook.");
+            } else if (result == View.SendResult.OK) {
+                // New turn started: drop the previous round's resolved-events log.
+                clearEventLog();
             }
         }
     }
@@ -661,18 +690,19 @@ public class GameScreenController {
         GameDTO g = guiView.getGameView();
 
         if (!guiView.isMyTurn()) {
+            flashDeniedFeedback(row, index);
             return;
         }
 
         List<CardDTO> targetRowCards = (row == CardRow.UPPER) ? g.upperRowCards() : g.lowerRowCards();
         if (targetRowCards == null || index < 0 || index >= targetRowCards.size()) {
-            guiView.showError("Errore", "Impossibile trovare la carta.");
+            flashDeniedFeedback(row, index);
             return;
         }
 
         OfferTileDTO myTile = myOfferTile(g);
         if (myTile == null) {
-            guiView.showError("Errore", "Impossibile recuperare la tua posizione attuale sulla pista delle offerte.");
+            flashDeniedFeedback(row, index);
             return;
         }
 
@@ -680,21 +710,26 @@ public class GameScreenController {
         if (row == CardRow.UPPER) {
             int maxUpper = View.maxUpperPicks(myTile.id());
             if (turnUpperTaken >= maxUpper) {
-                guiView.showError("Errore", "Hai già esaurito la tua quota di pescate dalla fila superiore (" + turnUpperTaken + "/" + maxUpper + ").");
+                flashDeniedFeedback(row, index);
                 return;
             }
         } else {
             int maxLower = View.maxLowerPicks(myTile.id());
             if (turnLowerTaken >= maxLower) {
-                guiView.showError("Errore", "Hai già esaurito la tua quota di pescate dalla fila inferiore (" + turnLowerTaken + "/" + maxLower + ").");
+                flashDeniedFeedback(row, index);
                 return;
             }
         }
 
         if (guiView.getPlayerId() < 0) {
-            guiView.showError("Errore", "Id player inconsistente.");
+            flashDeniedFeedback(row, index);
             return;
         }
+
+        // Remember the attempted slot so a server-side rejection (e.g. CANNOT_AFFORD,
+        // INVALID_CARD) can flash the denied feedback on exactly this card.
+        lastAttemptedRow = row;
+        lastAttemptedIndex = index;
 
         View.SendResult result = guiView.sendAndAwaitUpdate(new TakeCardAction(guiView.getPlayerId(), index, row));
 
@@ -1156,6 +1191,16 @@ public class GameScreenController {
 
     /** Orange selection outline that exactly follows a fitHeight-driven card image. */
     private Rectangle cardOutline(ImageView imageView) {
+        return cardOutline(imageView, "#E2592B");
+    }
+
+    /** Red "draw denied" outline, same geometry as {@link #cardOutline(ImageView)}. */
+    private Rectangle cardDeniedOutline(ImageView imageView) {
+        return cardOutline(imageView, "#E0432B");
+    }
+
+    /** Rounded outline following a fitHeight-driven card image, in the given colour. */
+    private Rectangle cardOutline(ImageView imageView, String colorHex) {
         Image image = imageView.getImage();
         double imageHeight = image == null ? 0.0 : image.getHeight();
         double imageWidth = image == null ? 0.0 : image.getWidth();
@@ -1163,7 +1208,7 @@ public class GameScreenController {
 
         Rectangle outline = new Rectangle();
         outline.setFill(Color.TRANSPARENT);
-        outline.setStroke(Color.web("#E2592B"));
+        outline.setStroke(Color.web(colorHex));
         outline.setStrokeWidth(3.0);
         outline.setArcWidth(CARD_CORNER_RADIUS);
         outline.setArcHeight(CARD_CORNER_RADIUS);
@@ -1171,6 +1216,59 @@ public class GameScreenController {
         outline.heightProperty().bind(imageView.fitHeightProperty());
         outline.setMouseTransparent(true);
         return outline;
+    }
+
+    /**
+     * Flashes the "draw denied" feedback on the card last attempted by the
+     * player (stored in {@link #lastAttemptedRow}/{@link #lastAttemptedIndex}).
+     * Used when the server rejects a draw. Runs on the FX thread.
+     */
+    private void flashLastAttemptedDenied() {
+        if (lastAttemptedRow == null || lastAttemptedIndex < 0) return;
+        flashDeniedFeedback(lastAttemptedRow, lastAttemptedIndex);
+    }
+
+    /**
+     * Transient visual feedback for a rejected draw: a blinking red outline on
+     * the clicked card plus a short horizontal shake. Targets only the slot at
+     * {@code (row, index)}, auto-clears after ~600ms, and is purely cosmetic
+     * (no game state changes). Must run on the FX thread.
+     */
+    private void flashDeniedFeedback(CardRow row, int index) {
+        HBox rowBox = (row == CardRow.UPPER) ? topCardsRow : bottomCardsRow;
+        if (rowBox == null || index < 0 || index >= rowBox.getChildren().size()) return;
+        if (!(rowBox.getChildren().get(index) instanceof StackPane slot) || slot.getChildren().isEmpty()) return;
+        if (!(slot.getChildren().get(0) instanceof StackPane content)) return;
+
+        ImageView cardView = null;
+        for (Node n : content.getChildren()) {
+            if (n instanceof ImageView iv) { cardView = iv; break; }
+        }
+        if (cardView == null) return;
+
+        // Drop any leftover denied outline from a previous rapid click.
+        content.getChildren().removeIf(n -> "denied-outline".equals(n.getId()));
+
+        Rectangle outline = cardDeniedOutline(cardView);
+        outline.setId("denied-outline");
+        content.getChildren().add(outline);
+
+        FadeTransition blink = new FadeTransition(Duration.millis(150), outline);
+        blink.setFromValue(1.0);
+        blink.setToValue(0.15);
+        blink.setAutoReverse(true);
+        blink.setCycleCount(4);                 // ~600ms total
+        blink.setOnFinished(e -> content.getChildren().remove(outline));
+
+        TranslateTransition shake = new TranslateTransition(Duration.millis(55), content);
+        shake.setFromX(0);
+        shake.setByX(6);
+        shake.setAutoReverse(true);
+        shake.setCycleCount(6);
+        shake.setOnFinished(e -> content.setTranslateX(0));
+
+        blink.play();
+        shake.play();
     }
 
     /** Clips images whose size is driven by fitWidth instead of fitHeight. */

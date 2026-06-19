@@ -145,6 +145,62 @@ public class ActionResolutionStateTest {
     }
 
     @Test
+    void returnAllowedWhenOnlyBuildingsAndNoAffordOnBothRowTile() {
+        // Repro of the live bug: totem on tile E (1 upper + 1 lower pick), both
+        // rows contain ONLY buildings the player cannot afford, NO Character
+        // anywhere. The player must be allowed to end the turn (no block).
+        Board board = game.getBoard();
+        board.setUpperRow(new ArrayList<>(List.of(
+                new BuildingCard("U", 10, 2, Era.ERA_1, "f.png", "b.png", null),
+                new BuildingCard("U", 9, 2, Era.ERA_1, "f.png", "b.png", null))));
+        board.setLowerRow(new ArrayList<>(List.of(
+                new BuildingCard("L", 5, 2, Era.ERA_1, "f.png", "b.png", null),
+                new BuildingCard("L", 7, 2, Era.ERA_1, "f.png", "b.png", null))));
+
+        // Force p1 onto tile E deterministically.
+        OfferTrack track = board.getOfferTrack();
+        for (OfferTile t : track.getTiles()) {
+            if (p1.equals(t.getOccupant()) || p2.equals(t.getOccupant())) t.removeTotem();
+        }
+        track.placeTotem(OffertileId.E, p1);
+
+        // Make it p1's turn in the offer order.
+        controller.setOfferOrder(List.of(p1, p2));
+        controller.setOfferOrderIndex(0);
+
+        state.handleAction(controller, new ReturnTotemAction(1));
+
+        assertNull("Return must be accepted (no character to pick on tile E)",
+                viewUpdater.getLastError());
+    }
+
+    @Test
+    void returnAllowedWhenCharacterOnlyInUnpickableRow() {
+        // Tile C is upper-only (lowerRowPicks=0). A Character sits in the LOWER
+        // row (not pickable from C) and the upper row has only buildings. The
+        // player must be allowed to end the turn.
+        Board board = game.getBoard();
+        board.setUpperRow(new ArrayList<>(List.of(
+                new BuildingCard("U", 10, 2, Era.ERA_1, "f.png", "b.png", null))));
+        board.setLowerRow(new ArrayList<>(List.of(
+                new Shaman("shaman_front.png", "shaman_back.png", Era.ERA_1, 2, 2))));
+
+        OfferTrack track = board.getOfferTrack();
+        for (OfferTile t : track.getTiles()) {
+            if (p1.equals(t.getOccupant()) || p2.equals(t.getOccupant())) t.removeTotem();
+        }
+        track.placeTotem(OffertileId.C, p1);
+
+        controller.setOfferOrder(List.of(p1, p2));
+        controller.setOfferOrderIndex(0);
+
+        state.handleAction(controller, new ReturnTotemAction(1));
+
+        assertNull("Return must be accepted: the character is in a row tile C cannot pick from",
+                viewUpdater.getLastError());
+    }
+
+    @Test
     void takeFoodRejectedOnNonFoodTileTesting() {
         // In a 2-player game tile A (the only foodReward>0 tile) is excluded
         // by its minPlayers constraint, so p2's tile cannot grant food. The
