@@ -78,11 +78,34 @@ public class GuiView extends View {
             try {
                 primaryStage = new Stage();
                 primaryStage.setTitle("Mesos Game");
+                primaryStage.setOnCloseRequest(e -> shutdownAndExit());
                 showStartScreen();
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Failed to start GUI", e);
             }
         });
+    }
+
+    /**
+     * Tears down the session and terminates the JVM. Stops the network pump and
+     * calls {@link ServerConnection#disconnect()}, which logs out from the server
+     * (so the player is marked DISCONNECTED) and unexports the RMI callback.
+     * {@link System#exit} is required because RMI keeps non-daemon threads alive,
+     * so {@link Platform#exit()} alone would leave the process running headless.
+     */
+    public void shutdownAndExit() {
+        try {
+            if (controller != null) controller.stop();
+        } catch (Exception ignored) {
+            // Best effort: we are shutting down regardless.
+        }
+        try {
+            if (connection != null) connection.disconnect();
+        } catch (Exception ignored) {
+            // Server may already be gone; closing locally is what matters.
+        }
+        Platform.exit();
+        System.exit(0);
     }
 
     // ------------------------------------------------------------------
