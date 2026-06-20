@@ -7,6 +7,7 @@ import it.polimi.ingws.gc8.Network.Messages.NetworkMessage;
 import java.rmi.RemoteException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Server-side adapter for a single RMI client connection.
@@ -32,6 +33,8 @@ public class RMIClientConnection implements ClientConnection {
     private final RemoteView remoteView;
     private final BlockingQueue<Object> inboundQueue;
     private volatile boolean active;
+    /** Ensures the {@link PoisonPill} is enqueued exactly once. */
+    private final AtomicBoolean inboundClosed = new AtomicBoolean(false);
 
     public RMIClientConnection(RemoteView remoteView) {
         this.remoteView = remoteView;
@@ -47,6 +50,7 @@ public class RMIClientConnection implements ClientConnection {
             remoteView.onGameUpdate(networkMessage);
         } catch (RemoteException e) {
             active = false;
+            releaseInbound();
         }
     }
 
@@ -61,8 +65,18 @@ public class RMIClientConnection implements ClientConnection {
 
     @Override
     public void close() {
-        if (active) {
-            active = false;
+        active = false;
+        releaseInbound();
+    }
+
+    /**
+     * Unblocks {@link #receiveMessage()} by enqueuing the poison pill exactly
+     * once, regardless of whether {@link #active} was already cleared by a
+     * failed {@link #sendMessage}. This is the single place that guarantees the
+     * handler thread wakes up and runs its cleanup.
+     */
+    private void releaseInbound() {
+        if (inboundClosed.compareAndSet(false, true)) {
             inboundQueue.offer(new PoisonPill());
         }
     }
