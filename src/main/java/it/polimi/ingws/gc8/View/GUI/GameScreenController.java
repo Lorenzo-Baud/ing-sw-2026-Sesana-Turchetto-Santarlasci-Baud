@@ -117,7 +117,6 @@ public class GameScreenController {
 
     // ---- Action bar ----
     @FXML private Label quotaLabel;
-    @FXML private javafx.scene.control.Button endTurnButton;
 
     /** Injects the owning {@link GuiView} instance. */
     public void setGuiView(GuiView guiView) {
@@ -427,7 +426,7 @@ public class GameScreenController {
         return b;
     }
 
-    /** Updates the action bar quota text and the manual end-turn button. */
+    /** Updates the action bar quota text. */
     private void renderActionBar(GameDTO snap, boolean myTurn) {
         OfferTileDTO myTile = myOfferTile(snap);
         if (myTurn && myTile != null) {
@@ -440,21 +439,6 @@ public class GameScreenController {
         } else {
             quotaLabel.setText("In attesa del tuo turno");
         }
-        // Manual safety net: the player can always end their turn while on the
-        // offer track. The server stays authoritative — it rejects the return
-        // (MUST_PICK_CHARACTER) if a mandatory Character pick is still available.
-        if (endTurnButton != null) {
-            endTurnButton.setDisable(!(myTurn && myTile != null));
-        }
-    }
-
-    /** Action-bar button: manually return the totem and end the turn. */
-    @FXML
-    private void handleEndTurnButton() {
-        if (!guiView.isMyTurn()) {
-            return;
-        }
-        endTurnAndReturnTotem();
     }
 
     /** Convenience overload that reads the current snapshot. */

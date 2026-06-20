@@ -107,12 +107,6 @@
                         <Label fx:id="quotaLabel" styleClass="quota-text" text="In attesa del tuo turno" />
                      </children>
                   </VBox>
-                  <Button fx:id="endTurnButton" mnemonicParsing="false" onAction="#handleEndTurnButton"
-                          styleClass="btn-ghost" text="Termina turno" disable="true">
-                     <HBox.margin>
-                        <Insets left="8.0" />
-                     </HBox.margin>
-                  </Button>
                   <Region HBox.hgrow="ALWAYS" />
                   <HBox fx:id="tribeMiniBox" alignment="CENTER" spacing="13.0" styleClass="tribe-mini"
                         onMouseClicked="#handleShowTribePopupDirectly">
