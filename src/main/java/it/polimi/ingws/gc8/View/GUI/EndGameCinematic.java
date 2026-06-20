@@ -197,12 +197,18 @@ public final class EndGameCinematic {
     // ------------------------------------------------------------- Phase A
 
     private Pane buildOpeningPane() {
-        double w = 460;
+        double w = 520;
         double h = 360;
 
         Label kicker = parchmentLabel("ERA " + roman(eraNumber) + " COMPLETATA", 15, FontWeight.SEMI_BOLD, INK_SOFT);
         kicker.setStyle("-fx-letter-spacing: 3px;");
         Label title = parchmentLabel("PARTITA TERMINATA", 40, FontWeight.EXTRA_BOLD, INK);
+        // Guard against the title overflowing the parchment (and being clipped to
+        // "PARTITA TERMIN…") when the System font renders wider on some screens.
+        title.setWrapText(true);
+        title.setMaxWidth(w - 72);
+        title.setAlignment(Pos.CENTER);
+        title.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
         Label subtitle = parchmentLabel(
                 (endMessage == null || endMessage.isBlank()) ? "Il mazzo Tribù è esaurito." : endMessage,
                 17, FontWeight.NORMAL, INK_SOFT);

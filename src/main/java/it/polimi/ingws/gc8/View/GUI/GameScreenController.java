@@ -60,6 +60,11 @@ public class GameScreenController {
 
     private static final Logger LOGGER = Logger.getLogger(GameScreenController.class.getName());
     private static final double CARD_CORNER_RADIUS = 16.0;
+    /** Card artwork aspect ratio (width / height). Upper/lower cards are
+     *  840x1280 (~0.656); offer tiles are narrower, so this is the widest case. */
+    private static final double CARD_ASPECT_RATIO = 0.66;
+    /** Horizontal gap between cards in a row; must match the HBox spacing in the FXML. */
+    private static final double CARD_ROW_SPACING = 13.0;
 
     /** Variables to track how many cards have been taken from each row during the current turn, to enforce quotas. */
     int turnUpperTaken = 0;
@@ -80,6 +85,11 @@ public class GameScreenController {
     /** Card artwork height, derived from the available market height so cards
      *  scale with the window and never need per-card scrolling. */
     private DoubleBinding cardHeight;
+    /** Largest number of cards currently shown in a single market row. Used to
+     *  cap card width so a crowded row never overflows the centered HBox and
+     *  clips on the sides. Updated each render. */
+    private final javafx.beans.property.IntegerProperty maxCardsInRow =
+            new javafx.beans.property.SimpleIntegerProperty(9);
 
     // ---- HUD ----
     @FXML private Label eraLabel;
@@ -123,11 +133,21 @@ public class GameScreenController {
     public void initialize() {
         guiView.getPrimaryStage().setTitle("Mesos Game - Gioco");
 
-        // Cards size to the available market height (split across the three rows)
-        // so they scale with the window and never overflow into a scrollbar.
+        // Cards size to the smaller of two budgets so they always fit:
+        //  - vertical: the available market height split across the three rows;
+        //  - horizontal: the available width divided by the busiest row's card
+        //    count (else a crowded centered HBox overflows and clips at the sides).
         cardHeight = Bindings.createDoubleBinding(
-                () -> Math.max(90.0, marketBox.getHeight() / 3.0 - 46.0),
-                marketBox.heightProperty());
+                () -> {
+                    double vertical = marketBox.getHeight() / 3.0 - 46.0;
+                    int n = Math.max(1, maxCardsInRow.get());
+                    // marketBox left+right padding is 22+22; keep a little safety slack.
+                    double availWidth = marketBox.getWidth() - 44.0 - 16.0;
+                    double perCardWidth = (availWidth - CARD_ROW_SPACING * (n - 1)) / n;
+                    double horizontal = perCardWidth / CARD_ASPECT_RATIO;
+                    return Math.max(90.0, Math.min(vertical, horizontal));
+                },
+                marketBox.heightProperty(), marketBox.widthProperty(), maxCardsInRow);
 
         // First render from the existing snapshot (we're already on the FX thread).
         renderFromSnapshot(guiView.getGameView());
@@ -191,6 +211,10 @@ public class GameScreenController {
         for (int i = 0; i < snap.lowerRowCards().size(); i++) {
             addCardToRow(CardRow.LOWER, snap.lowerRowCards().get(i), i);
         }
+
+        // Cap card width to the busiest row so a crowded centered row never clips.
+        maxCardsInRow.set(Math.max(snap.upperRowCards().size(),
+                Math.max(snap.offerTrack().size(), snap.lowerRowCards().size())));
 
         // ---------- ACTION BAR ----------
         renderActionBar(snap, myTurn);
