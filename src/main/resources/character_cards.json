@@ -74,37 +74,37 @@
 
 
 
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "inventor", "icon": 6},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "inventor", "icon": 9},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "inventor", "icon": 3},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "inventor", "icon": 2},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 3, "type": "inventor", "icon": 1},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 3, "type": "inventor", "icon": 0},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 4, "type": "inventor", "icon": 3},
+  {"front":  "/cards/character_cards/inventors/inventor_17.png", "back": "", "era": "3", "number_of_players": 0, "type": "inventor", "icon": 6},
+  {"front":  "/cards/character_cards/inventors/inventor_20.png", "back": "", "era": "3", "number_of_players": 0, "type": "inventor", "icon": 9},
+  {"front":  "/cards/character_cards/inventors/inventor_19.png", "back": "", "era": "3", "number_of_players": 0, "type": "inventor", "icon": 3},
+  {"front":  "/cards/character_cards/inventors/inventor_18.png", "back": "", "era": "3", "number_of_players": 0, "type": "inventor", "icon": 2},
+  {"front":  "/cards/character_cards/inventors/inventor_16.png", "back": "", "era": "3", "number_of_players": 3, "type": "inventor", "icon": 1},
+  {"front":  "/cards/character_cards/inventors/inventor_15.png", "back": "", "era": "3", "number_of_players": 3, "type": "inventor", "icon": 0},
+  {"front":  "/cards/character_cards/inventors/inventor_14.png", "back": "", "era": "3", "number_of_players": 4, "type": "inventor", "icon": 3},
 
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "collector", "foodDiscount": 3},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 4, "type": "collector", "foodDiscount": 3},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 5, "type": "collector", "foodDiscount": 3},
+  {"front":  "/cards/character_cards/collectors/collector_11.png", "back": "", "era": "3", "number_of_players": 0, "type": "collector", "foodDiscount": 3},
+  {"front":  "/cards/character_cards/collectors/collector_10.png", "back": "", "era": "3", "number_of_players": 4, "type": "collector", "foodDiscount": 3},
+  {"front":  "/cards/character_cards/collectors/collector_9.png", "back": "", "era": "3", "number_of_players": 5, "type": "collector", "foodDiscount": 3},
 
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "artist"},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "artist"},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "artist"},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 5, "type": "artist"},
+  {"front":  "/cards/character_cards/artists/artist_11.png", "back": "", "era": "3", "number_of_players": 0, "type": "artist"},
+  {"front":  "/cards/character_cards/artists/artist_12.png", "back": "", "era": "3", "number_of_players": 0, "type": "artist"},
+  {"front":  "/cards/character_cards/artists/artist_13.png", "back": "", "era": "3", "number_of_players": 0, "type": "artist"},
+  {"front":  "/cards/character_cards/artists/artist_10.png", "back": "", "era": "3", "number_of_players": 5, "type": "artist"},
 
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "shaman", "icons":  2},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 3, "type": "shaman", "icons":  2},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 4, "type": "shaman", "icons":  2},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "shaman", "icons":  3},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "shaman", "icons":  3},
+  {"front":  "/cards/character_cards/shamans/shaman_12.png", "back": "", "era": "3", "number_of_players": 0, "type": "shaman", "icons":  2},
+  {"front":  "/cards/character_cards/shamans/shaman_5.png", "back": "", "era": "3", "number_of_players": 3, "type": "shaman", "icons":  2},
+  {"front":  "/cards/character_cards/shamans/shaman_1.png", "back": "", "era": "3", "number_of_players": 4, "type": "shaman", "icons":  2},
+  {"front":  "/cards/character_cards/shamans/shaman_4.png", "back": "", "era": "3", "number_of_players": 0, "type": "shaman", "icons":  3},
+  {"front":  "/cards/character_cards/shamans/shaman_2.png", "back": "", "era": "3", "number_of_players": 0, "type": "shaman", "icons":  3},
 
-  {"front":  "", "back": "", "era": "3", "number_of_players": 5, "type": "hunter", "bonus": true},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "hunter", "bonus": true},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "hunter", "bonus": false},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "hunter", "bonus": false},
+  {"front":  "/cards/character_cards/hunters/hunter_9.png", "back": "", "era": "3", "number_of_players": 5, "type": "hunter", "bonus": true},
+  {"front":  "/cards/character_cards/hunters/hunter_12.png", "back": "", "era": "3", "number_of_players": 0, "type": "hunter", "bonus": true},
+  {"front":  "/cards/character_cards/hunters/hunter_14.png", "back": "", "era": "3", "number_of_players": 0, "type": "hunter", "bonus": false},
+  {"front":  "/cards/character_cards/hunters/hunter_15.png", "back": "", "era": "3", "number_of_players": 0, "type": "hunter", "bonus": false},
 
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "builder", "prestigePoints": 2, "foodBonus": 2},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 5, "type": "builder", "prestigePoints": 4, "foodBonus": 1},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "builder", "prestigePoints": 5, "foodBonus": 1},
-  {"front":  "", "back": "", "era": "3", "number_of_players": 0, "type": "builder", "prestigePoints": 3, "foodBonus": 2}
+  {"front":  "/cards/character_cards/builders/builder_8.png", "back": "", "era": "3", "number_of_players": 0, "type": "builder", "prestigePoints": 2, "foodBonus": 2},
+  {"front":  "/cards/character_cards/builders/builder_7.png", "back": "", "era": "3", "number_of_players": 5, "type": "builder", "prestigePoints": 4, "foodBonus": 1},
+  {"front":  "/cards/character_cards/builders/builder_5.png", "back": "", "era": "3", "number_of_players": 0, "type": "builder", "prestigePoints": 5, "foodBonus": 1},
+  {"front":  "/cards/character_cards/builders/builder_6.png", "back": "", "era": "3", "number_of_players": 0, "type": "builder", "prestigePoints": 3, "foodBonus": 2}
 
 ]
