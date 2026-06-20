@@ -210,6 +210,14 @@ public class MainController {
                     registry.removeMatch(matchId);
                     shutdown();
                 }
+            } else if (status == MatchStatus.FINISHED) {
+                // Game already over: a client leaving (e.g. "Nuova partita" /
+                // "Esci" from the end screen) is a normal departure, NOT an
+                // in-game disconnection. Just drop its listener — no
+                // notifyPlayerDisconnected, no suspension/turn handling.
+                if (viewUpdater != null) {
+                    viewUpdater.removeListener(clientHandler);
+                }
             } else {
                 int pid = clientHandler.getPlayerId();
                 // FA3: keep the handler reference in clientMap so we still know
