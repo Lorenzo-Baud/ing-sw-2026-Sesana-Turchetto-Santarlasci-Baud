@@ -357,9 +357,8 @@ public final class EndGameCinematic {
 
     private String statsLine(PlayerDTO p) {
         long buildings = p.tribe().stream().filter(c -> c.type() == CardType.BUILDING).count();
-        long events = p.tribe().stream().filter(c -> c.type() == CardType.EVENT).count();
         long characters = p.tribe().stream().filter(c -> c.type() == CardType.CHARACTER).count();
-        return "tribù " + characters + " · edifici " + buildings + " · eventi " + events;
+        return "personaggi " + characters + " · edifici " + buildings;
     }
 
     // ------------------------------------------------------------- scroll/unroll
