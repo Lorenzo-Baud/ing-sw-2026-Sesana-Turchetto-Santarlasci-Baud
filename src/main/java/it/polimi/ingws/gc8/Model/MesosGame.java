@@ -32,6 +32,19 @@ public class MesosGame implements GameModel {
     private Era currentEra;
     private GamePhase phase;
     private int currentPlayerIndex;
+
+    /**
+     * Authoritative per-turn pick counters for the player currently acting in
+     * ACTION_RESOLUTION. Kept in the model (not in the controller state) so they
+     * are part of the snapshot/DTO — the views read these instead of guessing
+     * with their own local counters, which used to drift from the server and
+     * cause spurious "no more picks allowed" rejections. Reset when the turn
+     * passes to the next player.
+     */
+    private int currentTurnUpperTaken;
+    private int currentTurnLowerTaken;
+    private boolean currentTurnFoodTaken;
+
     /** Persistence: the view side is "live" — it is rebuilt on restore, never persisted. */
     private transient ViewUpdater viewUpdater;
 
@@ -146,6 +159,31 @@ public class MesosGame implements GameModel {
     // GETTERS
     @Override
     public int getNumPlayers() { return numPlayers; }
+
+    @Override
+    public int getCurrentTurnUpperTaken() { return currentTurnUpperTaken; }
+
+    @Override
+    public int getCurrentTurnLowerTaken() { return currentTurnLowerTaken; }
+
+    @Override
+    public boolean isCurrentTurnFoodTaken() { return currentTurnFoodTaken; }
+
+    @Override
+    public void setCurrentTurnUpperTaken(int n) { this.currentTurnUpperTaken = n; }
+
+    @Override
+    public void setCurrentTurnLowerTaken(int n) { this.currentTurnLowerTaken = n; }
+
+    @Override
+    public void setCurrentTurnFoodTaken(boolean taken) { this.currentTurnFoodTaken = taken; }
+
+    @Override
+    public void resetCurrentTurnPicks() {
+        this.currentTurnUpperTaken = 0;
+        this.currentTurnLowerTaken = 0;
+        this.currentTurnFoodTaken = false;
+    }
 
     @Override
     public int getCurrentRound() { return currentRound; }

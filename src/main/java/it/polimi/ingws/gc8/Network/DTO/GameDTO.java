@@ -24,6 +24,9 @@ import java.util.List;
  * @param turnOrderTrack        list of players in the order in which they are placed on the turn order track. First
  *                              element is placed on the top slot (will place the totem first),
  *                              last element is placed on the bottom one
+ * @param currentUpperTaken     upper-row picks the acting player has already taken this turn (authoritative)
+ * @param currentLowerTaken     lower-row picks the acting player has already taken this turn (authoritative)
+ * @param currentFoodTaken      whether the acting player has already taken food this turn (authoritative)
  */
 public record GameDTO(
     int numberOfPlayers,
@@ -36,5 +39,8 @@ public record GameDTO(
     GamePhase phase,
     int currentRound,
     Era currentEra,
-    List<PlayerDTO> turnOrderTrack
+    List<PlayerDTO> turnOrderTrack,
+    int currentUpperTaken,
+    int currentLowerTaken,
+    boolean currentFoodTaken
 ) implements Serializable {}

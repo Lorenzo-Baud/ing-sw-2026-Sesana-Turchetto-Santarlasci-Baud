@@ -28,16 +28,11 @@ import java.util.List;
  */
 public class ActionResolutionState implements GameState {
 
-    /**
-     * Picks the current player has already performed during this turn.
-     * Reset on each transition between players (onEnter, handleReturnTotem).
-     * These counters are the authoritative source: TakeCardAction and
-     * TakeFoodAction are rejected when they would exceed the corresponding
-     * limit declared by the OfferTile the player is currently standing on.
-     */
-    private int currentTurnUpperTaken = 0;
-    private int currentTurnLowerTaken = 0;
-    private boolean currentTurnFoodTaken = false;
+    // Per-turn pick counters now live in the model (GameModel.getCurrentTurnUpperTaken
+    // etc.) so they travel in the snapshot/DTO and the views read them as the single
+    // source of truth — this state no longer keeps its own copies. The counters are
+    // the authoritative limit check: TakeCardAction/TakeFoodAction are rejected when
+    // they would exceed what the OfferTile the player stands on allows.
 
     @Override
     public void handleAction(GameController context, PlayerAction action) {
@@ -77,7 +72,7 @@ public class ActionResolutionState implements GameState {
         List<Player> offerOrder = context.getModel().getPlayersInOfferOrder();
         context.setOfferOrder(offerOrder);
         context.setOfferOrderIndex(0);
-        resetTurnCounters();
+        context.getModel().resetCurrentTurnPicks();
 
         if (!offerOrder.isEmpty()) {
             Player firstPlayer = offerOrder.get(0);
@@ -118,14 +113,14 @@ public class ActionResolutionState implements GameState {
         }
         CardRow row = action.getRow();
         if (row == CardRow.UPPER) {
-            if (currentTurnUpperTaken >= tile.getUpperRowPicks()) {
+            if (model.getCurrentTurnUpperTaken() >= tile.getUpperRowPicks()) {
                 viewUpdater.notifyError(player.getPlayerId(), "PICK_LIMIT_EXCEEDED",
                         "No more upper-row picks allowed on offer tile "
                                 + tile.getId() + ".");
                 return;
             }
         } else if (row == CardRow.LOWER) {
-            if (currentTurnLowerTaken >= tile.getLowerRowPicks()) {
+            if (model.getCurrentTurnLowerTaken() >= tile.getLowerRowPicks()) {
                 viewUpdater.notifyError(player.getPlayerId(), "PICK_LIMIT_EXCEEDED",
                         "No more lower-row picks allowed on offer tile "
                                 + tile.getId() + ".");
@@ -144,27 +139,38 @@ public class ActionResolutionState implements GameState {
         }
         Card targetCard = rowCards.get(idx);
 
-        // Determine card type and execute
+        // Determine card type and execute. The authoritative pick counter must be
+        // bumped BEFORE the take: takeBuildingCard/takeCharacterCard call
+        // model.notifyUpdate internally, so the snapshot they broadcast must
+        // already include this pick. If we incremented afterwards the snapshot
+        // would carry a stale counter — the views resync to it, believe the pick
+        // never happened (keep demanding it, never auto-return the totem) while
+        // the server's own counter is one ahead and rejects the next pick as
+        // PICK_LIMIT_EXCEEDED.
         if (targetCard instanceof BuildingCard building) {
             if (!model.canPlayerAffordBuilding(player, building)) {
                 viewUpdater.notifyError(player.getPlayerId(), "CANNOT_AFFORD",
                         "Not enough food to buy this building.");
                 return;
             }
+            bumpPickCounter(model, row);
             model.takeBuildingCard(player, building);
         } else if (targetCard instanceof CharacterCard character) {
+            bumpPickCounter(model, row);
             model.takeCharacterCard(player, character);
         } else {
             viewUpdater.notifyError(player.getPlayerId(), "INVALID_CARD",
                     "Cannot take this type of card.");
             return;
         }
+    }
 
-        // Pick accepted: update authoritative counter.
+    /** Bumps the authoritative per-turn pick counter for the given row. */
+    private void bumpPickCounter(GameModel model, CardRow row) {
         if (row == CardRow.UPPER) {
-            currentTurnUpperTaken++;
+            model.setCurrentTurnUpperTaken(model.getCurrentTurnUpperTaken() + 1);
         } else if (row == CardRow.LOWER) {
-            currentTurnLowerTaken++;
+            model.setCurrentTurnLowerTaken(model.getCurrentTurnLowerTaken() + 1);
         }
     }
 
@@ -186,13 +192,16 @@ public class ActionResolutionState implements GameState {
                     "Offer tile " + tile.getId() + " does not grant food.");
             return;
         }
-        if (currentTurnFoodTaken) {
+        if (model.isCurrentTurnFoodTaken()) {
             viewUpdater.notifyError(player.getPlayerId(), "FOOD_ALREADY_TAKEN",
                     "You have already taken food this turn.");
             return;
         }
+        // Set the flag BEFORE takeFood: takeFood calls model.notifyUpdate
+        // internally, so the broadcast snapshot must already reflect that food
+        // was taken this turn (otherwise the views resync to a stale flag).
+        model.setCurrentTurnFoodTaken(true);
         model.takeFood(player);
-        currentTurnFoodTaken = true;
     }
 
     private void handleReturnTotem(GameController context, Player player) {
@@ -224,11 +233,11 @@ public class ActionResolutionState implements GameState {
         if (tile == null) {
             return false;
         }
-        if (currentTurnUpperTaken < tile.getUpperRowPicks()
+        if (model.getCurrentTurnUpperTaken() < tile.getUpperRowPicks()
                 && rowHasCharacter(model.getBoard().getUpperRow())) {
             return true;
         }
-        return currentTurnLowerTaken < tile.getLowerRowPicks()
+        return model.getCurrentTurnLowerTaken() < tile.getLowerRowPicks()
                 && rowHasCharacter(model.getBoard().getLowerRow());
     }
 
@@ -244,11 +253,12 @@ public class ActionResolutionState implements GameState {
     private void advanceToNextOfferPlayer(GameController context, Player player) {
         GameModel model = context.getModel();
 
-        model.returnTotemToTurnOrder(player);
+        // Counters belong to the player whose turn is ending; reset BEFORE the
+        // returnTotem notify (returnTotemToTurnOrder calls model.notifyUpdate
+        // internally) so every broadcast snapshot stays consistent with the model.
+        model.resetCurrentTurnPicks();
 
-        // Counters belong to the player whose turn is ending; reset before
-        // handing control to the next player.
-        resetTurnCounters();
+        model.returnTotemToTurnOrder(player);
 
         int nextIndex = context.getOfferOrderIndex() + 1;
         context.setOfferOrderIndex(nextIndex);
@@ -275,12 +285,6 @@ public class ActionResolutionState implements GameState {
             }
             advanceToNextOfferPlayer(context, current);
         }
-    }
-
-    private void resetTurnCounters() {
-        currentTurnUpperTaken = 0;
-        currentTurnLowerTaken = 0;
-        currentTurnFoodTaken = false;
     }
 
     private Player getCurrentOfferPlayer(GameController context) {

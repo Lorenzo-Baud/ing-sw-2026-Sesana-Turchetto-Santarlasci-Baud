@@ -476,6 +476,15 @@ public class GameScreenController {
     /** Convenience overload that reads the current snapshot. */
     private void updateInterface() {
         GameDTO snap = guiView.getGameView();
+        // Resync the local pick counters from the authoritative snapshot on every
+        // model update. The server is the single source of truth: this prevents
+        // the local counters from drifting (which used to let the player click a
+        // pick the server then rejected with "no more picks allowed").
+        if (snap != null) {
+            turnUpperTaken = snap.currentUpperTaken();
+            turnLowerTaken = snap.currentLowerTaken();
+            turnFoodTaken = snap.currentFoodTaken();
+        }
         renderFromSnapshot(snap);
 
         if (snap != null && guiView.isMyTurn()) {
@@ -538,9 +547,12 @@ public class GameScreenController {
                 case ErrorMessage m -> {
                     LOGGER.fine(() -> "Received error message from server: " + m.getError());
                     guiView.lastErrorMessageAt = System.currentTimeMillis();
-                    if (m.getError().equals("CANNOT_AFFORD") || m.getError().equals("INVALID_CARD")) {
-                        // Draw rejected by the server: flash the denied feedback on the
-                        // exact card the player tried to take, instead of a dialog.
+                    if (m.getError().equals("CANNOT_AFFORD") || m.getError().equals("INVALID_CARD")
+                            || m.getError().equals("PICK_LIMIT_EXCEEDED")) {
+                        // Draw rejected by the server (unaffordable, invalid, or the
+                        // tile's pick quota is already used up): flash the denied
+                        // feedback on the exact card instead of a dialog. The next
+                        // snapshot resyncs the local counters so this won't recur.
                         Platform.runLater(this::flashLastAttemptedDenied);
                     } else if (m.getError().equals("MUST_PICK_CHARACTER")) {
                         guiView.showError("Errore", "Devi prima prendere il Personaggio disponibile, poi potrai terminare il turno.");

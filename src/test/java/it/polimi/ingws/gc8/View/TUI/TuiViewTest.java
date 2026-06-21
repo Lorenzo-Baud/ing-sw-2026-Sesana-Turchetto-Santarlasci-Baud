@@ -77,7 +77,8 @@ class TuiViewTest {
                 cp,
                 phase,
                 1, Era.ERA_1,
-                List.of()
+                List.of(),
+                0, 0, false
         );
     }
 

@@ -76,15 +76,13 @@ public class TuiView extends View {
      */
     private final ConcurrentLinkedQueue<UiNotice> pendingNotices = new ConcurrentLinkedQueue<>();
 
-    // Pick counters for the in-flight ACTION_RESOLUTION turn. They live at
-    // class scope (not inside runResolutionPhase) so that choosing "Back" —
-    // which returns from runResolutionPhase and immediately re-enters it on
-    // the next main-loop iteration — does NOT silently reset them. They are
-    // reset whenever the current player changes (new turn).
+    // Pick counters for the in-flight ACTION_RESOLUTION turn, resynced every
+    // frame from the authoritative snapshot (see runResolutionPhase). The server
+    // is the single source of truth, so these never drift and reset for free when
+    // the turn passes (the new snapshot carries zeros).
     private int turnUpperTaken = 0;
     private int turnLowerTaken = 0;
     private boolean turnFoodTaken = false;
-    private int lastResolutionPlayerId = -1;
 
     private enum NoticeLevel { INFO, ERROR }
     private record UiNotice(NoticeLevel level, String text) {}
@@ -290,19 +288,15 @@ public class TuiView extends View {
             GameDTO g = gameView;
             if (g == null || g.phase() != GamePhase.ACTION_RESOLUTION) return;
 
-            // Detect turn boundaries by tracking the currentPlayer id. When
-            // it changes (or it's the first time we enter ACTION_RESOLUTION)
-            // the pick counters must restart from zero. Keeping them at
-            // class scope is what prevents the "Back" exploit: returning
-            // from this method and re-entering it on the next loop
-            // iteration NO LONGER zeroes the counters.
-            int currentId = g.currentPlayer() == null ? -1 : g.currentPlayer().playerId();
-            if (currentId != lastResolutionPlayerId) {
-                turnUpperTaken = 0;
-                turnLowerTaken = 0;
-                turnFoodTaken = false;
-                lastResolutionPlayerId = currentId;
-            }
+            // Pick counters come straight from the authoritative snapshot (the
+            // server is the single source of truth). Reading them every frame
+            // keeps the local view from drifting and also handles turn
+            // boundaries for free: when the turn passes, the server resets these
+            // to zero and the next snapshot reflects it. This also closes the
+            // old "Back" exploit without manual turn-id tracking.
+            turnUpperTaken = g.currentUpperTaken();
+            turnLowerTaken = g.currentLowerTaken();
+            turnFoodTaken = g.currentFoodTaken();
 
             OfferTileDTO myTile = findMyTile(g);
             String tileLabel = myTile == null
@@ -387,7 +381,6 @@ public class TuiView extends View {
                 case "RETURN" -> {
                     Printer.printSuccess("Returning totem…");
                     if (sendAndAwaitUpdate(new ReturnTotemAction(myPlayerId())) == SendResult.OK) {
-                        lastResolutionPlayerId = -1; // force reset on next turn
                         return;
                     }
                     // On ERROR/TIMEOUT we stay in the loop so the user can retry.
@@ -404,7 +397,6 @@ public class TuiView extends View {
                     && (!canFood || turnFoodTaken)) {
                 Printer.printSuccess("All picks done — returning totem automatically.");
                 if (sendAndAwaitUpdate(new ReturnTotemAction(myPlayerId())) == SendResult.OK) {
-                    lastResolutionPlayerId = -1;
                     return;
                 }
                 // If the server rejects the auto-return (shouldn't happen in

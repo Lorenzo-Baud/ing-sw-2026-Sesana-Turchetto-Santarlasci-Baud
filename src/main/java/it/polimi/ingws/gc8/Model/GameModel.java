@@ -40,6 +40,33 @@ public interface GameModel extends Serializable {
     int getCurrentRound();
 
     /**
+     * Authoritative per-turn pick counters for the player currently acting in
+     * ACTION_RESOLUTION. The views read these (via the snapshot DTO) instead of
+     * keeping their own local counters, which used to drift from the server.
+     *
+     * @return upper-row picks already taken this turn
+     */
+    int getCurrentTurnUpperTaken();
+
+    /** @return lower-row picks already taken this turn */
+    int getCurrentTurnLowerTaken();
+
+    /** @return whether food was already taken this turn */
+    boolean isCurrentTurnFoodTaken();
+
+    /** Sets the upper-row picks taken this turn. */
+    void setCurrentTurnUpperTaken(int n);
+
+    /** Sets the lower-row picks taken this turn. */
+    void setCurrentTurnLowerTaken(int n);
+
+    /** Sets whether food was taken this turn. */
+    void setCurrentTurnFoodTaken(boolean taken);
+
+    /** Resets the per-turn pick counters (called when the turn passes to the next player). */
+    void resetCurrentTurnPicks();
+
+    /**
      * @return current Era (ERA_1, ERA_2, ERA_3)
      */
     Era getCurrentEra();

@@ -167,7 +167,10 @@ public class ViewUpdater {
                 phase,
                 currentRound,
                 currentEra,
-                turnOrderTrackDTO
+                turnOrderTrackDTO,
+                model.getCurrentTurnUpperTaken(),
+                model.getCurrentTurnLowerTaken(),
+                model.isCurrentTurnFoodTaken()
         );
     }
 

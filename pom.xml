@@ -55,13 +55,19 @@
         </dependency>
 
         <!--
-            Cross-platform client jar: the JavaFX native libraries (.dylib/.dll/.so)
-            live ONLY in javafx-graphics, and each are platform-specific. The plain
-            dependency above bundles natives for the BUILD host only, so a jar built
-            on macOS would not run on Windows/Linux. We explicitly pull every
-            platform's javafx-graphics classifier so the fat jar carries all natives
-            and runs everywhere with a plain `java -jar`. (controls/fxml/base are pure
-            Java and platform-independent, so they need no extra classifiers.)
+            JavaFX native libraries (.dll/.so/.dylib) live ONLY in javafx-graphics
+            and are platform-specific. The plain javafx-graphics dependency above
+            carries the BUILD host's natives (so the IDE / dev run on this machine
+            always picks the right architecture); the classifiers below add the
+            natives for the other platforms, so a plain `mvn package` produces fat
+            jars that run everywhere with `java -jar` — no profile needed.
+            (controls/fxml/base are pure Java, so they need no extra classifiers.)
+
+            Coverage: Windows + Linux + Apple Silicon macOS. The Intel-mac (`mac`)
+            classifier is intentionally omitted: its dylibs share filenames with
+            `mac-aarch64`'s, so bundling both would let x86_64 overwrite arm64 in
+            the single jar and break the GUI on Apple Silicon. A jar for Intel macs
+            must be built separately with the `mac` classifier.
         -->
         <dependency>
             <groupId>org.openjfx</groupId>
@@ -74,12 +80,6 @@
             <artifactId>javafx-graphics</artifactId>
             <version>${javafx.version}</version>
             <classifier>linux</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-graphics</artifactId>
-            <version>${javafx.version}</version>
-            <classifier>mac</classifier>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
@@ -104,6 +104,15 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.5.1</version>
+                <!--
+                    Don't emit dependency-reduced-pom.xml. Shade generates it by
+                    default (a copy of this pom with the bundled deps stripped),
+                    but we never deploy this jar to a Maven repo, so it is just
+                    noise that looks like a "second pom". pom.xml is the only pom.
+                -->
+                <configuration>
+                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                </configuration>
                 <executions>
 
                     <execution>
