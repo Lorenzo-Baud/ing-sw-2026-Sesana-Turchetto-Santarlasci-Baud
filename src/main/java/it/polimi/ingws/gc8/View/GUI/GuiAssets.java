@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 public final class GuiAssets {
 
     private static final Logger LOGGER = Logger.getLogger(GuiAssets.class.getName());
+    public static final String APP_ICON_PATH = "/cards/totem/Livello 17.png";
 
     /** Decoded-image cache keyed by classpath resource path. */
     private static final Map<String, Image> CACHE = new ConcurrentHashMap<>();
@@ -49,6 +50,11 @@ public final class GuiAssets {
         Image img = new Image(stream);
         CACHE.put(resourcePath, img);
         return img;
+    }
+
+    /** Application/window icon used for JavaFX stage and desktop taskbar. */
+    public static Image appIcon() {
+        return image(APP_ICON_PATH);
     }
 
     /** Angled 3-D totem render for the given color (players strip, podium). */

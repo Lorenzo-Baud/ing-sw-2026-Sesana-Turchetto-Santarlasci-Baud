@@ -73,17 +73,49 @@ public class GuiView extends View {
 
     @Override
     public void run() {
+        configureApplicationName();
         // Initialize the JavaFX Toolkit manually (we are not using Application.launch).
         Platform.startup(() -> {
             try {
                 primaryStage = new Stage();
                 primaryStage.setTitle("Mesos Game");
+                configureApplicationIcon(primaryStage);
                 primaryStage.setOnCloseRequest(e -> shutdownAndExit());
                 showStartScreen();
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Failed to start GUI", e);
             }
         });
+    }
+
+    /**
+     * Sets the desktop-visible application name before JavaFX/AWT initialise.
+     * This is especially visible on macOS, where the menu bar/Dock otherwise
+     * show the generic "java" process name when launched from IntelliJ.
+     */
+    private void configureApplicationName() {
+        System.setProperty("apple.awt.application.name", "MESOS");
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "MESOS");
+    }
+
+    /**
+     * Installs the app icon only on the OS taskbar/Dock. Do not add it to the
+     * JavaFX Stage icons: on some platforms that also shows it in the window
+     * title bar, which we intentionally avoid.
+     */
+    private void configureApplicationIcon(Stage stage) {
+        try {
+            if (!java.awt.Taskbar.isTaskbarSupported()) return;
+            java.awt.Taskbar taskbar = java.awt.Taskbar.getTaskbar();
+            if (!taskbar.isSupported(java.awt.Taskbar.Feature.ICON_IMAGE)) return;
+            try (var in = getClass().getResourceAsStream(GuiAssets.APP_ICON_PATH)) {
+                if (in != null) {
+                    taskbar.setIconImage(javax.imageio.ImageIO.read(in));
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.fine(() -> "Desktop taskbar icon not available: " + e.getMessage());
+        }
     }
 
     /**

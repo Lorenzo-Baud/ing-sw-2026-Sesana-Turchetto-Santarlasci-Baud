@@ -119,6 +119,8 @@
                         <Label fx:id="foodLabel" styleClass="tribe-mini-food" text="0" />
                         <Label styleClass="stat-cap" text="PP" />
                         <Label fx:id="prestigeLabel" styleClass="tribe-mini-pp" text="0" />
+                        <Label styleClass="stat-cap" text="EDIF." />
+                        <Label fx:id="buildingDiscountLabel" styleClass="tribe-mini-discount" text="0" />
                         <Label styleClass="tribe-mini-arrow" text="›" />
                      </children>
                   </HBox>

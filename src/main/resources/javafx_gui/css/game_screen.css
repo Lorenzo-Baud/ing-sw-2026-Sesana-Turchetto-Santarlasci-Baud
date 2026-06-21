@@ -293,6 +293,40 @@
     -fx-border-color: rgba(60,44,34,0.10) transparent transparent transparent;
     -fx-border-width: 1 0 0 0;
 }
+.tribe-summary {
+    -fx-padding: 2 0 2 0;
+}
+.tribe-stat {
+    -fx-padding: 8 10 8 10;
+    -fx-min-width: 104px;
+}
+.tribe-stat-label {
+    -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;
+    -fx-font-weight: 800;
+    -fx-font-size: 10px;
+    -fx-text-fill: #8A7764;
+}
+.tribe-stat-value {
+    -fx-font-family: "Bricolage Grotesque", "Arial Black", "Segoe UI", sans-serif;
+    -fx-font-weight: 800;
+    -fx-font-size: 16px;
+    -fx-text-fill: #3C2C22;
+}
+.tribe-group-header {
+    -fx-padding: 6 0 0 0;
+}
+.tribe-group-title {
+    -fx-font-family: "Bricolage Grotesque", "Arial Black", "Segoe UI", sans-serif;
+    -fx-font-weight: 800;
+    -fx-font-size: 14px;
+    -fx-text-fill: #3C2C22;
+}
+.tribe-group-detail {
+    -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 12px;
+    -fx-text-fill: #7A6754;
+}
 
 /* ---- action bar --------------------------------------------------- */
 .quota-text {
@@ -334,6 +368,12 @@
     -fx-font-weight: 800;
     -fx-font-size: 24px;
     -fx-text-fill: #C8922A;
+}
+.tribe-mini-discount {
+    -fx-font-family: "Bricolage Grotesque", "Arial Black", "Segoe UI", sans-serif;
+    -fx-font-weight: 800;
+    -fx-font-size: 20px;
+    -fx-text-fill: #5FA9A0;
 }
 .tribe-mini-arrow {
     -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;

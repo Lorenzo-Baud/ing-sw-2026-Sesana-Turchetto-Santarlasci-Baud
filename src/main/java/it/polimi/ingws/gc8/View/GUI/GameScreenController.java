@@ -44,7 +44,12 @@ import javafx.stage.Modality;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -115,6 +120,7 @@ public class GameScreenController {
     // ---- Tribe mini-box (action bar) ----
     @FXML private Label foodLabel;
     @FXML private Label prestigeLabel;
+    @FXML private Label buildingDiscountLabel;
 
     // ---- Action bar ----
     @FXML private Label quotaLabel;
@@ -188,9 +194,20 @@ public class GameScreenController {
         // ---------- LEFT RAIL (turn order) ----------
         renderTurnOrder(snap, n);
 
-        // ---------- TRIBE MINI-BOX (cibo + prestigio) ----------
-        foodLabel.setText(String.valueOf(snap.players().get(me - 1).foodPoints()));
-        prestigeLabel.setText(String.valueOf(snap.players().get(me - 1).prestigePoints()));
+        // ---------- TRIBE MINI-BOX (cibo + prestigio + sconto edifici) ----------
+        PlayerDTO localPlayer = playerById(snap, me);
+        if (localPlayer != null) {
+            TribeStats localStats = tribeStats(localPlayer);
+            foodLabel.setText(String.valueOf(localPlayer.foodPoints()));
+            prestigeLabel.setText(String.valueOf(localPlayer.prestigePoints()));
+            buildingDiscountLabel.setText(localStats.builderDiscount() == 0
+                    ? "0"
+                    : "-" + localStats.builderDiscount() + "F");
+        } else {
+            foodLabel.setText("0");
+            prestigeLabel.setText("0");
+            buildingDiscountLabel.setText("0");
+        }
 
         // ---------- MARKET ROWS ----------
         topCardsRow.getChildren().clear();
@@ -458,10 +475,11 @@ public class GameScreenController {
 
     /** Convenience overload that reads the current snapshot. */
     private void updateInterface() {
-        renderFromSnapshot(guiView.getGameView());
+        GameDTO snap = guiView.getGameView();
+        renderFromSnapshot(snap);
 
-        if (guiView.isMyTurn()) {
-            OfferTileDTO myTile = myOfferTile(guiView.getGameView());
+        if (snap != null && guiView.isMyTurn()) {
+            OfferTileDTO myTile = myOfferTile(snap);
             if (myTile != null) {
 
                 // If the player placed their totem on the food tile, take food and
@@ -480,38 +498,17 @@ public class GameScreenController {
 
                 int remainingUpper = View.maxUpperPicks(myTile.id()) - turnUpperTaken;
                 int remainingLower = View.maxLowerPicks(myTile.id()) - turnLowerTaken;
+                PlayerDTO localPlayer = playerById(snap, guiView.getPlayerId());
 
-                if(remainingUpper > 0) {
-                    for (int i = 0; i < guiView.getGameView().upperRowCards().size(); i++) {
-                        if (guiView.getGameView().upperRowCards().get(i).type() == CardType.CHARACTER) {
-                            canPick = true;
-                            break;
-                        }
-                        if (guiView.getGameView().upperRowCards().get(i).type() == CardType.BUILDING
-                                && guiView.getGameView().upperRowCards().get(i).buildingFoodCost() <=
-                                guiView.getGameView().players().get(guiView.getPlayerId() - 1).foodPoints()) {
-                            canPick = true;
-                            break;
-                        }
-                    }
+                if (remainingUpper > 0) {
+                    canPick = hasPickableCard(snap.upperRowCards(), localPlayer);
                 }
 
-                if(remainingLower > 0) {
-                    for (int i = 0; i < guiView.getGameView().lowerRowCards().size(); i++) {
-                        if (guiView.getGameView().lowerRowCards().get(i).type() == CardType.CHARACTER) {
-                            canPick = true;
-                            break;
-                        }
-                        if (guiView.getGameView().lowerRowCards().get(i).type() == CardType.BUILDING
-                                && guiView.getGameView().lowerRowCards().get(i).buildingFoodCost() <=
-                                guiView.getGameView().players().get(guiView.getPlayerId() - 1).foodPoints()) {
-                            canPick = true;
-                            break;
-                        }
-                    }
+                if (!canPick && remainingLower > 0) {
+                    canPick = hasPickableCard(snap.lowerRowCards(), localPlayer);
                 }
 
-                if(!canPick) {
+                if (!canPick) {
                     endTurnAndReturnTotem();
                 }
 
@@ -776,15 +773,48 @@ public class GameScreenController {
         }
     }
 
-    /** HUD button: shows a short rules reminder. */
+    /** HUD button: opens the full rules PDF in the system viewer. */
     @FXML
     private void handleShowRules() {
-        guiView.showInfo("Come si gioca",
-                "Nel tuo turno posiziona il totem su una tessera offerta, poi pesca carte dalla "
-                        + "fila superiore e/o inferiore rispettando le quote della tessera. Il turno si chiude "
-                        + "automaticamente quando hai completato le azioni richieste. "
-                        + "Click sinistro su una carta per prenderla, click destro per vederne i dettagli. "
-        );
+        openRulesPdf();
+    }
+
+    /**
+     * Extracts the bundled rules PDF ({@code /rules/mesos_rules_it.pdf}) to a
+     * temp file and opens it in the system's default viewer. The PDF lives on
+     * the classpath so this works from a packaged jar too. Runs the (blocking)
+     * extraction and {@code Desktop.open} off the FX thread; failures surface a
+     * dialog back on the FX thread.
+     */
+    private void openRulesPdf() {
+        Thread t = new Thread(() -> {
+            try {
+                java.io.InputStream in = getClass().getResourceAsStream("/rules/mesos_rules_it.pdf");
+                if (in == null) {
+                    Platform.runLater(() -> guiView.showError("Regole",
+                            "PDF delle regole non trovato tra le risorse."));
+                    return;
+                }
+                java.io.File pdf = java.io.File.createTempFile("mesos_rules_", ".pdf");
+                pdf.deleteOnExit();
+                try (in; java.io.OutputStream out = new java.io.FileOutputStream(pdf)) {
+                    in.transferTo(out);
+                }
+                if (java.awt.Desktop.isDesktopSupported()
+                        && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.OPEN)) {
+                    java.awt.Desktop.getDesktop().open(pdf);
+                } else {
+                    Platform.runLater(() -> guiView.showInfo("Regole",
+                            "Apertura automatica non supportata su questo sistema.\n"
+                                    + "Il PDF è disponibile qui:\n" + pdf.getAbsolutePath()));
+                }
+            } catch (Exception e) {
+                Platform.runLater(() -> guiView.showError("Regole",
+                        "Impossibile aprire il PDF delle regole: " + e.getMessage()));
+            }
+        }, "open-rules-pdf");
+        t.setDaemon(true);
+        t.start();
     }
 
     /**
@@ -860,16 +890,27 @@ public class GameScreenController {
         header.getChildren().addAll(title, count, spacer, era);
         root.getChildren().add(header);
 
+        TribeStats stats = tribeStats(player);
+        boolean hideInventorDetails = !isYou && snap.phase() != GamePhase.GAME_OVER;
+        root.getChildren().add(tribeSummary(stats, hideInventorDetails));
+
         // characters section
         List<CardDTO> chars = tribe.stream().filter(c -> c.type() == CardType.CHARACTER).toList();
         if (!chars.isEmpty()) {
             root.getChildren().add(sectionLabel("PERSONAGGI"));
-            root.getChildren().add(cardFlow(chars));
+            Map<CharacterType, List<CardDTO>> byType = groupCharactersByType(chars);
+            for (CharacterType type : CharacterType.values()) {
+                List<CardDTO> group = byType.get(type);
+                if (group == null || group.isEmpty()) continue;
+                root.getChildren().add(characterGroupHeader(type, group.size(), stats, hideInventorDetails));
+                root.getChildren().add(cardFlow(group));
+            }
         }
+
         // buildings section
         List<CardDTO> buildings = tribe.stream().filter(c -> c.type() == CardType.BUILDING).toList();
         if (!buildings.isEmpty()) {
-            root.getChildren().add(sectionLabel("EDIFICI"));
+            root.getChildren().add(sectionLabel("EDIFICI · PP stampati +" + stats.printedBuildingPrestige()));
             root.getChildren().add(cardFlow(buildings));
         }
         // empty tribe (common for opponents in the early game)
@@ -906,6 +947,81 @@ public class GameScreenController {
         Label l = new Label(text);
         l.getStyleClass().add("stat-cap");
         return l;
+    }
+
+    /** Compact tribe summary derived from the immutable DTO snapshot. */
+    private FlowPane tribeSummary(TribeStats stats, boolean hideInventorDetails) {
+        FlowPane summary = new FlowPane();
+        summary.setHgap(9);
+        summary.setVgap(9);
+        summary.getStyleClass().add("tribe-summary");
+        summary.getChildren().add(statChip("Personaggi", String.valueOf(stats.characterCount())));
+        summary.getChildren().add(statChip("Edifici", String.valueOf(stats.buildingCount())));
+        summary.getChildren().add(statChip("Sconto edifici", "-" + stats.builderDiscount() + "F"));
+        summary.getChildren().add(statChip("Sconto sostentamento", "-" + stats.collectorDiscount() + "F"));
+        summary.getChildren().add(statChip("Icone sciamano", String.valueOf(stats.shamanIcons())));
+        summary.getChildren().add(statChip("PP Builder", "+" + stats.builderPrestige()));
+        summary.getChildren().add(statChip("PP Artisti", "+" + stats.artistFinalPrestige()));
+        summary.getChildren().add(statChip("PP Inventori",
+                hideInventorDetails ? "nascosti" : "+" + stats.inventorFinalPrestige()));
+        summary.getChildren().add(statChip("PP Edifici", "+" + stats.printedBuildingPrestige()));
+        return summary;
+    }
+
+    private VBox statChip(String label, String value) {
+        Label cap = new Label(label);
+        cap.getStyleClass().add("tribe-stat-label");
+        Label val = new Label(value);
+        val.getStyleClass().add("tribe-stat-value");
+        VBox box = new VBox(2, cap, val);
+        box.getStyleClass().addAll("stat-card", "tribe-stat");
+        return box;
+    }
+
+    /** Header for one character role group inside the tribe popup. */
+    private HBox characterGroupHeader(CharacterType type, int count, TribeStats stats,
+                                      boolean hideInventorDetails) {
+        HBox row = new HBox(10);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.getStyleClass().add("tribe-group-header");
+
+        Label title = new Label(characterGroupName(type) + " x" + count);
+        title.getStyleClass().add("tribe-group-title");
+        Label detail = new Label(characterGroupDetail(type, stats, hideInventorDetails));
+        detail.getStyleClass().add("tribe-group-detail");
+        detail.setWrapText(true);
+
+        row.getChildren().addAll(title, detail);
+        return row;
+    }
+
+    private static String characterGroupName(CharacterType type) {
+        return switch (type) {
+            case BUILDER -> "Costruttori";
+            case HUNTER -> "Cacciatori";
+            case SHAMAN -> "Sciamani";
+            case COLLECTOR -> "Raccoglitori";
+            case INVENTOR -> "Inventori";
+            case ARTIST -> "Artisti";
+        };
+    }
+
+    private static String characterGroupDetail(CharacterType type, TribeStats stats,
+                                               boolean hideInventorDetails) {
+        return switch (type) {
+            case BUILDER -> "sconto edifici -" + stats.builderDiscount()
+                    + "F · PP finali +" + stats.builderPrestige();
+            case HUNTER -> "Evento Caccia: +" + stats.hunterCount()
+                    + " cibo e PP in base all'Era";
+            case SHAMAN -> "icone totali " + stats.shamanIcons();
+            case COLLECTOR -> "sconto Sostentamento -" + stats.collectorDiscount() + "F";
+            case INVENTOR -> hideInventorDetails
+                    ? "icone invenzione nascoste fino al conteggio finale"
+                    : "icone distinte " + stats.distinctInventorIcons()
+                    + " · PP finali +" + stats.inventorFinalPrestige();
+            case ARTIST -> "coppie " + stats.artistPairs()
+                    + " · PP finali +" + stats.artistFinalPrestige();
+        };
     }
 
     /** A wrapping flow of card images. */
@@ -1005,7 +1121,7 @@ public class GameScreenController {
     }
 
     /** Rules description for a card, by type/subtype. */
-    private static String cardDescription(CardDTO card) {
+    private String cardDescription(CardDTO card) {
         return switch (card.type()) {
             case EVENT -> switch (card.eventType()) {
                 case sustenance -> "Pagate 1 cibo per ogni carta personaggio nella vostra tribù (gli edifici non contano). " +
@@ -1042,9 +1158,7 @@ public class GameScreenController {
                         " base al numero di artisti che avete nella vostra tribù. A fine partita ottenete 10 " +
                         "punti prestigio per ogni due pittori nella vostra tribù.";
             };
-            case BUILDING -> "Questa carta edificio ha un costo di " + card.buildingFoodCost() + " cibo e " +
-                    "permette di ottenere " + card.buildingPrestigeBonus() + " punti prestigio a fine partita. " +
-                    "L'effetto è riportato nell'immagine";
+            case BUILDING -> buildingDescription(card, localPlayer());
         };
     }
 
@@ -1300,6 +1414,11 @@ public class GameScreenController {
                 if (card.buildingFoodCost() != null) {
                     chips.getChildren().add(chip(card.buildingFoodCost() + " cibo", "card-chip-food"));
                 }
+                PlayerDTO localPlayer = localPlayer();
+                if (localPlayer != null && builderDiscount(localPlayer) > 0) {
+                    chips.getChildren().add(chip("paghi "
+                            + effectiveBuildingCost(card, localPlayer) + " cibo", "card-chip-food"));
+                }
                 if (card.buildingPrestigeBonus() != null) {
                     chips.getChildren().add(chip(card.buildingPrestigeBonus() + " PP", "card-chip-pp"));
                 }
@@ -1325,6 +1444,153 @@ public class GameScreenController {
     // ------------------------------------------------------------------
     // Small helpers
     // ------------------------------------------------------------------
+
+    private String buildingDescription(CardDTO card, PlayerDTO viewer) {
+        int printedCost = card.buildingFoodCost() == null ? 0 : card.buildingFoodCost();
+        int prestige = card.buildingPrestigeBonus() == null ? 0 : card.buildingPrestigeBonus();
+        if (viewer == null) {
+            return "Questa carta edificio ha un costo di " + printedCost + " cibo e "
+                    + "permette di ottenere " + prestige + " punti prestigio a fine partita. "
+                    + "L'effetto è riportato nell'immagine.";
+        }
+
+        int discount = builderDiscount(viewer);
+        int effectiveCost = effectiveBuildingCost(card, viewer);
+        String affordability = effectiveCost <= viewer.foodPoints()
+                ? "Puoi acquistarla con il cibo attuale."
+                : "Non hai abbastanza cibo per acquistarla ora.";
+        return "Costo stampato: " + printedCost + " cibo. "
+                + "Sconto Costruttori: -" + discount + " cibo. "
+                + "Paghi: " + effectiveCost + " cibo. "
+                + affordability + " "
+                + "A fine partita vale " + prestige + " PP stampati. "
+                + "L'effetto è riportato nell'immagine.";
+    }
+
+    private boolean hasPickableCard(List<CardDTO> cards, PlayerDTO player) {
+        if (cards == null) return false;
+        for (CardDTO card : cards) {
+            if (card == null) continue;
+            if (card.type() == CardType.CHARACTER) return true;
+            if (card.type() == CardType.BUILDING && player != null
+                    && effectiveBuildingCost(card, player) <= player.foodPoints()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private PlayerDTO localPlayer() {
+        return playerById(guiView.getGameView(), guiView.getPlayerId());
+    }
+
+    private static PlayerDTO playerById(GameDTO snap, int playerId) {
+        if (snap == null || snap.players() == null) return null;
+        for (PlayerDTO player : snap.players()) {
+            if (player != null && player.playerId() == playerId) {
+                return player;
+            }
+        }
+        return null;
+    }
+
+    private static int effectiveBuildingCost(CardDTO building, PlayerDTO player) {
+        int printedCost = building == null || building.buildingFoodCost() == null
+                ? 0
+                : building.buildingFoodCost();
+        return Math.max(0, printedCost - builderDiscount(player));
+    }
+
+    private static int builderDiscount(PlayerDTO player) {
+        return tribeStats(player).builderDiscount();
+    }
+
+    private static Map<CharacterType, List<CardDTO>> groupCharactersByType(List<CardDTO> cards) {
+        EnumMap<CharacterType, List<CardDTO>> byType = new EnumMap<>(CharacterType.class);
+        for (CharacterType type : CharacterType.values()) {
+            byType.put(type, new ArrayList<>());
+        }
+        if (cards == null) return byType;
+        for (CardDTO card : cards) {
+            if (card != null && card.type() == CardType.CHARACTER && card.characterType() != null) {
+                byType.get(card.characterType()).add(card);
+            }
+        }
+        return byType;
+    }
+
+    private static TribeStats tribeStats(PlayerDTO player) {
+        return tribeStats(player == null ? null : player.tribe());
+    }
+
+    private static TribeStats tribeStats(List<CardDTO> tribe) {
+        int characterCount = 0;
+        int buildingCount = 0;
+        int builderDiscount = 0;
+        int collectorDiscount = 0;
+        int builderPrestige = 0;
+        int hunterCount = 0;
+        int shamanIcons = 0;
+        int inventorCount = 0;
+        int artistCount = 0;
+        int printedBuildingPrestige = 0;
+        Set<Integer> inventorIcons = new HashSet<>();
+
+        if (tribe != null) {
+            for (CardDTO card : tribe) {
+                if (card == null || card.type() == null) continue;
+                if (card.type() == CardType.BUILDING) {
+                    buildingCount++;
+                    printedBuildingPrestige += card.buildingPrestigeBonus() == null
+                            ? 0
+                            : card.buildingPrestigeBonus();
+                    continue;
+                }
+                if (card.type() != CardType.CHARACTER || card.characterType() == null) continue;
+
+                characterCount++;
+                switch (card.characterType()) {
+                    case BUILDER -> {
+                        builderDiscount += card.builderFoodBonus() == null ? 0 : card.builderFoodBonus();
+                        builderPrestige += card.builderPrestigePoints() == null ? 0 : card.builderPrestigePoints();
+                    }
+                    case HUNTER -> hunterCount++;
+                    case SHAMAN -> shamanIcons += card.shamanIcons() == null ? 0 : card.shamanIcons();
+                    case COLLECTOR -> collectorDiscount += card.collectorFoodDiscount() == null
+                            ? 0
+                            : card.collectorFoodDiscount();
+                    case INVENTOR -> {
+                        inventorCount++;
+                        if (card.inventorIcon() != null) {
+                            inventorIcons.add(card.inventorIcon());
+                        }
+                    }
+                    case ARTIST -> artistCount++;
+                }
+            }
+        }
+
+        return new TribeStats(characterCount, buildingCount, builderDiscount, collectorDiscount,
+                builderPrestige, hunterCount, shamanIcons, inventorCount, inventorIcons.size(),
+                artistCount, printedBuildingPrestige);
+    }
+
+    private record TribeStats(int characterCount, int buildingCount, int builderDiscount,
+                              int collectorDiscount, int builderPrestige, int hunterCount,
+                              int shamanIcons, int inventorCount, int distinctInventorIcons,
+                              int artistCount, int printedBuildingPrestige) {
+        int artistPairs() {
+            return artistCount / 2;
+        }
+
+        int artistFinalPrestige() {
+            return artistPairs() * 10;
+        }
+
+        int inventorFinalPrestige() {
+            return inventorCount * distinctInventorIcons;
+        }
+    }
 
     /** Returns this player's occupied offer tile, or {@code null}. */
     private OfferTileDTO myOfferTile(GameDTO g) {

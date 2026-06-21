@@ -209,22 +209,19 @@ public final class EndGameCinematic {
         title.setMaxWidth(w - 72);
         title.setAlignment(Pos.CENTER);
         title.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
-        Label subtitle = parchmentLabel(
-                (endMessage == null || endMessage.isBlank()) ? "Il mazzo Tribù è esaurito." : endMessage,
-                17, FontWeight.NORMAL, INK_SOFT);
-        subtitle.setWrapText(true);
-        subtitle.setMaxWidth(w - 80);
-        subtitle.setAlignment(Pos.CENTER);
 
         Button reveal = new Button("Scopri chi ha vinto ›");
         reveal.getStyleClass().add("game-over-primary");
         reveal.setOnAction(e -> goToLeaderboard());
 
-        VBox content = new VBox(16, kicker, title, subtitle, reveal);
+        // No subtitle here on purpose: it used to show the server end message,
+        // which already named the winner — spoiling the "Scopri chi ha vinto"
+        // reveal. The winner is shown only on the leaderboard (Phase B).
+        VBox content = new VBox(16, kicker, title, reveal);
         content.setAlignment(Pos.CENTER);
         content.setPadding(new Insets(40, 36, 40, 36));
 
-        for (Node n : List.of(kicker, title, subtitle, reveal)) {
+        for (Node n : List.of(kicker, title, reveal)) {
             n.setOpacity(0);
         }
 
@@ -232,8 +229,7 @@ public final class EndGameCinematic {
         unroll(scroll, 550, () -> {
             cascadeIn(kicker, 0, 16);
             cascadeIn(title, 200, 16);
-            cascadeIn(subtitle, 500, 16);
-            cascadeIn(reveal, 800, 16);
+            cascadeIn(reveal, 500, 16);
         });
         return scroll.layer;
     }
@@ -283,7 +279,10 @@ public final class EndGameCinematic {
 
         Button exit = new Button("Esci");
         exit.getStyleClass().add("game-over-secondary");
-        exit.setTextFill(Color.BLACK);
+        // Inline style wins over the .game-over-secondary author stylesheet,
+        // which would otherwise keep the text light grey (setTextFill is lower
+        // priority than an author stylesheet in JavaFX CSS).
+        exit.setStyle("-fx-text-fill: black;");
         exit.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(exit, Priority.ALWAYS);
         exit.setOnAction(e -> dismiss(onExit));
