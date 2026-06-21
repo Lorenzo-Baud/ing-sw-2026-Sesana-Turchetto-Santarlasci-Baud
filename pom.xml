@@ -53,6 +53,40 @@
             <artifactId>javafx-graphics</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+
+        <!--
+            Cross-platform client jar: the JavaFX native libraries (.dylib/.dll/.so)
+            live ONLY in javafx-graphics, and each are platform-specific. The plain
+            dependency above bundles natives for the BUILD host only, so a jar built
+            on macOS would not run on Windows/Linux. We explicitly pull every
+            platform's javafx-graphics classifier so the fat jar carries all natives
+            and runs everywhere with a plain `java -jar`. (controls/fxml/base are pure
+            Java and platform-independent, so they need no extra classifiers.)
+        -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>win</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>linux</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>mac</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>mac-aarch64</classifier>
+        </dependency>
     </dependencies>
 
     <build>
