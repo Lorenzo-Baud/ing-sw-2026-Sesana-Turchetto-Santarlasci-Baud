@@ -33,9 +33,9 @@ The application supports both the simplified ruleset (2 players, excluding Artis
 | **Complete Rules** | 🟢 | Complete implementation of the advanced game rules. |
 | **Socket** | 🟢 | Custom TCP Socket protocol for robust client-server communication. |
 | **RMI** | 🟢 | Java Remote Method Invocation implementation. |
-| **TUI** | 🟢 | Text-based User Interface with ANSI escape codes and a robust append-mode rendering. |
+| **TUI** | 🟢 | Text-based User Interface. |
 | **GUI** | 🟢 | Graphical User Interface implemented using JavaFX. |
-| **Multiple Matches** (AF) | 🟢 | Server concurrently handles multiple lobbies and active matches via a `MatchRegistry`. |
+| **Multiple Matches** (AF) | 🟢 | Server concurrently handles multiple lobbies and active matches. |
 | **Persistence** (AF) | 🟢 | Periodic game state saving to disk, allowing matches to resume after a server crash. |
 | **Resilience** (AF) | 🟢 | Game state handles client disconnections seamlessly; disconnected players can reconnect while the game skips their turns or pauses. |
 
