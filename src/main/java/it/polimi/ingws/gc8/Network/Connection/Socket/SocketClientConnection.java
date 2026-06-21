@@ -43,6 +43,8 @@ public class SocketClientConnection implements ClientConnection {
     public SocketClientConnection(Socket socket) throws IOException {
         this.socket = socket;
 
+        socket.setTcpNoDelay(true);
+
         this.outStream = new ObjectOutputStream(socket.getOutputStream());
         this.outStream.flush();
         this.inStream = new ObjectInputStream(socket.getInputStream());

@@ -38,6 +38,7 @@ public class SocketServerConnection implements ServerConnection {
     @Override
     public void connect(String host, int port) throws Exception {
         this.socket = new Socket(host, port);
+        this.socket.setTcpNoDelay(true);
         this.out = new ObjectOutputStream(socket.getOutputStream());
         this.out.flush();
         this.in = new ObjectInputStream(socket.getInputStream());

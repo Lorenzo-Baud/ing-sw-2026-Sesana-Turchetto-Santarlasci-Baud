@@ -178,6 +178,17 @@
     -fx-font-size: 9px;
     -fx-padding: 2 7 2 7;
 }
+/* Peek arrow on opponents' player cards: opens their (public) tribe. */
+.tribe-peek-arrow {
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #B7A892;
+    -fx-padding: 0 4 2 8;
+    -fx-cursor: hand;
+}
+.tribe-peek-arrow:hover {
+    -fx-text-fill: #E2592B;
+}
 
 /* ---- turn-order rail --------------------------------------------- */
 .turn-order-card {

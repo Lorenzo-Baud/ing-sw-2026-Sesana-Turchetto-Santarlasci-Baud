@@ -45,3 +45,5 @@ docs/FA3-uml-changes.md
 # FA2: runtime match snapshots
 mesos-saves/
 docs/FA2-persistenza.md
+docs/FA1-partite-multiple.md
+docs/FA3-resilienza-disconnessioni.md

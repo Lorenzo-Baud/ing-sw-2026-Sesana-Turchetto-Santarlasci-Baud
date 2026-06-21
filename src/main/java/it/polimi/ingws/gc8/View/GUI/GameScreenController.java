@@ -31,6 +31,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
@@ -274,6 +275,20 @@ public class GameScreenController {
 
         info.getChildren().addAll(nameRow, metaRow);
         card.getChildren().addAll(totem, info);
+
+        // For opponents, add a peek arrow on the right that opens their tribe.
+        // Tribes are public in MESOS (cards lie face-up), so this reveals no
+        // hidden state. The local player's own card is left unchanged — they
+        // already have the tribe mini-box in the action bar.
+        if (!isYou) {
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+            Label peek = new Label("›");
+            peek.getStyleClass().add("tribe-peek-arrow");
+            Tooltip.install(peek, new Tooltip("Vedi la tribù di " + p.nickname()));
+            peek.setOnMouseClicked(e -> showTribePopup(p, false));
+            card.getChildren().addAll(spacer, peek);
+        }
         return card;
     }
 
@@ -802,13 +817,30 @@ public class GameScreenController {
     }
 
     /**
-     * Shows the player's full tribe in a parchment-styled modal, grouped into
-     * characters and buildings (matching the redesign).
+     * Shows the local player's full tribe (action-bar mini-box click).
      */
     @FXML
     private void handleShowTribePopupDirectly() {
         GameDTO snap = guiView.getGameView();
-        List<CardDTO> tribe = snap.players().get(guiView.getPlayerId() - 1).tribe();
+        if (snap == null) return;
+        showTribePopup(snap.players().get(guiView.getPlayerId() - 1), true);
+    }
+
+    /**
+     * Shows a player's full tribe in a parchment-styled modal, grouped into
+     * characters and buildings (matching the redesign). Used both for the local
+     * player's own tribe (the action-bar mini-box) and, via the peek arrow on
+     * each opponent's player card, for opponents' tribes. Tribes are public
+     * information in MESOS (cards lie face-up), so this reveals no hidden state.
+     *
+     * @param player the player whose tribe to display
+     * @param isYou  true for the local player (only changes the title)
+     */
+    private void showTribePopup(PlayerDTO player, boolean isYou) {
+        GameDTO snap = guiView.getGameView();
+        if (snap == null || player == null) return;
+        List<CardDTO> tribe = player.tribe() == null ? List.of() : player.tribe();
+        String windowTitle = isYou ? "La mia tribù" : "Tribù di " + player.nickname();
 
         VBox root = new VBox(16);
         root.getStyleClass().addAll("parchment-strong");
@@ -817,7 +849,7 @@ public class GameScreenController {
         // header
         HBox header = new HBox(12);
         header.setAlignment(Pos.CENTER_LEFT);
-        Label title = new Label("La mia tribù");
+        Label title = new Label(windowTitle);
         title.getStyleClass().add("parchment-title");
         Label count = new Label(tribe.size() + " carte");
         count.getStyleClass().add("tribe-count");
@@ -840,6 +872,12 @@ public class GameScreenController {
             root.getChildren().add(sectionLabel("EDIFICI"));
             root.getChildren().add(cardFlow(buildings));
         }
+        // empty tribe (common for opponents in the early game)
+        if (chars.isEmpty() && buildings.isEmpty()) {
+            Label empty = new Label("Nessuna carta nella tribù.");
+            empty.getStyleClass().add("tribe-row");
+            root.getChildren().add(empty);
+        }
 
         ScrollPane scrollPane = new ScrollPane(root);
         scrollPane.setFitToWidth(true);
@@ -850,7 +888,7 @@ public class GameScreenController {
         scrollPane.setStyle("-fx-background: #EBDCC0; -fx-background-color: #EBDCC0;");
 
         Stage popupStage = new Stage();
-        popupStage.setTitle("La mia tribù");
+        popupStage.setTitle(windowTitle);
         popupStage.initModality(Modality.APPLICATION_MODAL);
         popupStage.initOwner(middleCardsRow.getScene().getWindow());
 
