@@ -26,13 +26,10 @@ public class PausedState implements GameState {
 
     @Override
     public void onEnter(GameController context) {
-        // Store the phase we were in before pausing
-        // (the model's phase still reflects the previous state)
         this.previousPhase = context.getModel().getPhase();
     }
 
     @Override
     public void onExit(GameController context) {
-        // No cleanup needed
     }
 }

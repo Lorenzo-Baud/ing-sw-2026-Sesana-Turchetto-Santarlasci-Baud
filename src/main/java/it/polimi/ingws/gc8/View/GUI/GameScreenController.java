@@ -85,7 +85,6 @@ public class GameScreenController {
     /** Reference to the owning GuiView, injected before {@code load()}. */
     private GuiView guiView;
 
-    // ---- Root & layout ----
     @FXML private StackPane rootPane;
     @FXML private VBox marketBox;
     /** Card artwork height, derived from the available market height so cards
@@ -97,7 +96,6 @@ public class GameScreenController {
     private final javafx.beans.property.IntegerProperty maxCardsInRow =
             new javafx.beans.property.SimpleIntegerProperty(9);
 
-    // ---- HUD ----
     @FXML private Label eraLabel;
     @FXML private Label roundLabel;
     @FXML private HBox turnPill;
@@ -105,24 +103,19 @@ public class GameScreenController {
     /** Center turn pill text ("Tocca a te" / "Turno di …"). */
     @FXML private Label yourTurnLabel;
 
-    // ---- Players strip & turn-order rail (built dynamically) ----
     @FXML private HBox playersStrip;
     @FXML private VBox turnOrderList;
 
-    // ---- Resolved-events log (bottom of the left rail) ----
     @FXML private VBox eventLogBox;
 
-    // ---- Market rows ----
     @FXML private HBox topCardsRow;
     @FXML private HBox middleCardsRow;
     @FXML private HBox bottomCardsRow;
 
-    // ---- Tribe mini-box (action bar) ----
     @FXML private Label foodLabel;
     @FXML private Label prestigeLabel;
     @FXML private Label buildingDiscountLabel;
 
-    // ---- Action bar ----
     @FXML private Label quotaLabel;
 
     /** Injects the owning {@link GuiView} instance. */
@@ -139,10 +132,6 @@ public class GameScreenController {
     public void initialize() {
         guiView.getPrimaryStage().setTitle("Mesos Game - Gioco");
 
-        // Cards size to the smaller of two budgets so they always fit:
-        //  - vertical: the available market height split across the three rows;
-        //  - horizontal: the available width divided by the busiest row's card
-        //    count (else a crowded centered HBox overflows and clips at the sides).
         cardHeight = Bindings.createDoubleBinding(
                 () -> {
                     double vertical = marketBox.getHeight() / 3.0 - 46.0;
@@ -155,11 +144,9 @@ public class GameScreenController {
                 },
                 marketBox.heightProperty(), marketBox.widthProperty(), maxCardsInRow);
 
-        // First render from the existing snapshot (we're already on the FX thread).
         renderFromSnapshot(guiView.getGameView());
 
-        // Start the per-game dispatcher: the lobby dispatcher returned right
-        // after calling showGame(), so the queue would otherwise have no consumer.
+
         Thread updateDispatcher = new Thread(this::dispatchLoop, "gui-dispatcher-game");
         updateDispatcher.setDaemon(true);
         updateDispatcher.start();
@@ -476,10 +463,6 @@ public class GameScreenController {
     /** Convenience overload that reads the current snapshot. */
     private void updateInterface() {
         GameDTO snap = guiView.getGameView();
-        // Resync the local pick counters from the authoritative snapshot on every
-        // model update. The server is the single source of truth: this prevents
-        // the local counters from drifting (which used to let the player click a
-        // pick the server then rejected with "no more picks allowed").
         if (snap != null) {
             turnUpperTaken = snap.currentUpperTaken();
             turnLowerTaken = snap.currentLowerTaken();
@@ -491,8 +474,6 @@ public class GameScreenController {
             OfferTileDTO myTile = myOfferTile(snap);
             if (myTile != null) {
 
-                // If the player placed their totem on the food tile, take food and
-                // return to the turn order track.
                 if (myTile.id() == OffertileId.A && !turnFoodTaken) {
                     turnFoodTaken = true;
                     if (guiView.sendAndAwaitUpdate(new TakeFoodAction(guiView.getPlayerId())) == View.SendResult.OK) {
@@ -502,7 +483,6 @@ public class GameScreenController {
                     }
                 }
 
-                // If the player cannot take any more cards from the rows, end the turn.
                 boolean canPick = false;
 
                 int remainingUpper = View.maxUpperPicks(myTile.id()) - turnUpperTaken;
@@ -1170,7 +1150,7 @@ public class GameScreenController {
                         " base al numero di artisti che avete nella vostra tribù. A fine partita ottenete 10 " +
                         "punti prestigio per ogni due pittori nella vostra tribù.";
             };
-            case BUILDING -> buildingDescription(card, localPlayer());
+            case BUILDING -> "L'effetto è riportato nell'immagine.";
         };
     }
 
@@ -1423,16 +1403,8 @@ public class GameScreenController {
             case EVENT -> chips.getChildren().add(chip("Evento", "card-chip-type"));
             case BUILDING -> {
                 chips.getChildren().add(chip("Edificio", "card-chip-type"));
-                if (card.buildingFoodCost() != null) {
-                    chips.getChildren().add(chip(card.buildingFoodCost() + " cibo", "card-chip-food"));
-                }
-                PlayerDTO localPlayer = localPlayer();
-                if (localPlayer != null && builderDiscount(localPlayer) > 0) {
-                    chips.getChildren().add(chip("paghi "
-                            + effectiveBuildingCost(card, localPlayer) + " cibo", "card-chip-food"));
-                }
-                if (card.buildingPrestigeBonus() != null) {
-                    chips.getChildren().add(chip(card.buildingPrestigeBonus() + " PP", "card-chip-pp"));
+                if (card.era() != null) {
+                    chips.getChildren().add(chip("Era " + roman(card.era().ordinal() + 1), "card-chip-era"));
                 }
             }
         }
@@ -1457,28 +1429,6 @@ public class GameScreenController {
     // Small helpers
     // ------------------------------------------------------------------
 
-    private String buildingDescription(CardDTO card, PlayerDTO viewer) {
-        int printedCost = card.buildingFoodCost() == null ? 0 : card.buildingFoodCost();
-        int prestige = card.buildingPrestigeBonus() == null ? 0 : card.buildingPrestigeBonus();
-        if (viewer == null) {
-            return "Questa carta edificio ha un costo di " + printedCost + " cibo e "
-                    + "permette di ottenere " + prestige + " punti prestigio a fine partita. "
-                    + "L'effetto è riportato nell'immagine.";
-        }
-
-        int discount = builderDiscount(viewer);
-        int effectiveCost = effectiveBuildingCost(card, viewer);
-        String affordability = effectiveCost <= viewer.foodPoints()
-                ? "Puoi acquistarla con il cibo attuale."
-                : "Non hai abbastanza cibo per acquistarla ora.";
-        return "Costo stampato: " + printedCost + " cibo. "
-                + "Sconto Costruttori: -" + discount + " cibo. "
-                + "Paghi: " + effectiveCost + " cibo. "
-                + affordability + " "
-                + "A fine partita vale " + prestige + " PP stampati. "
-                + "L'effetto è riportato nell'immagine.";
-    }
-
     private boolean hasPickableCard(List<CardDTO> cards, PlayerDTO player) {
         if (cards == null) return false;
         for (CardDTO card : cards) {
@@ -1490,10 +1440,6 @@ public class GameScreenController {
             }
         }
         return false;
-    }
-
-    private PlayerDTO localPlayer() {
-        return playerById(guiView.getGameView(), guiView.getPlayerId());
     }
 
     private static PlayerDTO playerById(GameDTO snap, int playerId) {

@@ -11,9 +11,12 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.DialogPane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -248,11 +251,7 @@ public class GuiView extends View {
      * @param content content of the error dialog
      */
     private void showErrorOnFxThread(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
+        showThemedAlert(Alert.AlertType.ERROR, title, content);
     }
 
     /**
@@ -275,10 +274,38 @@ public class GuiView extends View {
      * @param title title of the info dialog
      */
     private void showInfoOnFxThread(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        showThemedAlert(Alert.AlertType.INFORMATION, title, content);
+    }
+
+    /**
+     * Builds and shows a modal {@link Alert} restyled to match the app's
+     * dark/parchment theme. The default JavaFX (modena) icon is dropped and the
+     * app stylesheet is attached to the dialog pane, so every popup routed
+     * through {@link #showError}/{@link #showInfo} (suspended match, player
+     * disconnected, rules, timeout, validation errors…) shares one look.
+     * Error alerts get an extra {@code app-dialog-error} accent class.
+     */
+    private void showThemedAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
+        alert.initModality(Modality.APPLICATION_MODAL);
+        if (primaryStage != null) {
+            alert.initOwner(primaryStage);
+        }
+
+        DialogPane pane = alert.getDialogPane();
+        pane.setGraphic(null);
+        URL css = getClass().getResource("/javafx_gui/css/theme.css");
+        if (css != null) {
+            pane.getStylesheets().add(css.toExternalForm());
+        }
+        pane.getStyleClass().add("app-dialog");
+        if (type == Alert.AlertType.ERROR) {
+            pane.getStyleClass().add("app-dialog-error");
+        }
+
         alert.showAndWait();
     }
 

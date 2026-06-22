@@ -19,7 +19,6 @@ import javafx.scene.control.ToggleGroup;
  */
 public class StartScreenController {
 
-    // Reference to the main view manager to coordinate scene switches
     private GuiView guiView;
 
     @FXML
@@ -33,7 +32,6 @@ public class StartScreenController {
     @FXML
     private ToggleButton rmiToggle;
 
-    // Setter used by GuiView to inject itself after loading the FXML
     public void setGuiView(GuiView guiView) {
         this.guiView = guiView;
     }
@@ -46,7 +44,6 @@ public class StartScreenController {
         rmiToggle.setToggleGroup(transportGroup);
         socketToggle.setSelected(true);
 
-        // Changes primary stage title
         guiView.getPrimaryStage().setTitle("Mesos Game - Login");
 
         transportGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
@@ -93,9 +90,6 @@ public class StartScreenController {
 
         guiView.getController().start();
         guiView.setNickname(username);
-
-        // FA1 (multi-match) + FA2/FA3 (reconnection) are handled on the
-        // dedicated, themed match-selection screen.
         guiView.showMatchSelection();
     }
 }

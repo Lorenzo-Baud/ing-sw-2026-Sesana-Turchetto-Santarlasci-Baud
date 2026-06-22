@@ -82,16 +82,57 @@
 
 /* ---- choice box --------------------------------------------------- */
 .choice-box {
-    -fx-background-color: rgba(242,231,208,0.06);
+    -fx-background-color: #F2E7D0;
     -fx-background-radius: 12px;
-    -fx-border-color: rgba(242,231,208,0.14);
+    -fx-border-color: rgba(0,0,0,0.20);
     -fx-border-radius: 12px;
-    -fx-mark-color: #E2592B;
+    -fx-mark-color: #1C1520;
 }
 .choice-box .label {
-    -fx-text-fill: #F2E7D0;
+    -fx-text-fill: #000000;
     -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;
     -fx-font-weight: 700;
+}
+/* dropdown items of the player-count choice box */
+.choice-box-popup .label {
+    -fx-text-fill: #000000;
+}
+
+/* ---- joinable match cards (selection list) ----------------------- */
+.match-card {
+    -fx-background-color: rgba(242,231,208,0.06);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(242,231,208,0.14);
+    -fx-border-radius: 16px;
+    -fx-border-width: 1px;
+    -fx-padding: 14 18 14 18;
+    -fx-cursor: hand;
+}
+.match-card:hover {
+    -fx-background-color: rgba(242,231,208,0.10);
+    -fx-border-color: #E2592B;
+    -fx-scale-x: 1.03;
+    -fx-scale-y: 1.03;
+}
+.match-title {
+    -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;
+    -fx-font-weight: 800;
+    -fx-font-size: 15px;
+    -fx-text-fill: #F2E7D0;
+}
+.match-meta {
+    -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;
+    -fx-font-size: 12px;
+    -fx-text-fill: #B7A892;
+}
+.match-badge {
+    -fx-background-color: rgba(226,89,43,0.22);
+    -fx-background-radius: 999px;
+    -fx-text-fill: #F0A07E;
+    -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 11px;
+    -fx-padding: 4 10 4 10;
 }
 
 /* ---- segmented transport switch ---------------------------------- */
@@ -261,3 +302,43 @@
 .transparent-scroll > .viewport {
     -fx-background-color: transparent;
 }
+
+/* ---- themed alert dialogs (showError / showInfo) ----------------- */
+.app-dialog.dialog-pane {
+    -fx-background-color: linear-gradient(to bottom right, #2e2032, #16101b);
+    -fx-border-color: rgba(242,231,208,0.16);
+    -fx-border-width: 1px;
+    -fx-padding: 4px;
+}
+.app-dialog.dialog-pane .label {
+    -fx-text-fill: #F2E7D0;
+    -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;
+    -fx-font-size: 14px;
+}
+.app-dialog.dialog-pane > .content,
+.app-dialog.dialog-pane .content.label {
+    -fx-padding: 18 18 14 18;
+}
+/* OK / close button styled like the accent buttons */
+.app-dialog.dialog-pane .button-bar .button {
+    -fx-background-color: #E2592B;
+    -fx-background-radius: 12px;
+    -fx-text-fill: #1C1520;
+    -fx-font-family: "Mulish", "Segoe UI", Arial, sans-serif;
+    -fx-font-weight: 800;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-padding: 8 22 8 22;
+}
+.app-dialog.dialog-pane .button-bar .button:hover { -fx-background-color: #f0673a; }
+.app-dialog.dialog-pane .button-bar .button:pressed { -fx-translate-y: 1; -fx-background-color: #cf4d23; }
+/* error variant: red accent border + reddish button */
+.app-dialog-error.dialog-pane {
+    -fx-border-color: rgba(226,89,43,0.55);
+}
+.app-dialog-error.dialog-pane .button-bar .button {
+    -fx-background-color: #C0392B;
+    -fx-text-fill: #F7ECE2;
+}
+.app-dialog-error.dialog-pane .button-bar .button:hover { -fx-background-color: #d6493a; }
+.app-dialog-error.dialog-pane .button-bar .button:pressed { -fx-translate-y: 1; -fx-background-color: #a82f23; }

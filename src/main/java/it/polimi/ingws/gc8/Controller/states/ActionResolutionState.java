@@ -28,12 +28,6 @@ import java.util.List;
  */
 public class ActionResolutionState implements GameState {
 
-    // Per-turn pick counters now live in the model (GameModel.getCurrentTurnUpperTaken
-    // etc.) so they travel in the snapshot/DTO and the views read them as the single
-    // source of truth — this state no longer keeps its own copies. The counters are
-    // the authoritative limit check: TakeCardAction/TakeFoodAction are rejected when
-    // they would exceed what the OfferTile the player stands on allows.
-
     @Override
     public void handleAction(GameController context, PlayerAction action) {
         GameModel model = context.getModel();
@@ -46,7 +40,6 @@ public class ActionResolutionState implements GameState {
             return;
         }
 
-        // Validate it's this player's turn in the offer order
         Player currentPlayer = getCurrentOfferPlayer(context);
         if (currentPlayer == null || currentPlayer.getPlayerId() != player.getPlayerId()) {
             viewUpdater.notifyError(player.getPlayerId(), "NOT_YOUR_TURN",
@@ -85,15 +78,12 @@ public class ActionResolutionState implements GameState {
 
     @Override
     public void onExit(GameController context) {
-        // Clear offer order tracking
         context.setOfferOrder(null);
         context.setOfferOrderIndex(0);
     }
 
     @Override
     public void onCurrentPlayerDisconnected(GameController context) {
-        // FA3: if the active offer player just dropped, auto-return their totem
-        // (no gains) and advance, so the phase keeps moving.
         skipDisconnectedOfferPlayers(context);
     }
 
@@ -101,10 +91,6 @@ public class ActionResolutionState implements GameState {
         GameModel model = context.getModel();
         ViewUpdater viewUpdater = context.getViewUpdater();
 
-        // Authoritative pick-limit check: refuse picks that exceed what the
-        // player's current offer tile allows. Without this guard the server
-        // would accept unbounded picks (the TUI client may have its own
-        // counter but a modified client could bypass it).
         OfferTile tile = model.getOfferTile(player);
         if (tile == null) {
             viewUpdater.notifyError(player.getPlayerId(), "NO_OFFER_TILE",
@@ -139,14 +125,6 @@ public class ActionResolutionState implements GameState {
         }
         Card targetCard = rowCards.get(idx);
 
-        // Determine card type and execute. The authoritative pick counter must be
-        // bumped BEFORE the take: takeBuildingCard/takeCharacterCard call
-        // model.notifyUpdate internally, so the snapshot they broadcast must
-        // already include this pick. If we incremented afterwards the snapshot
-        // would carry a stale counter — the views resync to it, believe the pick
-        // never happened (keep demanding it, never auto-return the totem) while
-        // the server's own counter is one ahead and rejects the next pick as
-        // PICK_LIMIT_EXCEEDED.
         if (targetCard instanceof BuildingCard building) {
             if (!model.canPlayerAffordBuilding(player, building)) {
                 viewUpdater.notifyError(player.getPlayerId(), "CANNOT_AFFORD",
@@ -178,9 +156,6 @@ public class ActionResolutionState implements GameState {
         GameModel model = context.getModel();
         ViewUpdater viewUpdater = context.getViewUpdater();
 
-        // Food is granted only by offer tiles whose foodReward is positive
-        // (in MESOS, only tile A). Reject otherwise to avoid silently giving
-        // food on tiles that don't allow it.
         OfferTile tile = model.getOfferTile(player);
         if (tile == null) {
             viewUpdater.notifyError(player.getPlayerId(), "NO_OFFER_TILE",
@@ -197,9 +172,7 @@ public class ActionResolutionState implements GameState {
                     "You have already taken food this turn.");
             return;
         }
-        // Set the flag BEFORE takeFood: takeFood calls model.notifyUpdate
-        // internally, so the broadcast snapshot must already reflect that food
-        // was taken this turn (otherwise the views resync to a stale flag).
+
         model.setCurrentTurnFoodTaken(true);
         model.takeFood(player);
     }
@@ -207,11 +180,6 @@ public class ActionResolutionState implements GameState {
     private void handleReturnTotem(GameController context, Player player) {
         GameModel model = context.getModel();
 
-        // Rule (manual p.4): taking Character cards is mandatory while the player
-        // still has picks left on their offer tile and Characters are available
-        // in the relevant rows. Buildings remain optional (they cost food), so
-        // they never block the totem return. This guard makes the obligation
-        // authoritative server-side; the GUI only enforces it as UX.
         if (hasMandatoryCharacterPick(model, player)) {
             context.getViewUpdater().notifyError(player.getPlayerId(), "MUST_PICK_CHARACTER",
                     "You must take the available Character card(s) before returning your totem.");
@@ -220,7 +188,6 @@ public class ActionResolutionState implements GameState {
 
         advanceToNextOfferPlayer(context, player);
 
-        // FA3: skip any disconnected players who are next in the offer order.
         skipDisconnectedOfferPlayers(context);
     }
 
@@ -253,9 +220,6 @@ public class ActionResolutionState implements GameState {
     private void advanceToNextOfferPlayer(GameController context, Player player) {
         GameModel model = context.getModel();
 
-        // Counters belong to the player whose turn is ending; reset BEFORE the
-        // returnTotem notify (returnTotemToTurnOrder calls model.notifyUpdate
-        // internally) so every broadcast snapshot stays consistent with the model.
         model.resetCurrentTurnPicks();
 
         model.returnTotemToTurnOrder(player);

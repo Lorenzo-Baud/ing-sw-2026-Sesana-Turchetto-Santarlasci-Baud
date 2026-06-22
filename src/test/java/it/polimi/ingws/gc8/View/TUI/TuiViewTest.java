@@ -85,7 +85,7 @@ class TuiViewTest {
     /** Builds a minimal CardDTO of type CHARACTER/HUNTER. */
     private static CardDTO stubCard(String name) {
         return new CardDTO(
-                name, "back", false, CardType.CHARACTER,
+                name, "back", false, CardType.CHARACTER, Era.ERA_1,
                 CharacterType.HUNTER, 2, null, false,
                 null, null, null, null,
                 null, null, null, null,

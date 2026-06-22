@@ -42,10 +42,6 @@ public class ClientController implements ViewListener {
         this.view = view;
     }
 
-    // ------------------------------------------------------------------
-    // Lifecycle
-    // ------------------------------------------------------------------
-
     /** Registers this controller as listener of the view. */
     public void start() {
         if (running) return;
@@ -61,10 +57,6 @@ public class ClientController implements ViewListener {
         view.removeListener(this);
         if (networkPump != null) networkPump.interrupt();
     }
-
-    // ------------------------------------------------------------------
-    // Incoming: server -> view queue
-    // ------------------------------------------------------------------
 
     private void pumpLoop() {
         while (running) {
@@ -94,10 +86,6 @@ public class ClientController implements ViewListener {
             }
         }
     }
-
-    // ------------------------------------------------------------------
-    // Outgoing: view -> server
-    // ------------------------------------------------------------------
 
     /**
      * {@link ViewListener} callback invoked when the View captures user input.

@@ -41,7 +41,6 @@ public class PositioningState implements GameState {
             return;
         }
 
-        // Validate it's this player's turn
         Player currentPlayer = model.getCurrentPlayer();
         if (currentPlayer == null || currentPlayer.getPlayerId() != player.getPlayerId()) {
             viewUpdater.notifyError(player.getPlayerId(), "NOT_YOUR_TURN",
@@ -49,7 +48,6 @@ public class PositioningState implements GameState {
             return;
         }
 
-        // Find the requested offer tile
         OfferTile targetTile = findOfferTile(model, placeAction.getOfferTileId());
         if (targetTile == null || !targetTile.isFree()) {
             viewUpdater.notifyError(player.getPlayerId(), "INVALID_TILE",
@@ -57,11 +55,8 @@ public class PositioningState implements GameState {
             return;
         }
 
-        // Execute the action on the model (and transition if it was the last).
         placeAndCheckTransition(context, player, targetTile);
 
-        // FA3: if the next player(s) in turn order are disconnected, auto-skip
-        // them so a single offline player cannot stall the positioning phase.
         skipDisconnectedPlayers(context);
     }
 
@@ -69,20 +64,13 @@ public class PositioningState implements GameState {
     public void onEnter(GameController context) {
         GameModel model = context.getModel();
 
-        // Rule (manual p.4): each positioning round starts from the TOP of the
-        // turn-order track, not from whoever acted last in the previous phase
-        // (after action resolution currentPlayer points at the last finisher,
-        // who is now in the bottom slot). Reset it before anything else so the
-        // disconnection-skip below also starts from the correct first player.
         List<Player> turnOrder = model.getPlayersInTurnOrder();
         if (!turnOrder.isEmpty()) {
             model.setCurrentPlayer(turnOrder.get(0));
         }
 
-        // FA3: the first player(s) may already be disconnected; skip them.
         skipDisconnectedPlayers(context);
 
-        // Notify whoever is up now (only if we are still positioning).
         if (model.getPhase() == GamePhase.POSITIONING) {
             Player firstPlayer = model.getCurrentPlayer();
             if (firstPlayer != null) {

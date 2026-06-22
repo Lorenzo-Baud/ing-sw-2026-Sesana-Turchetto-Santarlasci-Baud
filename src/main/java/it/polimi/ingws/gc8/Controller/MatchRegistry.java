@@ -42,7 +42,6 @@ public class MatchRegistry {
             throw new IllegalStateException(
                     "Nome partita troppo lungo (max " + MAX_MATCH_NAME_LEN + " caratteri)");
         }
-        // Compound check-then-create must be atomic against concurrent creators.
         synchronized (matches) {
             if (matches.containsKey(id)) {
                 throw new IllegalStateException("Esiste già una partita con questo nome: " + id);

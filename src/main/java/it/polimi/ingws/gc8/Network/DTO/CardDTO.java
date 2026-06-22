@@ -2,6 +2,7 @@ package it.polimi.ingws.gc8.Network.DTO;
 
 import it.polimi.ingws.gc8.Model.Enum.CardType;
 import it.polimi.ingws.gc8.Model.Enum.CharacterType;
+import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.EventType;
 
 import java.io.Serializable;
@@ -18,6 +19,7 @@ import java.io.Serializable;
  * @param back       identificatore del retro
  * @param isFlipped  true se la carta mostra il retro
  * @param type       tipo di carta (CHARACTER / BUILDING / EVENT)
+ * @param era        era a cui appartiene la carta (ERA_1 / ERA_2 / ERA_3)
  *
  * @param characterType         tipo personaggio (null se non CHARACTER)
  * @param numberOfPlayers       n. minimo giocatori per cui la carta entra in gioco
@@ -47,6 +49,7 @@ public record CardDTO(
         String back,
         boolean isFlipped,
         CardType type,
+        Era era,
 
         // CHARACTER
         CharacterType characterType,

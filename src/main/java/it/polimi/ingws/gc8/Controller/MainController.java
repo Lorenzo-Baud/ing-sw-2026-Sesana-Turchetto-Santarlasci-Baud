@@ -125,22 +125,14 @@ public class MainController {
                 if (status == MatchStatus.LOBBY) {
                     throw new IllegalStateException("Nickname già in uso in questa lobby");
                 }
-                // FA3: reject a second live connection for the same nickname
-                // instead of silently replacing the existing one.
+
                 if (connState.get(existingId) == ConnectionState.CONNECTED) {
                     throw new IllegalStateException("Nickname già attivo in questa partita");
                 }
-                // Reconnection to in-progress match.
                 clientHandler.attachToMatch(this, existingId);
                 clientMap.put(existingId, clientHandler);
                 connState.put(existingId, ConnectionState.CONNECTED);
                 lastPongMs.put(existingId, System.currentTimeMillis());
-                // NB: we deliberately do NOT add this client as a listener nor push
-                // the snapshot here. On TCP everything shares one ordered stream, so
-                // any push sent before the JoinResult response would desync the
-                // synchronous lobby handshake. The snapshot is delivered by
-                // completeReconnection(...) AFTER the response is on the wire.
-                // The notification to the OTHER players is safe to send now.
                 if (viewUpdater != null) {
                     viewUpdater.notifyPlayerReconnected(nickname);
                 }
@@ -211,26 +203,17 @@ public class MainController {
                     shutdown();
                 }
             } else if (status == MatchStatus.FINISHED) {
-                // Game already over: a client leaving (e.g. "Nuova partita" /
-                // "Esci" from the end screen) is a normal departure, NOT an
-                // in-game disconnection. Just drop its listener — no
-                // notifyPlayerDisconnected, no suspension/turn handling.
                 if (viewUpdater != null) {
                     viewUpdater.removeListener(clientHandler);
                 }
             } else {
                 int pid = clientHandler.getPlayerId();
-                // FA3: keep the handler reference in clientMap so we still know
-                // the nickname, but mark the player as disconnected.
                 connState.put(pid, ConnectionState.DISCONNECTED);
                 if (viewUpdater != null) {
                     viewUpdater.removeListener(clientHandler);
                     viewUpdater.notifyPlayerDisconnected(clientHandler.getNickname());
                 }
                 evaluateSuspensionAfterDisconnect();
-                // FA3: if the game is still running (not suspended) and the
-                // leaver was the active player, advance past them so the turn
-                // does not stall.
                 if (!suspended && gameController != null) {
                     gameController.onPlayerDisconnected();
                 }
@@ -263,7 +246,6 @@ public class MainController {
             }
             return;
         }
-        // FA3: while suspended (single player connected) reject game actions.
         if (suspended) {
             if (viewUpdater != null) {
                 viewUpdater.notifyError(action.getPlayerId(), "SUSPENDED",
@@ -272,7 +254,6 @@ public class MainController {
             return;
         }
         gameController.handleAction(action);
-        // FA2: persist after every applied action (fine granularity, robust to crashes).
         persistAsync();
     }
 
@@ -296,10 +277,6 @@ public class MainController {
                     lobby.size(), expectedPlayers, status);
         }
     }
-
-    // ------------------------------------------------------------------
-    // Internals
-    // ------------------------------------------------------------------
 
     /** Caller MUST hold {@link #lobbyLock}. */
     private void maybeAutoStart() {
@@ -327,17 +304,14 @@ public class MainController {
         for (int i = 0; i < lobby.size(); i++) {
             ClientHandler ch = lobby.get(i);
             players.add(new Player(ch.getPlayerId(), ch.getNickname(), colors[i]));
-            // FA3: everyone starts connected, with a fresh liveness timestamp.
             connState.put(ch.getPlayerId(), ConnectionState.CONNECTED);
             lastPongMs.put(ch.getPlayerId(), System.currentTimeMillis());
         }
         gameController.startGame(players);
 
-        // Persistence: start the heartbeat once the game is actually running.
         scheduler.scheduleAtFixedRate(this::heartbeatTick,
                 PING_INTERVAL_MS, PING_INTERVAL_MS, TimeUnit.MILLISECONDS);
 
-        // Persistence: spin up persistence and write an initial snapshot of the started game.
         startPersistence();
         persistAsync();
     }
@@ -369,8 +343,6 @@ public class MainController {
         if (pm == null || exec == null || gameController == null) return;
         if (status != MatchStatus.IN_GAME) return;
 
-        // Copy metadata before taking the game lock to avoid a lock-order
-        // inversion (elsewhere the order is lobbyLock -> gameLock).
         final Map<String, Integer> nickCopy = new HashMap<>(nickToPlayerId);
         final int exp = expectedPlayers;
         final int hpid = hostPlayerId;
@@ -403,7 +375,6 @@ public class MainController {
                 }
             });
         } catch (java.util.concurrent.RejectedExecutionException ignored) {
-            // executor already shut down (match ending) — nothing to persist.
         }
     }
 
@@ -434,7 +405,6 @@ public class MainController {
         mc.gameController.setDisconnectedCheck(mc::isDisconnected);
         mc.gameController.setOnGameOver(mc::handleGameOver);
 
-        // Everyone is offline until they reconnect by nickname.
         for (Integer pid : snap.nickToPlayerId().values()) {
             mc.connState.put(pid, ConnectionState.DISCONNECTED);
         }
@@ -519,8 +489,6 @@ public class MainController {
             }
             scheduleSoleSurvivorTimeout();
         }
-        // connected == 0: server still up but nobody to play; leave suspended
-        // state untouched (a reconnection re-evaluates via maybeResume).
     }
 
     /**
@@ -579,7 +547,6 @@ public class MainController {
             status = MatchStatus.FINISHED;
             soleSurvivorTask = null;
         }
-        // Broadcast outside lobbyLock: forceGameOver takes the game lock.
         if (gc != null) {
             gc.forceGameOver("Vittoria di " + winner + " (unico giocatore rimasto connesso).");
         }

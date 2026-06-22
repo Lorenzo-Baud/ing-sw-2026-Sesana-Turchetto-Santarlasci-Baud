@@ -66,9 +66,6 @@ public class EndRoundState implements GameState {
         if (model.isGameOver()) {
             model.calculateFinalScores();
             context.transitionTo(GamePhase.GAME_OVER);
-            // Broadcast the GameOverMessage so the views switch to the results
-            // screen. transitionTo only flips the phase; without this the natural
-            // end-of-game (unlike FA3's forceGameOver) would never reach the UI.
             Player winner = model.getWinner();
             String endMessage = (winner != null)
                     ? "Partita terminata: vince " + winner.getNickname() + "!"
@@ -93,6 +90,5 @@ public class EndRoundState implements GameState {
 
     @Override
     public void onExit(GameController context) {
-        // No cleanup needed
     }
 }

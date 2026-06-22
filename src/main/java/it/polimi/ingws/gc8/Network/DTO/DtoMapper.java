@@ -36,7 +36,7 @@ public final class DtoMapper {
     public static CardDTO toDTO(Card card) {
         if (card instanceof BuildingCard b) {
             return new CardDTO(
-                    b.getFront(), b.getBack(), false, CardType.BUILDING,
+                    b.getFront(), b.getBack(), false, CardType.BUILDING, b.getEra(),
                     null, null, null, null, null, null, null, null,
                     b.getId(),
                     b.getFoodCost(),
@@ -53,7 +53,7 @@ public final class DtoMapper {
             Integer collectorDisc = (c instanceof Collector co) ? co.getFoodDiscount()   : null;
             Integer inventorIcon  = (c instanceof Inventor in)  ? in.getIcon()           : null;
             return new CardDTO(
-                    c.getFront(), c.getBack(), false, CardType.CHARACTER,
+                    c.getFront(), c.getBack(), false, CardType.CHARACTER, c.getEra(),
                     c.getCharacterType(),
                     c.getNumberOfPlayers(),
                     shamanIcons,
@@ -87,7 +87,7 @@ public final class DtoMapper {
                 malusPoints  = cp.getMalusPoints();
             }
             return new CardDTO(
-                    e.getFront(), e.getBack(), false, CardType.EVENT,
+                    e.getFront(), e.getBack(), false, CardType.EVENT, e.getEra(),
                     null, null, null, null, null, null, null, null,
                     null, null, null, null,
                     e.getEventType(),

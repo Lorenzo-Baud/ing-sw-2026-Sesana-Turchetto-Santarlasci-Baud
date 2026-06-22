@@ -27,6 +27,5 @@ public class GameOverState implements GameState {
 
     @Override
     public void onExit(GameController context) {
-        // No cleanup needed
     }
 }

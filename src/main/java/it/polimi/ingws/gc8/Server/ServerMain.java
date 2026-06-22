@@ -108,36 +108,11 @@ public class ServerMain {
         }
     }
 
-    /** Interface name fragments that indicate a virtual / VM / tunnel adapter. */
-    private static final String[] VIRTUAL_IFACE_HINTS = {
-            "vnic", "vmnet", "vboxnet", "bridge", "utun", "awdl", "llw",
-            "docker", "veth", "tap", "tun", "ham", "zt"
-    };
-
-    /** Address prefixes of known VM host-only / container subnets to deprioritize. */
-    private static final String[] VIRTUAL_SUBNET_PREFIXES = {
-            "10.37.129.",   // Parallels (Shared)
-            "10.211.55.",   // Parallels (Host-Only)
-            "192.168.56.",  // VirtualBox Host-Only
-            "172.17.", "172.18." // Docker default bridges
-    };
-
     /**
-     * Picks the best non-loopback, non-link-local IPv4 address for clients to
-     * reach. Instead of returning the first match (which on a machine with
-     * Parallels/VirtualBox/Docker often is a virtual host-only address such as
-     * {@code 10.37.129.x}, unreachable from the real LAN), every candidate is
-     * scored: physical NIC names (en0/eth0/wlan0) and common LAN ranges are
-     * preferred, while virtual/tunnel interface names and known VM subnets are
-     * penalized. Falls back to {@code 127.0.0.1} if none is found.
-     *
-     * <p>Note: {@code NetworkInterface.isVirtual()} only flags logical
-     * sub-interfaces (e.g. {@code en0:1}), NOT VM adapters — those look like
-     * ordinary interfaces — hence the name/subnet heuristics below.
+     * Picks the first non-loopback, non-link-local IPv4 address on any
+     * up interface. Falls back to {@code 127.0.0.1} if none is found.
      */
     private static String detectLocalIp() {
-        String best = null;
-        int bestScore = Integer.MIN_VALUE;
         try {
             Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
             while (ifaces.hasMoreElements()) {
@@ -146,55 +121,17 @@ public class ServerMain {
                 Enumeration<InetAddress> addrs = iface.getInetAddresses();
                 while (addrs.hasMoreElements()) {
                     InetAddress addr = addrs.nextElement();
-                    if (!(addr instanceof Inet4Address)
-                            || addr.isLoopbackAddress()
-                            || addr.isLinkLocalAddress()) {
-                        continue;
-                    }
-                    int score = scoreCandidate(iface, addr.getHostAddress());
-                    if (score > bestScore) {
-                        bestScore = score;
-                        best = addr.getHostAddress();
+                    if (addr instanceof Inet4Address
+                            && !addr.isLoopbackAddress()
+                            && !addr.isLinkLocalAddress()) {
+                        return addr.getHostAddress();
                     }
                 }
             }
         } catch (Exception ignored) {
             // fall through to loopback
         }
-        return best != null ? best : LOOPBACK;
-    }
-
-    /** Higher score = more likely to be the real LAN address clients can reach. */
-    private static int scoreCandidate(NetworkInterface iface, String ip) {
-        int score = 0;
-        String name = iface.getName() == null ? "" : iface.getName().toLowerCase();
-        String display = iface.getDisplayName() == null ? "" : iface.getDisplayName().toLowerCase();
-
-        for (String hint : VIRTUAL_IFACE_HINTS) {
-            if (name.contains(hint) || display.contains(hint)) {
-                score -= 100;
-                break;
-            }
-        }
-        for (String prefix : VIRTUAL_SUBNET_PREFIXES) {
-            if (ip.startsWith(prefix)) {
-                score -= 50;
-                break;
-            }
-        }
-
-        // Prefer the conventional physical NIC names, then any en*/eth*/wl*.
-        if (name.equals("en0") || name.equals("eth0") || name.equals("wlan0")) {
-            score += 20;
-        } else if (name.startsWith("en") || name.startsWith("eth") || name.startsWith("wl")) {
-            score += 10;
-        }
-
-        // Prefer typical home/office LAN ranges.
-        if (ip.startsWith("192.168.") || ip.startsWith("10.")) {
-            score += 5;
-        }
-        return score;
+        return LOOPBACK;
     }
 
     private static int parsePort(String raw) {

@@ -40,6 +40,5 @@ public interface   GameState {
      * @param context the GameController
      */
     default void onCurrentPlayerDisconnected(GameController context) {
-        // no-op by default
     }
 }

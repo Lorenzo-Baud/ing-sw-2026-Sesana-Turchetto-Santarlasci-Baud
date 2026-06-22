@@ -85,20 +85,20 @@ public class MatchSelectionController {
     private HBox buildMatchRow(MatchInfo m) {
         HBox row = new HBox(12);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.getStyleClass().add("player-card");
+        row.getStyleClass().add("match-card");
         row.setMaxWidth(Double.MAX_VALUE);
 
         VBox info = new VBox(2);
         HBox.setHgrow(info, Priority.ALWAYS);
         Label id = new Label(m.matchId());
-        id.getStyleClass().add("player-name");
+        id.getStyleClass().add("match-title");
         String expected = m.expectedPlayers() > 0 ? String.valueOf(m.expectedPlayers()) : "?";
         Label meta = new Label("host " + m.hostNickname() + " · " + m.currentPlayers() + "/" + expected + " giocatori");
-        meta.getStyleClass().add("player-meta");
+        meta.getStyleClass().add("match-meta");
         info.getChildren().addAll(id, meta);
 
         Label badge = new Label(statusText(m.status()));
-        badge.getStyleClass().add("turn-slot-bonus");
+        badge.getStyleClass().add("match-badge");
 
         row.getChildren().addAll(info, badge);
         row.setOnMouseClicked(e -> joinExisting(m.matchId()));

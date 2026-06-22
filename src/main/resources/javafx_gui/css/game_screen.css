@@ -98,6 +98,10 @@
     -fx-background-color: rgba(234,177,74,0.18);
     -fx-text-fill: #EAC079;
 }
+.card-chip-era {
+    -fx-background-color: rgba(120,150,180,0.18);
+    -fx-text-fill: #A9C4DC;
+}
 /* make the Tooltip wrapper itself transparent so only .card-tip shows */
 .rich-tooltip {
     -fx-background-color: transparent;
