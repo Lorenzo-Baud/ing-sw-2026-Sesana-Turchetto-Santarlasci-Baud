@@ -71,6 +71,12 @@ public class StartScreenController {
             return;
         }
 
+        // Tear down any previous session (e.g. after "back to start") so the
+        // old ClientController's ViewListener and connection cannot survive
+        // alongside the new one — otherwise each action is also sent on the
+        // stale connection, which reports "Not connected to server".
+        guiView.endSession();
+
         ServerConnection connection = switch (selectedType) {
             case "RMI" -> new RMIServerConnection();
             case "Socket" -> new SocketServerConnection();

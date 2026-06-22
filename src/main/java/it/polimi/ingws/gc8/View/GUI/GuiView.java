@@ -59,6 +59,10 @@ public class GuiView extends View {
     }
 
     public void setConnection(ServerConnection connection) {
+        ServerConnection previous = this.connection;
+        if (previous != null && previous != connection) {
+            try { previous.disconnect(); } catch (Exception ignored) {}
+        }
         this.connection = connection;
     }
 
@@ -67,7 +71,38 @@ public class GuiView extends View {
     }
 
     public void setController(ClientController controller) {
+        ClientController previous = this.controller;
+        if (previous != null && previous != controller) {
+            // Stop the old controller first: this removes its ViewListener and
+            // network pump. Skipping it leaks a listener across a "back to start"
+            // + reconnect, so every action is sent twice — once on a stale
+            // (disconnected) connection that then reports "Not connected to
+            // server" on each action.
+            try { previous.stop(); } catch (Exception ignored) {}
+        }
         this.controller = controller;
+    }
+
+    /**
+     * Ends the current network session and frees its resources: stops the
+     * client controller (removing its {@link it.polimi.ingws.gc8.Client.ViewListener}
+     * and network pump), closes the connection, and drops any leftover server
+     * messages. Idempotent and safe to call when no session is active. Used by
+     * the "back to start" / "leave match" paths so a later reconnection starts
+     * from a clean state with a single active listener.
+     */
+    public void endSession() {
+        ClientController c = controller;
+        controller = null;
+        if (c != null) {
+            try { c.stop(); } catch (Exception ignored) {}
+        }
+        ServerConnection conn = connection;
+        connection = null;
+        if (conn != null) {
+            try { conn.disconnect(); } catch (Exception ignored) {}
+        }
+        clearMessages();
     }
 
     // ------------------------------------------------------------------

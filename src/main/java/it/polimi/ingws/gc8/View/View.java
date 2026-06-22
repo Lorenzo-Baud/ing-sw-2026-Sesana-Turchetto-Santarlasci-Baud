@@ -115,6 +115,15 @@ public abstract class View {
     }
 
     /**
+     * Drops any messages still queued from a previous session. Called when a
+     * session is torn down so that a stale message (e.g. a "connection lost"
+     * left behind by the old network pump) cannot surface in the next session.
+     */
+    public void clearMessages() {
+        messages.clear();
+    }
+
+    /**
      * Waits (blocking) for the next message from the server.
      * Interruptible: returns {@code null} if the thread is interrupted.
      */

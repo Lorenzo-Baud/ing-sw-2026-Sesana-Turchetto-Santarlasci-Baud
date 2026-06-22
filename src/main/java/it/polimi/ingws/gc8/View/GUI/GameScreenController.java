@@ -1067,12 +1067,10 @@ public class GameScreenController {
                 endMessage, guiView.getPlayerId(), onNewGame, onExit).play();
     }
 
-    /** Best-effort disconnect when leaving a finished match. */
+    /** Best-effort session teardown when leaving a finished match. */
     private void disconnectQuietly() {
         try {
-            if (guiView.getConnection() != null) {
-                guiView.getConnection().disconnect();
-            }
+            guiView.endSession();
         } catch (Exception ignored) {
             // The match is over; leaving is best effort.
         }

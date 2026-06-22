@@ -192,13 +192,13 @@ public class LobbyScreenController {
         return row;
     }
 
-    /** "Abbandona" button: closes the connection and returns to the start screen. */
+    /** "Abbandona" button: ends the session and returns to the start screen. */
     @FXML
     private void handleLeave() {
         try {
-            guiView.getConnection().disconnect();
+            guiView.endSession();
         } catch (Exception e) {
-            LOGGER.fine(() -> "Disconnect on leave failed: " + e.getMessage());
+            LOGGER.fine(() -> "Session teardown on leave failed: " + e.getMessage());
         }
         guiView.showStartScreen();
     }
