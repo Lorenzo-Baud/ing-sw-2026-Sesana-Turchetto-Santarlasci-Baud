@@ -9,6 +9,11 @@ import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
  */
 public class SetupState implements GameState {
 
+    /**
+     * Handles a player action during the setup phase. Since the game is not started yet, all actions are invalid
+     * @param context the GameController providing access to model and view updater
+     * @param action  the action requested by a player
+     */
     @Override
     public void handleAction(GameController context, PlayerAction action) {
         context.getViewUpdater().notifyError(

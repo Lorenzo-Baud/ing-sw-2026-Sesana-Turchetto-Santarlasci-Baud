@@ -11,6 +11,13 @@ import it.polimi.ingws.gc8.Model.Enum.GamePhase;
  */
 public class GameOverState implements GameState {
 
+    /**
+     * Handles a player action during the game over state.
+     * No actions are accepted, and an error message is sent to the player.
+     *
+     * @param context The game controller context.
+     * @param action  The player action to handle.
+     */
     @Override
     public void handleAction(GameController context, PlayerAction action) {
         context.getViewUpdater().notifyError(

@@ -13,15 +13,23 @@ public class MatchRegistry {
     /** Maximum length of a user-chosen match name. */
     public static final int MAX_MATCH_NAME_LEN = 24;
 
+    /** Matches map */
     private final Map<String, MainController> matches = new ConcurrentHashMap<>();
 
     /** Persistence: shared persistence manager; null disables persistence. */
     private final PersistenceManager pm;
 
+    /**
+     * Match registry constructor
+     */
     public MatchRegistry() {
         this(null);
     }
 
+    /**
+     * Match registry constructor with persistence manager
+     * @param pm persistance manager
+     */
     public MatchRegistry(PersistenceManager pm) {
         this.pm = pm;
     }
@@ -52,10 +60,19 @@ public class MatchRegistry {
         }
     }
 
+    /**
+     * Returns match controller given match id
+     * @param matchId match id
+     * @return match controller
+     */
     public MainController getMatch(String matchId) {
         return matches.get(matchId);
     }
 
+    /**
+     * Removes match from match registry, given its id
+     * @param matchId match id
+     */
     public void removeMatch(String matchId) {
         matches.remove(matchId);
     }
@@ -81,6 +98,10 @@ public class MatchRegistry {
         }
     }
 
+    /**
+     * Returns list of open matches
+     * @return list of open matches
+     */
     public List<MatchInfo> listOpenMatches() {
         return matches.values().stream()
                 .filter(m -> m.getStatus() == MatchStatus.LOBBY)

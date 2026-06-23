@@ -24,10 +24,10 @@ import java.util.List;
  * Static mapper from Model entities to network-serializable DTOs.
  * Keeps the Model layer free of any dependency on {@code Network.DTO}:
  * the mapping logic lives on the Network side, which is the consumer of DTOs.
- *
- * Il mapping {@code Card → CardDTO} usa dispatch via {@code instanceof} per
- * popolare i campi specifici di ciascun sottotipo (Character / Building / Event)
- * nel record fat {@link CardDTO}.
+ * <p>
+ * The {@code Card → CardDTO} mapping uses dispatch via {@code instanceof} to
+ * populate the specific fields of each subtype (Character / Building / Event)
+ * in the fat record {@link CardDTO}.
  */
 public final class DtoMapper {
 

@@ -30,18 +30,26 @@ public class RMIClientConnection implements ClientConnection {
     /** Server-internal marker used to unblock {@link #receiveMessage()} on close. */
     public static final class PoisonPill {}
 
+    /** Remove view object */
     private final RemoteView remoteView;
+    /** Inbound message queue */
     private final BlockingQueue<Object> inboundQueue;
+    /** Flags that indicates wether or not the server is active*/
     private volatile boolean active;
     /** Ensures the {@link PoisonPill} is enqueued exactly once. */
     private final AtomicBoolean inboundClosed = new AtomicBoolean(false);
 
+    /** RMIClientConnection constructor */
     public RMIClientConnection(RemoteView remoteView) {
         this.remoteView = remoteView;
         this.inboundQueue = new LinkedBlockingQueue<>();
         this.active = true;
     }
 
+    /**
+     * Sends a message through RMI
+     * @param message the message to send
+     */
     @Override
     public void sendMessage(Object message) {
         if (!active) return;
@@ -54,6 +62,11 @@ public class RMIClientConnection implements ClientConnection {
         }
     }
 
+    /**
+     * Receives message
+     * @return received message
+     * @throws Exception if an error in the message reception occurs
+     */
     @Override
     public Object receiveMessage() throws Exception {
         Object message = inboundQueue.take();
@@ -63,6 +76,7 @@ public class RMIClientConnection implements ClientConnection {
         return message;
     }
 
+    /** Closes RMI connection */
     @Override
     public void close() {
         active = false;
@@ -81,6 +95,10 @@ public class RMIClientConnection implements ClientConnection {
         }
     }
 
+    /**
+     * Returns whether the connection is still active or not
+     * @return whether the connection is still active or not
+     */
     @Override
     public boolean isConnected() {
         return active;

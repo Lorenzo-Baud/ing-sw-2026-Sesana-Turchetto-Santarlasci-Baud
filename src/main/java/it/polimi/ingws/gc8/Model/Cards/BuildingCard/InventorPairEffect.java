@@ -12,6 +12,7 @@ public class InventorPairEffect implements BuildingEffect {
 
     private static final long serialVersionUID = 1L;
 
+    /** Food granted for each new pair of Inventors formed */
     private final int foodReward;
 
     /**

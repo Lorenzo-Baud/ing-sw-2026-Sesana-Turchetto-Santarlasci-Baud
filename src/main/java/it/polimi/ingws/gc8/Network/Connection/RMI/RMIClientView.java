@@ -15,13 +15,20 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class RMIClientView extends UnicastRemoteObject implements RemoteView {
 
+    /** Queue of inbound messages */
     private final BlockingQueue<NetworkMessage> inboundQueue;
 
+    /** RMIClientView constructor */
     public RMIClientView() throws RemoteException {
         super();
         this.inboundQueue = new LinkedBlockingQueue<>();
     }
 
+    /**
+     * Method triggered on game update
+     * @param message the message to deliver to the view
+     * @throws RemoteException if an error occurs
+     */
     @Override
     public void onGameUpdate(NetworkMessage message) throws RemoteException {
         if (message != null) {

@@ -29,14 +29,22 @@ public class Board implements Serializable {
     private static final long serialVersionUID = 1L;
 
 
+    /** Logger object */
     private static final Logger LOGGER = Logger.getLogger(Board.class.getName());
 
+    /** Tribe deck */
     private Deque<Card> tribeDeck;
+    /** Cards in the lower row*/
     private List<Card> lowerRow;
+    /** Cards in the upper row*/
     private List<Card> upperRow;
+    /** Turn order track */
     private TurnOrderTrack turnOrderTrack;
+    /** Era 2 building deck */
     private Deque<Card> era2BuildingDeck;
+    /** Era 3 building deck */
     private Deque<Card> era3BuildingDeck;
+    /** Offer track */
     private OfferTrack offerTrack;
 
     /**
@@ -383,6 +391,11 @@ public class Board implements Serializable {
         return selectedEra1;
     }
 
+    /**
+     * Returns building counts given the number of players in the match
+     * @param playerCount player count
+     * @return array of building counts for each era, in order (Era I, Era II, Era III)
+     */
     private int[] buildingCountsFor(int playerCount) {
         switch (playerCount) {
             case 2:
@@ -398,6 +411,12 @@ public class Board implements Serializable {
         }
     }
 
+    /**
+     * Select random buildings to insert in the deck
+     * @param cards list of all available building cards
+     * @param count number of cards that have to be selected
+     * @return list of building cards
+     */
     private List<BuildingCard> selectRandomBuildings(List<BuildingCard> cards, int count) {
         if (cards.size() < count) {
             throw new IllegalStateException("Not enough Building cards for setup");

@@ -18,19 +18,35 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
 
     public static final int EXPORT_PORT = 1099;
 
+    /** Registry of matches */
     private final MatchRegistry registry;
+    /** List of active connections */
     private final Map<String, RMIClientConnection> connections = new ConcurrentHashMap<>();
 
+    /** RMIServer constructor */
     public RMIServer(MatchRegistry registry) throws RemoteException {
         super(EXPORT_PORT);
         this.registry = registry;
     }
 
+    /**
+     * Returns a list of open matches
+     * @return list of open matches
+     * @throws RemoteException if an error occurs
+     */
     @Override
     public List<MatchInfo> listOpenMatches() throws RemoteException {
         return registry.listOpenMatches();
     }
 
+    /**
+     * Method to create a match
+     * @param matchName match name
+     * @param nickname host nickname
+     * @param clientView client view object
+     * @return JoinResult object containing match and player information
+     * @throws RemoteException if an error occurs during match creation
+     */
     @Override
     public JoinResult createMatch(String matchName, String nickname, RemoteView clientView) throws RemoteException {
         if (clientView == null || nickname == null || nickname.isBlank()) {
@@ -60,6 +76,14 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
         return result;
     }
 
+    /**
+     * Method to join a match
+     * @param matchId match id
+     * @param nickname player nickname
+     * @param clientView client view object
+     * @return JoinResult object containing match and player information
+     * @throws RemoteException if an error occurs during match join
+     */
     @Override
     public JoinResult joinMatch(String matchId, String nickname, RemoteView clientView) throws RemoteException {
         if (clientView == null || nickname == null || nickname.isBlank() || matchId == null) {
@@ -96,6 +120,13 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
         return result;
     }
 
+    /**
+     * Sets expected number of players in a game
+     * @param playerId host id
+     * @param matchId match id
+     * @param n number of players
+     * @throws RemoteException if an error occurs during the method
+     */
     @Override
     public void setExpectedPlayers(int playerId, String matchId, int n) throws RemoteException {
         MainController match = registry.getMatch(matchId);
@@ -104,6 +135,12 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
         }
     }
 
+    /**
+     * Requests game startup
+     * @param playerId host name
+     * @param matchId match id
+     * @throws RemoteException if an error occurs during match startup
+     */
     @Override
     public void requestStartGame(int playerId, String matchId) throws RemoteException {
         MainController match = registry.getMatch(matchId);
@@ -112,6 +149,12 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
         }
     }
 
+    /**
+     * Submits action to the server
+     * @param action action that has to be submitted
+     * @param matchId match id
+     * @throws RemoteException if an error occurs during action submit
+     */
     @Override
     public void submitAction(PlayerAction action, String matchId) throws RemoteException {
         if (action == null) return;
@@ -122,6 +165,12 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
         }
     }
 
+    /**
+     * Method to handle pong messages from clients
+     * @param playerId player id
+     * @param matchId match id
+     * @throws RemoteException if an error occurs during pong method
+     */
     @Override
     public void pong(int playerId, String matchId) throws RemoteException {
         MainController match = registry.getMatch(matchId);
@@ -130,6 +179,12 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
         }
     }
 
+    /**
+     * Logs out a player from the server and closes the connection
+     * @param playerId player id
+     * @param matchId match id
+     * @throws RemoteException if an error occurs during logout
+     */
     @Override
     public void logout(int playerId, String matchId) throws RemoteException {
         String key = matchId + ":" + playerId;

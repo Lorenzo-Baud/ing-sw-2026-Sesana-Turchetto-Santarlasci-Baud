@@ -8,14 +8,25 @@ public class PlaceTotemAction implements PlayerAction {
 
     private static final long serialVersionUID = 1L;
 
+    /** Player id */
     private final int playerId;
+    /** Offer tile id */
     private final String offerTileId;
 
+    /**
+     * Constructor for the PlaceTotemAction
+     * @param playerId player id
+     * @param offerTileId offer tile id
+     */
     public PlaceTotemAction(int playerId, String offerTileId) {
         this.playerId = playerId;
         this.offerTileId = offerTileId;
     }
 
+    /**
+     * Returns player id
+     * @return player id
+     */
     @Override
     public int getPlayerId() {
         return playerId;

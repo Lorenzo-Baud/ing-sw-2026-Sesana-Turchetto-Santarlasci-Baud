@@ -36,6 +36,5 @@ public class CardController {
     @FXML
     private void handleCardClick(MouseEvent event) {
         LOGGER.fine(() -> "Card clicked! Row: " + row + ", Position: " + positionIndex);
-        // TODO: forward click to the owning controller / build a PlayerAction
     }
 }

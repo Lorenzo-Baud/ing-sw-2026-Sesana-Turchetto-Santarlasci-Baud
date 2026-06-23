@@ -13,8 +13,14 @@ import it.polimi.ingws.gc8.Model.Enum.GamePhase;
  */
 public class PausedState implements GameState {
 
+    /** Previous game phase */
     private GamePhase previousPhase;
 
+    /**
+     * Handles a player action while the game is paused
+     * @param context the GameController providing access to model and view updater
+     * @param action  the action requested by a player
+     */
     @Override
     public void handleAction(GameController context, PlayerAction action) {
         context.getViewUpdater().notifyError(

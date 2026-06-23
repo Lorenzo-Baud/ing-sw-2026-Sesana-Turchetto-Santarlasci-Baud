@@ -16,16 +16,29 @@ public class TakeCardAction implements PlayerAction {
 
     private static final long serialVersionUID = 1L;
 
+    /** Player id */
     private final int playerId;
+    /** Card index */
     private final int cardIndex;
+    /** Row from which the card must be taken */
     private final CardRow row;
 
+    /**
+     * Default constructor for TakeCardAction
+     * @param playerId player id
+     * @param cardIndex card index
+     * @param row row from which the card must be taken
+     */
     public TakeCardAction(int playerId, int cardIndex, CardRow row) {
         this.playerId = playerId;
         this.cardIndex = cardIndex;
         this.row = Objects.requireNonNull(row, "row");
     }
 
+    /**
+     * Returns player id
+     * @return player id
+     */
     @Override
     public int getPlayerId() {
         return playerId;

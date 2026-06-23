@@ -28,9 +28,13 @@ import java.net.Socket;
  */
 public class SocketClientConnection implements ClientConnection {
 
+    /** Socket object */
     private final Socket socket;
+    /** Object output stream */
     private final ObjectOutputStream outStream;
+    /** Object input stream */
     private final ObjectInputStream inStream;
+    /** True if connected */
     private volatile boolean connected;
 
     /**

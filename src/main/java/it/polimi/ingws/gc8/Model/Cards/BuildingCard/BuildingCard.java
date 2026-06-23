@@ -18,13 +18,28 @@ public class BuildingCard extends Card {
 
     private static final long serialVersionUID = 1L;
 
+    /** Logger object */
     private static final Logger LOGGER = Logger.getLogger(BuildingCard.class.getName());
 
+    /** Building card id */
     private String id;
+    /** Food cost */
     private int foodCost;
+    /** Prestige bonus given at end of the match */
     private int prestigeBonus;
+    /** Effect of the card */
     private BuildingEffect effect;
 
+    /**
+     * Building card constructor
+     * @param id id of the building
+     * @param foodCost cost of the building
+     * @param prestigeBonus prestige bonus at end of the match
+     * @param era era
+     * @param front front image
+     * @param back back image
+     * @param effect building effect
+     */
     public BuildingCard(String id, int foodCost, int prestigeBonus,
                         Era era, String front, String back,
                         BuildingEffect effect) {

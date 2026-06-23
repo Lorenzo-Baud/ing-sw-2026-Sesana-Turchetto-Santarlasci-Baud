@@ -82,6 +82,12 @@ public final class Bootstrap {
 
     // Sub-prompts
 
+    /**
+     * Ask the user which UI flavor to use. If the user chooses GUI, the bootstrap
+     * will return null and the GUI will handle the rest of the configuration.
+     * @return the chosen UI flavor
+     * @throws IOException if invalid input is detected
+     */
     private static UiFlavor askUiFlavor() throws IOException {
         while (true) {
             Printer.printInfo("Which interface do you want to use?");
@@ -94,6 +100,11 @@ public final class Bootstrap {
         }
     }
 
+    /**
+     * Asks for game host
+     * @return host address
+     * @throws IOException if invalid input is detected
+     */
     private static String askHost() throws IOException {
         while (true) {
             Printer.printPrompt("Server host [" + DEFAULT_HOST + "]: ");
@@ -108,6 +119,12 @@ public final class Bootstrap {
         }
     }
 
+    /**
+     * Asks for server port
+     * @param connType type of connection
+     * @return port number
+     * @throws IOException if invalid input is detected
+     */
     private static int askPort(String connType) throws IOException {
         while (true) {
             int defPort;
@@ -157,6 +174,15 @@ public final class Bootstrap {
         }
     }
 
+    /**
+     * Prompts the user with a choice between {@code min} and {@code max}, inclusive, and
+     * keeps asking until a valid number is entered.
+     * @param label prompt displaye
+     * @param min min choice range
+     * @param max max choice range
+     * @return choice made by the user
+     * @throws IOException if invalid input is detected
+     */
     private static int chooseInRange(String label, int min, int max) throws IOException {
         while (true) {
             Printer.printPrompt(label + " > ");
@@ -174,6 +200,11 @@ public final class Bootstrap {
         }
     }
 
+    /**
+     * Reads line
+     * @return line ridden
+     * @throws IOException if invalid input is detected
+     */
     private static String readLine() throws IOException {
         return IN.readLine();
     }

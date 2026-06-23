@@ -36,28 +36,43 @@ import java.util.logging.Logger;
  */
 public class MainController {
 
+    /** Minimum number of players */
     public static final int MIN_PLAYERS = 2;
+    /** Maximum number of players */
     public static final int MAX_PLAYERS = 5;
 
+    /** Minimum number of players to continue the game */
     public static final int MIN_TO_CONTINUE = 2;
+    /** FA3: if only one player is left connected, they have this long to wait for others before winning by default. */
     public static final long SOLE_SURVIVOR_TIMEOUT_MS = 60_000L;
+    /** FA3: ping interval and timeout for detecting silent disconnects. */
     public static final long PING_INTERVAL_MS = 10_000L;
+    /** FA3: if a player does not reply to a ping within this time, they are considered disconnected. */
     public static final long PING_TIMEOUT_MS = 25_000L;
 
     /** Persistence: fallback save cadence if no action triggered a save in the meantime. */
     public static final long PERSIST_INTERVAL_MS = 30_000L;
 
+    /** Logger for the MainController class */
     private static final Logger LOGGER = Logger.getLogger(MainController.class.getName());
 
+    /** Match id */
     private final String matchId;
+
     private final MatchRegistry registry;
 
+    /** Persistence manager */
     private final PersistenceManager pm;
+    /** Persistence executor */
     private ExecutorService persistExec;
+    /** True if the game over has been handled */
     private final AtomicBoolean gameOverHandled = new AtomicBoolean(false);
 
+    /** Clients connected to the lobby */
     private final List<ClientHandler> lobby;
+    /** Maps containing clients and their id */
     private final Map<Integer, ClientHandler> clientMap;
+    /** Map containing player id and nicknames */
     private final Map<String, Integer> nickToPlayerId;
 
     /** FA3: per-player connection state, populated when the game starts. */
@@ -66,14 +81,22 @@ public class MainController {
     /** FA3: last time (ms) a pong was received from each player. */
     private final Map<Integer, Long> lastPongMs;
 
+    /** View updater object */
     private ViewUpdater viewUpdater;
+    /** Game controller onject*/
     private GameController gameController;
+    /** Match status */
     private volatile MatchStatus status;
 
+    /** Lobby lock */
     private final Object lobbyLock;
+    /** Next player id */
     private int nextPlayerId;
+    /** Host player id */
     private int hostPlayerId;
+    /** Expected number of players in the game */
     private int expectedPlayers;
+    /** Host nickname */
     private String hostNickname;
 
     /** FA3: true while the match is suspended waiting for more players. */
@@ -83,10 +106,21 @@ public class MainController {
     /** FA3: pending sole-survivor timeout task (guarded by lobbyLock). */
     private ScheduledFuture<?> soleSurvivorTask;
 
+    /**
+     * Constructor for MainController
+     * @param matchId match id
+     * @param registry registry of previous matches
+     */
     public MainController(String matchId, MatchRegistry registry) {
         this(matchId, registry, null);
     }
 
+    /**
+     * Constructor for MainController with persistence manager
+     * @param matchId match id
+     * @param registry registry of previous matches
+     * @param pm persistance manager object
+     */
     public MainController(String matchId, MatchRegistry registry, PersistenceManager pm) {
         this.matchId = matchId;
         this.registry = registry;
@@ -184,6 +218,10 @@ public class MainController {
         }
     }
 
+    /**
+     * Unregisters client from lobby
+     * @param clientHandler client handler object
+     */
     public void unregisterClient(ClientHandler clientHandler) {
         synchronized (lobbyLock) {
             if (status == MatchStatus.LOBBY) {
@@ -221,6 +259,11 @@ public class MainController {
         }
     }
 
+    /**
+     * Sets expected number of players inside the lobby
+     * @param playerId
+     * @param n expected number of players
+     */
     public void setExpectedPlayers(int playerId, int n) {
         synchronized (lobbyLock) {
             if (status != MatchStatus.LOBBY) return;
@@ -232,12 +275,19 @@ public class MainController {
         }
     }
 
+    /**
+     * Requests to start the game, if the caller is the host and the lobby has enough players.
+     */
     public void requestStartGame() {
         synchronized (lobbyLock) {
             tryStartGame();
         }
     }
 
+    /**
+     * Dispatches actions
+     * @param action player action
+     */
     public void dispatchAction(PlayerAction action) {
         if (status != MatchStatus.IN_GAME || gameController == null) {
             ClientHandler sender = clientMap.get(action.getPlayerId());
@@ -257,20 +307,37 @@ public class MainController {
         persistAsync();
     }
 
+    /**
+     * Returns true if the given player id is host
+     * @param playerId player id
+     * @return true of the given player id is host
+     */
     public boolean isHost(int playerId) {
         synchronized (lobbyLock) {
             return playerId == hostPlayerId;
         }
     }
 
+    /**
+     * Returns match id
+     * @return match id
+     */
     public String getMatchId() {
         return matchId;
     }
 
+    /**
+     * Returns game status
+     * @return gane status
+     */
     public MatchStatus getStatus() {
         return status;
     }
 
+    /**
+     * Returns match info
+     * @return match info
+     */
     public MatchInfo toMatchInfo() {
         synchronized (lobbyLock) {
             return new MatchInfo(matchId, hostNickname,
@@ -285,6 +352,9 @@ public class MainController {
         }
     }
 
+    /**
+     * Tries to start the game
+     */
     private void tryStartGame() {
         if (status != MatchStatus.LOBBY) return;
         if (lobby.size() < MIN_PLAYERS) return;
@@ -586,6 +656,9 @@ public class MainController {
         }
     }
 
+    /**
+     * Sends lobby update to all the connected clients
+     */
     private void broadcastLobbyUpdate() {
         List<String> names = new ArrayList<>();
         for (ClientHandler ch : lobby) {

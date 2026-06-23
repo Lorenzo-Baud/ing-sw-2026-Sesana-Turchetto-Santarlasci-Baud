@@ -14,12 +14,18 @@ public class SocketServer implements Runnable {
 
     private static final int HANDSHAKE_TIMEOUT_MS = 5000;
 
+    /** Server port */
     private final int port;
+    /** Match registry */
     private final MatchRegistry registry;
+    /** Counts handshakes received */
     private final AtomicInteger handshakeCounter = new AtomicInteger();
+    /** List of active client handlers */
     private final List<ClientHandler> activeHandlers = new CopyOnWriteArrayList<>();
 
+    /** ServerSocket object */
     private volatile ServerSocket serverSocket;
+    /** Indicates if the server is running*/
     private volatile boolean running;
 
     public SocketServer(int port, MatchRegistry registry) {
@@ -27,6 +33,9 @@ public class SocketServer implements Runnable {
         this.registry = registry;
     }
 
+    /**
+     * Runs the server
+     */
     @Override
     public void run() {
         try {
@@ -53,6 +62,10 @@ public class SocketServer implements Runnable {
         }
     }
 
+    /**
+     * Handles socket handshake
+     * @param clientSocket client socket object
+     */
     private void handleHandshake(Socket clientSocket) {
         SocketClientConnection connection = null;
         try {
@@ -74,6 +87,9 @@ public class SocketServer implements Runnable {
         }
     }
 
+    /**
+     * Stops the server
+     */
     public void stop() {
         running = false;
         try {

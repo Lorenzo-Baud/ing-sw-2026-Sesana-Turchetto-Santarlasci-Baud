@@ -14,23 +14,33 @@ public class ConfigurableEffect implements BuildingEffect {
 
     private static final long serialVersionUID = 1L;
 
-    // Sustenance reduction
+    /** Character type */
     private final CharacterType sustenanceType;
+    /** Food bonus per unit */
     private final int sustenanceReductionPerUnit;
 
     // Shamanic ritual parameters
+    /** Shamanic ritual shield */
     private final boolean shield;
+    /** Doubles shaman bonus */
     private final boolean doubleShamanBonus;
+    /** Gains bonus on tie */
     private final boolean gainOnTie;
+    /** Gives extra shaman icon */
     private final int shamanExtraIcons;
 
     // Turn order
+    /** Extra food on turn order */
     private final int extraFoodOnTurnOrder;
 
     // Event trigger
+    /** Event trigger */
     private final EventType triggerEvent;
+    /** Trigger target character type */
     private final CharacterType triggerTargetType;
+    /** Food points per unit */
     private final int foodPerUnit;
+    /** Prestige points per unit*/
     private final int ppPerUnit;
 
     // End game
@@ -39,8 +49,10 @@ public class ConfigurableEffect implements BuildingEffect {
     private final int endGamePPPerUnit;
 
     // Extra card pick
+    /** Gives extra card pick */
     private final boolean extraCardPick;
 
+    /** Private constructor for the configurable effect, used when loading effect from json file*/
     private ConfigurableEffect(
             CharacterType sustenanceType, int sustenanceReductionPerUnit,
             boolean shield, boolean doubleShamanBonus, boolean gainOnTie, int shamanExtraIcons,

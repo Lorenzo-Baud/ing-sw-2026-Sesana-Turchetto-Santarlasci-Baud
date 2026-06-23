@@ -14,7 +14,9 @@ public class SetCompletionEffect implements BuildingEffect {
 
     private static final long serialVersionUID = 1L;
 
+    /** Food awarded for each new complete set of 6 character types */
     private final int foodReward;
+    /** Number of completed sets */
     private int completedSets;
 
     /**

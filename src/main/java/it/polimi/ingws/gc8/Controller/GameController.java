@@ -22,9 +22,12 @@ import java.util.function.Supplier;
  */
 public class GameController {
 
+    /** Game model */
     private final GameModel model;
+    /** View updater object */
     private final ViewUpdater viewUpdater;
-    private final ReentrantLock gameLock;  //più client inviano azioni contemporaneamente, ogni lock() deve avere il suo unlock()
+    /** Game lock */
+    private final ReentrantLock gameLock;
 
     /** Pre-instantiated states, one per GamePhase. The "current" state is
      *  always derived from {@code model.getPhase()} via this map — we do not
@@ -49,6 +52,10 @@ public class GameController {
      *  on-disk snapshot. Defaults to a no-op. */
     private Runnable onGameOver = () -> {};
 
+    /**
+     * Default constructor for GameController object
+     * @param viewUpdater view updater object
+     */
     public GameController(ViewUpdater viewUpdater) {
         this(viewUpdater, new MesosGame(viewUpdater));
     }
@@ -203,10 +210,19 @@ public class GameController {
         this.onGameOver = (callback == null) ? () -> {} : callback;
     }
 
+    /**
+     * Returns gui view updater
+     * @return gui view updater
+     */
     public ViewUpdater getViewUpdater() {
         return viewUpdater;
     }
 
+    /**
+     * Returns player object by playerId
+     * @param playerId searched player id
+     * @return player object
+     */
     public Player getPlayerById(int playerId) {
         return playerMap.get(playerId);
     }
@@ -241,28 +257,50 @@ public class GameController {
         }
     }
 
+    /**
+     * Returns current games state
+     * @return current game state
+     */
     public GameState getCurrentState() {
         return states.get(model.getPhase());
     }
 
+    /**
+     * Returns all game states
+     * @return game states
+     */
     public Map<GamePhase, GameState> getStates() {
         return states;
     }
 
-    //Offer order tracking (used by ActionResolutionState)
-
+    /**
+     * Offer order tracking (used by ActionResolutionState)
+     * @return offer order
+     */
     public List<Player> getOfferOrder() {
         return offerOrder;
     }
 
+    /**
+     * Sets offer order
+     * @param offerOrder offer order
+     */
     public void setOfferOrder(List<Player> offerOrder) {
         this.offerOrder = offerOrder;
     }
 
+    /**
+     * Returns offer order index
+     * @return offer order index
+     */
     public int getOfferOrderIndex() {
         return offerOrderIndex;
     }
 
+    /**
+     * Sets offer order index
+     * @param offerOrderIndex offer order index
+     */
     public void setOfferOrderIndex(int offerOrderIndex) {
         this.offerOrderIndex = offerOrderIndex;
     }

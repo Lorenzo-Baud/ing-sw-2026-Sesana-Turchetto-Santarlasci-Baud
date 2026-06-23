@@ -37,6 +37,11 @@ public class ClientController implements ViewListener {
     private Thread networkPump;
     private volatile boolean running;
 
+    /**
+     * Constructs a new ClientController with the specified server connection and view.
+     * @param serverConnection server connection
+     * @param view game view
+     */
     public ClientController(ServerConnection serverConnection, View view) {
         this.serverConnection = serverConnection;
         this.view = view;
@@ -52,12 +57,18 @@ public class ClientController implements ViewListener {
         networkPump.start();
     }
 
+    /**
+     * Stops the controller
+     */
     public void stop() {
         running = false;
         view.removeListener(this);
         if (networkPump != null) networkPump.interrupt();
     }
 
+    /**
+     * Pump loop
+     */
     private void pumpLoop() {
         while (running) {
             try {

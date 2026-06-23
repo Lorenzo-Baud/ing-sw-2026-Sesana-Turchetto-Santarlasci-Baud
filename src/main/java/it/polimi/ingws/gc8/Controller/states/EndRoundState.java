@@ -25,6 +25,11 @@ import java.util.Map;
  */
 public class EndRoundState implements GameState {
 
+    /**
+     * Handles action
+     * @param context the GameController providing access to model and view updater
+     * @param action  the action requested by a player
+     */
     @Override
     public void handleAction(GameController context, PlayerAction action) {
         context.getViewUpdater().notifyError(
@@ -34,6 +39,10 @@ public class EndRoundState implements GameState {
         );
     }
 
+    /**
+     *
+     * @param context the GameController
+     */
     @Override
     public void onEnter(GameController context) {
         GameModel model = context.getModel();

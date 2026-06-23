@@ -8,41 +8,41 @@ import it.polimi.ingws.gc8.Model.Enum.EventType;
 import java.io.Serializable;
 
 /**
- * Data Transfer Object representing a Card's state for network communication.
+ * Data Transfer Object representing a card state for network communication.
+ * <p>This class follows a <em>fat record</em> strategy: a single type carries
+ * all the information needed for {@code Character}, {@code Building}, and
+ * {@code Event} cards. Fields that do not apply to the actual card subtype
+ * are set to {@code null}. The view checks {@link #type()} to decide which
+ * fields are relevant.</p>
  *
- * Strategia "fat record": un unico tipo trasporta tutte le informazioni
- * specifiche di Character / Building / Event. I campi non pertinenti al
- * sottotipo della carta sono {@code null}. La View consulta {@link #type()}
- * per decidere quali campi leggere.
+ * @param front card front identifier (resource path or name)
+ * @param back card back identifier
+ * @param isFlipped {@code true} if the card is currently showing its back
+ * @param type card type ({@code CHARACTER}, {@code BUILDING}, or {@code EVENT})
+ * @param era era the card belongs to ({@code ERA_1}, {@code ERA_2}, {@code ERA_3})
  *
- * @param front      identificatore del fronte (path/risorsa o nome)
- * @param back       identificatore del retro
- * @param isFlipped  true se la carta mostra il retro
- * @param type       tipo di carta (CHARACTER / BUILDING / EVENT)
- * @param era        era a cui appartiene la carta (ERA_1 / ERA_2 / ERA_3)
+ * @param characterType character subtype ({@code null} if not a {@code CHARACTER})
+ * @param numberOfPlayers minimum number of players required for the card to be in play
+ * @param shamanIcons Shaman icons ({@code null} if not a Shaman card)
+ * @param hunterBonus {@code true} if the Hunter has its bonus ({@code null} if not a Hunter card)
+ * @param builderFoodBonus Builder food bonus ({@code null} if not a Builder card)
+ * @param builderPrestigePoints Builder prestige points bonus
+ * @param collectorFoodDiscount Collector food discount
+ * @param inventorIcon Inventor icon ({@code null} if not an Inventor card)
  *
- * @param characterType         tipo personaggio (null se non CHARACTER)
- * @param numberOfPlayers       n. minimo giocatori per cui la carta entra in gioco
- * @param shamanIcons           icone Shaman (null se non SHAMAN)
- * @param hunterBonus           true se Hunter con bonus (null se non HUNTER)
- * @param builderFoodBonus      bonus food del Builder (null se non BUILDER)
- * @param builderPrestigePoints PP del Builder
- * @param collectorFoodDiscount sconto food del Collector
- * @param inventorIcon          icona Inventor (null se non INVENTOR)
+ * @param buildingId building identifier ({@code null} if not a {@code BUILDING})
+ * @param buildingFoodCost food cost
+ * @param buildingPrestigeBonus prestige points granted
+ * @param buildingEffect symbolic effect name (for example, {@code "SetCompletionEffect"})
  *
- * @param buildingId             id edificio (null se non BUILDING)
- * @param buildingFoodCost       costo in food
- * @param buildingPrestigeBonus  PP forniti
- * @param buildingEffect         nome simbolico dell'effetto (es. "SetCompletionEffect")
- *
- * @param eventType            tipo evento (null se non EVENT)
- * @param eventIsFinal         true se evento finale dell'era
- * @param eventPrestigeBonus   PP guadagnati (Hunt / Ritual top)
- * @param eventPrestigeMalus   PP persi (Sustenance / Ritual bottom)
- * @param eventBonusArtists    soglia di Artist per ottenere bonus (CavePaintings)
- * @param eventMalusArtists    soglia di Artist sotto la quale scatta il malus
- * @param eventBonusPoints     PP per ogni Artist sopra soglia
- * @param eventMalusPoints     PP persi sotto soglia
+ * @param eventType event type ({@code null} if not an {@code EVENT})
+ * @param eventIsFinal {@code true} if this is the final event of the era
+ * @param eventPrestigeBonus prestige points gained (Hunt / Ritual top)
+ * @param eventPrestigeMalus prestige points lost (Sustenance / Ritual bottom)
+ * @param eventBonusArtists artist threshold required to gain the bonus (CavePaintings)
+ * @param eventMalusArtists artist threshold below which the malus applies
+ * @param eventBonusPoints prestige points awarded for each artist above the threshold
+ * @param eventMalusPoints prestige points lost below the threshold
  */
 public record CardDTO(
         String front,

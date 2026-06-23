@@ -25,10 +25,12 @@ import java.util.Set;
 public class Tribe implements Serializable {
     private static final long serialVersionUID = 1L;
 
-
+    /** List of characters inside a tribe */
     private final List<CharacterCard> characters;
+    /** List of buildings inside a tribe */
     private final List<BuildingCard> buildings;
 
+    /** Tribe constructor */
     public Tribe() {
         this.characters = new ArrayList<>();
         this.buildings = new ArrayList<>();

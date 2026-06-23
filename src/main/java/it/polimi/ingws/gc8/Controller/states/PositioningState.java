@@ -21,6 +21,11 @@ import java.util.List;
  */
 public class PositioningState implements GameState {
 
+    /**
+     * Handles a player action during the positioning phase
+     * @param context the GameController providing access to model and view updater
+     * @param action  the action requested by a player
+     */
     @Override
     public void handleAction(GameController context, PlayerAction action) {
         GameModel model = context.getModel();
@@ -111,12 +116,22 @@ public class PositioningState implements GameState {
         // No cleanup needed
     }
 
+    /**
+     * Handles current player disconnection
+     * @param context the GameController
+     */
     @Override
     public void onCurrentPlayerDisconnected(GameController context) {
         // FA3: if the player who just dropped is the one to act, skip them.
         skipDisconnectedPlayers(context);
     }
 
+    /**
+     * Finds an offer tile by its ID in the model's available offer tiles.
+     * @param model game model
+     * @param tileId offer tile id
+     * @return the offer tile DTO
+     */
     private OfferTile findOfferTile(GameModel model, String tileId) {
         for (OfferTile tile : model.getAvailableOfferTiles()) {
             if (tile.getId().name().equals(tileId)) {

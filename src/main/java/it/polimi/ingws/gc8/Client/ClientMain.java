@@ -83,6 +83,13 @@ public class ClientMain {
         }
     }
 
+    /**
+     * Prompts user to select a game
+     * @param connection connection object to the server
+     * @param nickname user nickname
+     * @return result of the choice
+     * @throws Exception if an error occurs during match selection
+     */
     private static JoinResult runMatchSelection(ServerConnection connection, String nickname) throws Exception {
         Scanner scanner = new Scanner(System.in);
         while (true) {
@@ -133,6 +140,11 @@ public class ClientMain {
         }
     }
 
+    /**
+     * Initializes the view
+     * @param flavor gui flavor selected by the user
+     * @return created view object
+     */
     private static View createView(UiFlavor flavor) {
         return switch (flavor) {
             case TUI -> new TuiView();
@@ -140,6 +152,11 @@ public class ClientMain {
         };
     }
 
+    /**
+     * Creates connection object
+     * @param transport transport protocol selected by the user
+     * @return connection object to the server
+     */
     private static ServerConnection createConnection(String transport) {
         return switch (transport) {
             case "rmi" -> new RMIServerConnection();
@@ -148,6 +165,13 @@ public class ClientMain {
         };
     }
 
+    /**
+     * Returns a string base on the type of exception thrown during connection attempt
+     * @param e exception thrown during connection attempt
+     * @param host host ip
+     * @param port host port
+     * @return friendly error message
+     */
     private static String friendlyConnectError(Throwable e, String host, int port) {
         Throwable cur = e;
         while (cur != null) {

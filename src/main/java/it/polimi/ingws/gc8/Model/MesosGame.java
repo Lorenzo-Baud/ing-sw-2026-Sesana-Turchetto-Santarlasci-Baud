@@ -25,12 +25,19 @@ public class MesosGame implements GameModel {
 
     private static final long serialVersionUID = 1L;
 
+    /** List of players */
     private List<Player> players;
+    /** Board object */
     private Board board;
+    /** Number of players inside the game*/
     private int numPlayers;
+    /** Current round */
     private int currentRound;
+    /** Current era */
     private Era currentEra;
+    /** Current game phase */
     private GamePhase phase;
+    /** Index of the current player */
     private int currentPlayerIndex;
 
     /**
@@ -59,6 +66,10 @@ public class MesosGame implements GameModel {
         this.viewUpdater = viewUpdater;
     }
 
+    /**
+     * Notifies listener of an update of the model
+     * @param model (the current model)
+     */
     @Override
     public void notifyUpdate(GameModel model){
         if (viewUpdater != null) {
@@ -66,13 +77,20 @@ public class MesosGame implements GameModel {
         }
     }
 
+    /**
+     * Sets current player
+     * @param player current player
+     */
     @Override
     public void setCurrentPlayer(Player player) {
         this.currentPlayerIndex = this.players.indexOf(player);
         notifyUpdate(this);
     }
 
-
+    /**
+     * Mesos game constructor
+     * @param viewUpdater view updater object
+     */
     public MesosGame(ViewUpdater viewUpdater) {
         this.players = new ArrayList<>();
         this.currentRound = 0;
@@ -83,7 +101,9 @@ public class MesosGame implements GameModel {
         this.viewUpdater = viewUpdater;
     }
 
-    // Constructor used for test purposes
+    /**
+     * Constructor used for test purposes
+     */
     public MesosGame() {
         this.players = new ArrayList<>();
         this.currentRound = 0;
@@ -96,6 +116,11 @@ public class MesosGame implements GameModel {
 
     // SETUP
 
+    /**
+     * Sets up games
+     * @param numPlayers number of players (2-5)
+     * @param players list of players inside the game
+     */
     public void setupGame(int numPlayers, List<Player> players) {
         if (numPlayers < 2 || numPlayers > 5) {
             throw new IllegalArgumentException(

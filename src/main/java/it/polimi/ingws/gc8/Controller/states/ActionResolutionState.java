@@ -28,6 +28,11 @@ import java.util.List;
  */
 public class ActionResolutionState implements GameState {
 
+    /**
+     * Handles a player action during the action resolution phase.
+     * @param context the GameController providing access to model and view updater
+     * @param action  the action requested by a player
+     */
     @Override
     public void handleAction(GameController context, PlayerAction action) {
         GameModel model = context.getModel();
@@ -59,6 +64,11 @@ public class ActionResolutionState implements GameState {
         }
     }
 
+    /**
+     * Initializes the offer order and sets the first player as the current player.
+     * Resets the per-turn pick counters in the model.
+     * @param context the GameController providing access to model and view updater
+     */
     @Override
     public void onEnter(GameController context) {
         // Build the offer order and initialize the index
@@ -76,17 +86,31 @@ public class ActionResolutionState implements GameState {
         skipDisconnectedOfferPlayers(context);
     }
 
+    /**
+     *
+     * @param context the GameController
+     */
     @Override
     public void onExit(GameController context) {
         context.setOfferOrder(null);
         context.setOfferOrderIndex(0);
     }
 
+    /**
+     * Handles the disconnection of the current player
+     * @param context the GameController
+     */
     @Override
     public void onCurrentPlayerDisconnected(GameController context) {
         skipDisconnectedOfferPlayers(context);
     }
 
+    /**
+     * Handles the take card action
+     * @param context game controller
+     * @param player player performing the action
+     * @param action action performed
+     */
     private void handleTakeCard(GameController context, Player player, TakeCardAction action) {
         GameModel model = context.getModel();
         ViewUpdater viewUpdater = context.getViewUpdater();
@@ -152,6 +176,11 @@ public class ActionResolutionState implements GameState {
         }
     }
 
+    /**
+     * Handles take food action
+     * @param context game controller
+     * @param player player performing the action
+     */
     private void handleTakeFood(GameController context, Player player) {
         GameModel model = context.getModel();
         ViewUpdater viewUpdater = context.getViewUpdater();
@@ -177,6 +206,11 @@ public class ActionResolutionState implements GameState {
         model.takeFood(player);
     }
 
+    /**
+     * Handles totem return to the turn order track, advancing to the next offer player or ending the round.
+     * @param context game controller
+     * @param player player performing the action
+     */
     private void handleReturnTotem(GameController context, Player player) {
         GameModel model = context.getModel();
 
@@ -251,6 +285,11 @@ public class ActionResolutionState implements GameState {
         }
     }
 
+    /**
+     * Gets the current offer player from the offer order and index.
+     * @param context game controller
+     * @return player index
+     */
     private Player getCurrentOfferPlayer(GameController context) {
         List<Player> offerOrder = context.getOfferOrder();
         int index = context.getOfferOrderIndex();
