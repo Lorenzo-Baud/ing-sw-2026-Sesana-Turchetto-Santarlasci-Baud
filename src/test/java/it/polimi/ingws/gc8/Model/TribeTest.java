@@ -6,6 +6,7 @@ import it.polimi.ingws.gc8.Model.Cards.BuildingCard.SetCompletionEffect;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Artist;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Builder;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Collector;
+import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Hunter;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Shaman;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.EventCard;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.SustenanceEventCard;
@@ -119,6 +120,24 @@ public class TribeTest {
         assertFalse(tribe.hasShamanGainOnTie());
         assertFalse(tribe.canPickExtraCard());
 
+    }
+
+    @Test
+    public void testHunterWithIconGrantsFoodOnAdd() {
+        Tribe tribe = new Tribe();
+        Player player = new Player(0, "", TotemColor.RED);
+
+        // Hunter WITHOUT icon: grants no food
+        tribe.addCharacter(player, new Hunter("", "", Era.ERA_1, 1, false));
+        assertEquals(0, player.getFood());
+
+        // Hunter WITH icon: 1 food per Hunter in the tribe (now 2) -> +2
+        tribe.addCharacter(player, new Hunter("", "", Era.ERA_1, 1, true));
+        assertEquals(2, player.getFood());
+
+        // Another Hunter WITH icon: now 3 Hunters -> +3 -> total 5
+        tribe.addCharacter(player, new Hunter("", "", Era.ERA_1, 1, true));
+        assertEquals(5, player.getFood());
     }
 
     // Test to increase branch coverage

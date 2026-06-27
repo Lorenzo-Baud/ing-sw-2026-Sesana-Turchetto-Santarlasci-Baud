@@ -4,7 +4,6 @@ import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.EventType;
 import it.polimi.ingws.gc8.Model.Player;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -49,8 +48,21 @@ public class RitualEventCard extends EventCard {
      *   <li>Determines the global maximum and minimum icon counts.</li>
      *   <li>Identifies all players matching those extremes to handle ties correctly.</li>
      * </ul>
-     * Finally, {@code prestigeBonus} is added to the leaders and {@code prestigeMalus}
-     * is removed from the laggards.
+     * Rewards are applied to every player on the maximum and penalties to every
+     * player on the minimum; when all players are tied each one first gains and
+     * then loses prestige, as required by the rulebook.
+     * </p>
+     * <p>
+     * Building effects relevant to the Shamanic Ritual are honoured:
+     * <ul>
+     *   <li>extra shaman icons ({@link it.polimi.ingws.gc8.Model.Tribe#getTotalShamanIconBonus()})
+     *       count towards the comparison;</li>
+     *   <li>a shield ({@link it.polimi.ingws.gc8.Model.Tribe#hasShamanShield()}) cancels the
+     *       minority penalty for its owner;</li>
+     *   <li>a doubling building ({@link it.polimi.ingws.gc8.Model.Tribe#hasShamanDouble()})
+     *       doubles the reward of a sole leader (and, with
+     *       {@link it.polimi.ingws.gc8.Model.Tribe#hasShamanGainOnTie()}, of a shared lead too).</li>
+     * </ul>
      * </p>
      *
      * @param players the list of players to evaluate.
@@ -59,35 +71,63 @@ public class RitualEventCard extends EventCard {
     public void resolveEvent(List<Player> players) {
         if (players == null || players.isEmpty()) return;
 
-        ArrayList<Player> topPlayers = new ArrayList<>();
-        ArrayList<Player> bottomPlayers = new ArrayList<>();
+        int max = effectiveShamanIcons(players.get(0));
+        int min = max;
 
-        int max = players.get(0).getTribe().getTotalShamanIcons();
-        int min = players.get(0).getTribe().getTotalShamanIcons();
-
-        // First pass: find global extrema
+        // First pass: find global extrema over the effective icon counts
         for(Player p : players) {
-            int currentIcons = p.getTribe().getTotalShamanIcons();
+            int currentIcons = effectiveShamanIcons(p);
             if(currentIcons > max) max = currentIcons;
             if(currentIcons < min) min = currentIcons;
         }
 
-        // Second pass: identify all players in tie for max and min
+        // Count how many players share the maximum, to tell a sole leader from a tie
+        int leadersCount = 0;
         for(Player p : players) {
-            int currentIcons = p.getTribe().getTotalShamanIcons();
-            if(currentIcons == max) topPlayers.add(p);
-            if(currentIcons == min) bottomPlayers.add(p);
+            if(effectiveShamanIcons(p) == max) leadersCount++;
+        }
+        boolean soleLeader = leadersCount == 1 && max > min;
+
+        // Apply rewards to the leaders (sole leader doubling handled in gainFor)
+        for(Player p : players) {
+            if(effectiveShamanIcons(p) == max) {
+                p.addPrestigePoints(gainFor(p, soleLeader));
+            }
         }
 
-        // Apply rewards
-        for(Player p : topPlayers) {
-            p.addPrestigePoints(prestigeBonus);
+        // Apply penalties to the laggards, unless a building shields them
+        for(Player p : players) {
+            if(effectiveShamanIcons(p) == min && !p.getTribe().hasShamanShield()) {
+                p.removePrestigePoints(prestigeMalus);
+            }
         }
+    }
 
-        // Apply penalties
-        for(Player p : bottomPlayers) {
-            p.removePrestigePoints(prestigeMalus);
-        }
+    /**
+     * Effective shaman icons of a player: icons printed on Shaman cards plus any
+     * extra icons granted by buildings during the Shamanic Ritual.
+     *
+     * @param player the player to evaluate.
+     * @return the effective number of shaman icons.
+     */
+    private int effectiveShamanIcons(Player player) {
+        return player.getTribe().getTotalShamanIcons()
+                + player.getTribe().getTotalShamanIconBonus();
+    }
+
+    /**
+     * Prestige awarded to a leading player. A doubling building doubles the reward
+     * when the player has strictly more icons than everyone else; a building that
+     * also grants prestige on ties extends the doubling to a shared lead.
+     *
+     * @param player     the leading player.
+     * @param soleLeader whether the player is the unique maximum.
+     * @return the prestige points to award.
+     */
+    private int gainFor(Player player, boolean soleLeader) {
+        boolean doubled = player.getTribe().hasShamanDouble()
+                && (soleLeader || player.getTribe().hasShamanGainOnTie());
+        return doubled ? prestigeBonus * 2 : prestigeBonus;
     }
 
     /** @return the prestige points granted for the majority. */

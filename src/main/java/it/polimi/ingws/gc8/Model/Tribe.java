@@ -7,6 +7,7 @@ import it.polimi.ingws.gc8.Model.Cards.CharacterCards.CharacterCard;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Artist;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Builder;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Collector;
+import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Hunter;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Inventor;
 import it.polimi.ingws.gc8.Model.Cards.CharacterCards.Shaman;
 import it.polimi.ingws.gc8.Model.Cards.EventCards.EventCard;
@@ -41,6 +42,11 @@ public class Tribe implements Serializable {
     /**
      * Adds a Character card to the tribe and triggers
      * onCardAdded on all buildings the player owns.
+     * <p>
+     * Hunter innate ability: adding a Hunter that carries the food icon
+     * immediately grants the player 1 food for every Hunter currently in the
+     * tribe (counting all Hunters, with or without the icon, including the one
+     * just added).
      *
      * @param player the player who owns this tribe
      * @param card   the Character card being added
@@ -48,6 +54,10 @@ public class Tribe implements Serializable {
     public void addCharacter(Player player, CharacterCard card) {
         characters.add(card);
         triggerOnCardAdded(player, card);
+
+        if (card instanceof Hunter hunter && hunter.hasBonus()) {
+            player.addFood(countByType(CharacterType.HUNTER));
+        }
     }
 
     /**

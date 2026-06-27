@@ -59,11 +59,15 @@ public class CavePaintingsEventCard extends EventCard {
      *   by their total Artist count.
      * - Players with fewer than {@code malusArtists} lose {@code malusPoints}.
      * </p>
+     * Additionally, this method invokes {@code tribe.triggerOnEvent} so that any
+     * building reacting to the Cave Paintings event (e.g. "gain 1 food per Artist")
+     * is applied as well.
      *
      * @param players the list of active players in the game.
      */
     @Override
     public void resolveEvent(List<Player> players) {
+        if (players == null) return;
         for(Player p : players) {
             int artistCount = p.getTribe().countByType(CharacterType.ARTIST);
 
@@ -76,6 +80,9 @@ public class CavePaintingsEventCard extends EventCard {
             if(artistCount < malusArtists) {
                 p.removePrestigePoints(malusPoints);
             }
+
+            // Conditional building effects triggered by this event
+            p.getTribe().triggerOnEvent(p, this);
         }
     }
 
