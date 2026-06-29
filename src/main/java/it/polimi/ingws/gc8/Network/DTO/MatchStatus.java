@@ -1,8 +1,6 @@
 package it.polimi.ingws.gc8.Network.DTO;
 
-import java.io.Serializable;
-
-public enum MatchStatus implements Serializable {
+public enum MatchStatus {
     LOBBY,
     IN_GAME,
     FINISHED

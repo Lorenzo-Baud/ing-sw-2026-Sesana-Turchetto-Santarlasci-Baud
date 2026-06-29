@@ -2,7 +2,6 @@ package it.polimi.ingws.gc8.Network.Connection.RMI;
 
 import it.polimi.ingws.gc8.Controller.actions.PlayerAction;
 import it.polimi.ingws.gc8.Network.DTO.JoinResult;
-import it.polimi.ingws.gc8.Network.DTO.LoginResult;
 import it.polimi.ingws.gc8.Network.DTO.MatchInfo;
 
 import java.rmi.Remote;

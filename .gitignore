@@ -48,3 +48,4 @@ docs/FA2-persistenza.md
 docs/FA1-partite-multiple.md
 docs/FA3-resilienza-disconnessioni.md
 dependency-reduced-pom.xml
+/docs

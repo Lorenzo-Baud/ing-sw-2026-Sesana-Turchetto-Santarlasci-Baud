@@ -4,9 +4,6 @@ import it.polimi.ingws.gc8.Model.Enum.CharacterType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.EventType;
 import it.polimi.ingws.gc8.Model.Player;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**

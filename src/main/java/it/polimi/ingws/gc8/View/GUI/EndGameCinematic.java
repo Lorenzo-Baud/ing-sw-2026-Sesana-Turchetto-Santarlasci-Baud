@@ -1,7 +1,6 @@
 package it.polimi.ingws.gc8.View.GUI;
 
 import it.polimi.ingws.gc8.Model.Enum.CardType;
-import it.polimi.ingws.gc8.Network.DTO.CardDTO;
 import it.polimi.ingws.gc8.Network.DTO.PlayerDTO;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;

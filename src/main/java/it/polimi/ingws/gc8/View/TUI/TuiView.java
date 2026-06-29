@@ -223,7 +223,7 @@ public class TuiView extends View {
     }
 
     // ------------------------------------------------------------------
-    // POSITIONING phase: player places totem on an offer tile
+    // POSITIONING
     // ------------------------------------------------------------------
 
     private void runPositioningPhase() {
@@ -277,7 +277,7 @@ public class TuiView extends View {
     }
 
     // ------------------------------------------------------------------
-    // ACTION_RESOLUTION phase: player resolves their offer tile
+    // ACTION_RESOLUTION
     // ------------------------------------------------------------------
 
     private void runResolutionPhase() {
@@ -832,12 +832,6 @@ public class TuiView extends View {
         return out;
     }
 
-    /**
-     * MESOS rule (pag.2-3): some offer tiles are valid only at specific
-     * player counts. The server should already remove invalid tiles at
-     * setup; this filter is a UX safeguard so the TUI never proposes a
-     * tile that the player cannot lawfully use.
-     */
     private static boolean validForPlayerCount(OffertileId id, int playerCount) {
         return switch (id) {
             case A -> playerCount >= 5;

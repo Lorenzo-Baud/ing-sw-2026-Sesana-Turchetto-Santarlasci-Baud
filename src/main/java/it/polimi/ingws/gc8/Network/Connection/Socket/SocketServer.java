@@ -12,11 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class SocketServer implements Runnable {
 
-    private static final int HANDSHAKE_TIMEOUT_MS = 5000;
-
-    /** Server port */
     private final int port;
-    /** Match registry */
     private final MatchRegistry registry;
     /** Counts handshakes received */
     private final AtomicInteger handshakeCounter = new AtomicInteger();
@@ -25,7 +21,6 @@ public class SocketServer implements Runnable {
 
     /** ServerSocket object */
     private volatile ServerSocket serverSocket;
-    /** Indicates if the server is running*/
     private volatile boolean running;
 
     public SocketServer(int port, MatchRegistry registry) {

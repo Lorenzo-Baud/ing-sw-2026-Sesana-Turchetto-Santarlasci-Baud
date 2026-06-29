@@ -12,7 +12,6 @@ import it.polimi.ingws.gc8.Model.Enum.CharacterType;
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.EventType;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
-import it.polimi.ingws.gc8.Model.Enum.TotemColor;
 import it.polimi.ingws.gc8.Network.ViewUpdater;
 
 import java.util.*;
@@ -25,19 +24,12 @@ public class MesosGame implements GameModel {
 
     private static final long serialVersionUID = 1L;
 
-    /** List of players */
     private List<Player> players;
-    /** Board object */
     private Board board;
-    /** Number of players inside the game*/
     private int numPlayers;
-    /** Current round */
     private int currentRound;
-    /** Current era */
     private Era currentEra;
-    /** Current game phase */
     private GamePhase phase;
-    /** Index of the current player */
     private int currentPlayerIndex;
 
     /**

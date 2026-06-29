@@ -2,8 +2,6 @@ package it.polimi.ingws.gc8.Network.DTO;
 
 import it.polimi.ingws.gc8.Model.Enum.Era;
 import it.polimi.ingws.gc8.Model.Enum.GamePhase;
-import it.polimi.ingws.gc8.Model.Player;
-
 import java.io.Serializable;
 import java.util.List;
 
